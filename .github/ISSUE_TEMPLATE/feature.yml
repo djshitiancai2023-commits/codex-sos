@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a small improvement without sharing private material
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe the user problem, not private Codex content. Do not attach tokens, auth.json, sessions, customer data, or proprietary screenshots.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Explain the ordinary user's difficulty in plain language.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What happens today?
+  - type: textarea
+    id: proposed
+    attributes:
+      label: What is the smallest useful improvement?

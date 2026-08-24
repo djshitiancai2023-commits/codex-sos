@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Platforms>x64</Platforms>
+    <SelfContained>true</SelfContained>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CodexSOS.Core\CodexSOS.Core.csproj" />
+    <ProjectReference Include="..\..\src\CodexSOS.App\CodexSOS.App.csproj" />
+  </ItemGroup>
+</Project>

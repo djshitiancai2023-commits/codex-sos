@@ -1,0 +1,56 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-06",
+  "title": "官方体检超过等待上限",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "我说不清具体哪里不对，请帮我检查一下。",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Unknown",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<SANITIZED_INSTALL_HINT>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "timeout",
+    "timeoutLimitMs": 2000,
+    "simulatedDurationMs": 60000,
+    "maxAttempts": 1,
+    "expectedUiStopsWaiting": true,
+    "expectedAutomaticRetry": false,
+    "realDoctorAllowedToFinishNaturally": true,
+    "expectedState": "TimedOut",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "issues": []
+  },
+  "expected": {
+    "category": "DoctorFailure",
+    "confidence": "CannotDetermine",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "maximumUiWaitMs": 3500,
+    "mustContain": ["官方体检没有按时完成", "这不足以解释当前故障", "仍然完成了其他检查"],
+    "mustNotContain": ["应用无响应", "已经确定根因", "Codex 没问题", "正在无限重试"],
+    "safeActionIds": ["retry_check", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "upload_screenshot", "call_openai_api", "rerun_doctor_automatically"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

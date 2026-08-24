@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/CodexSOS.Core/CodexSOS.Core.csproj" />
+  <Project Path="src/CodexSOS.App/CodexSOS.App.csproj" />
+  <Project Path="tests/CodexSOS.Tests/CodexSOS.Tests.csproj" />
+</Solution>

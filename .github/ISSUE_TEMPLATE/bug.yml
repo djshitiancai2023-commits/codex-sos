@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a Codex SOS problem without exposing private data
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not paste tokens, auth.json, full sessions, private screenshots, customer names, or proprietary project content."
+  - type: input
+    id: version
+    attributes:
+      label: Codex SOS version
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Smallest steps to reproduce
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?

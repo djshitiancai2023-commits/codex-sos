@@ -1,0 +1,31 @@
+<Application x:Class="CodexSOS.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <Color x:Key="Ink">#152235</Color>
+        <Color x:Key="Muted">#607089</Color>
+        <Color x:Key="Ocean">#176B87</Color>
+        <Color x:Key="OceanDark">#10556C</Color>
+        <Color x:Key="Paper">#F7FAFC</Color>
+        <SolidColorBrush x:Key="InkBrush" Color="{StaticResource Ink}" />
+        <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource Muted}" />
+        <SolidColorBrush x:Key="OceanBrush" Color="{StaticResource Ocean}" />
+        <SolidColorBrush x:Key="PaperBrush" Color="{StaticResource Paper}" />
+        <Style TargetType="Button">
+            <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Padding" Value="18,11" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+    </Application.Resources>
+</Application>

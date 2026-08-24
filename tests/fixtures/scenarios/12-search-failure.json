@@ -1,0 +1,58 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-12",
+  "title": "公开问题搜索暂时连不上",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "Codex 做到一半断开了，后来一直连不上。",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<SANITIZED_INSTALL_HINT>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 360,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": false,
+    "issues": []
+  },
+  "expected": {
+    "category": "Connection",
+    "confidence": "PossiblyRelated",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "mustContain": ["没能连上公开问题搜索", "可以在浏览器里打开官方问题搜索入口"],
+    "mustNotContain": ["只有你遇到", "已经确定根因", "自动提交", "上传截图"],
+    "safeActionIds": ["restart_codex", "open_status_page", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "comment_github_issue", "upload_screenshot", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

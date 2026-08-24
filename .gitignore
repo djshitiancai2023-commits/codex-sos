@@ -1,0 +1,48 @@
+# Build output
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+coverage/
+*.pdb
+
+# IDE and local developer state
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local tools and scratch work
+work/
+.dotnet/
+.nuget/
+packages/
+*.tmp
+*.temp
+*.log
+*.dmp
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Never commit private Codex or diagnostic material
+/.codex/
+/auth.json
+/sessions/
+/archived_sessions/
+/private/
+/private-materials/
+/runtime-data/
+/screenshots/
+/doctor-raw*
+/session*.jsonl
+/conversation*.jsonl
+
+# Local UI acceptance captures belong in an explicit reviewed evidence package
+/ui-evidence-local/
+

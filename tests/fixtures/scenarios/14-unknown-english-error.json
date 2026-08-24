@@ -1,0 +1,59 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-14",
+  "title": "认不出的英文报错仍然保守收尾",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "",
+    "screenshotProvided": true,
+    "screenshotSource": null,
+    "mockOcrText": "Unhandled exception: quux_florb_2030 blew up while syncing."
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": []
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 120,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "submittedStableTerms": [],
+    "issues": []
+  },
+  "expected": {
+    "category": "Unknown",
+    "confidence": "CannotDetermine",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "mustContain": ["像是有报错", "认不出", "重新打开", "不要删除", "刚才更像是哪一种情况？"],
+    "mustNotContain": ["已经确定根因", "Codex 没问题", "自动修复", "自动提交"],
+    "safeActionIds": ["retry_check", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "upload_screenshot", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

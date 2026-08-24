@@ -1,0 +1,143 @@
+{
+  "fixtureVersion": 1,
+  "allDataFictional": true,
+  "description": "Every value is a deliberately fictional privacy canary.",
+  "cases": [
+    {
+      "id": "windows-user-path",
+      "kind": "local_path",
+      "input": "C:\\Users\\Fictional.User\\Documents\\Project-Orchid-Fixture\\trace.log",
+      "expected": "<LOCAL_PATH>"
+    },
+    {
+      "id": "unc-path",
+      "kind": "local_path",
+      "input": "\\\\fixture-host\\private-share\\Project-Orchid-Fixture\\trace.log",
+      "expected": "<LOCAL_PATH>"
+    },
+    {
+      "id": "wsl-mnt-path",
+      "kind": "local_path",
+      "input": "/mnt/c/Users/Fictional.User/Project-Orchid-Fixture/trace.log",
+      "expected": "<LOCAL_PATH>"
+    },
+    {
+      "id": "unix-home-path",
+      "kind": "local_path",
+      "input": "/home/fictional.user/Project-Orchid-Fixture/trace.log",
+      "expected": "<LOCAL_PATH>"
+    },
+    {
+      "id": "workspace-path",
+      "kind": "local_path",
+      "input": "/workspace/project-orchid-fixture/logs/trace.log",
+      "expected": "<LOCAL_PATH>"
+    },
+    {
+      "id": "windows-forward-slash-drive-path",
+      "kind": "local_path",
+      "input": "C:/Users/Fictional.User/Documents/Project-Orchid-Fixture/trace.log",
+      "expected": "<LOCAL_PATH>"
+    },
+    {
+      "id": "email",
+      "kind": "email",
+      "input": "rowan.fixture@example.test",
+      "expected": "<EMAIL>"
+    },
+    {
+      "id": "known-person-name",
+      "kind": "known_private_term",
+      "input": "Rowan Fixture",
+      "knownPrivateTerms": ["Rowan Fixture"],
+      "expected": "<PRIVATE_TERM>"
+    },
+    {
+      "id": "known-project-name",
+      "kind": "known_private_term",
+      "input": "Project-Orchid-Fixture",
+      "knownPrivateTerms": ["Project-Orchid-Fixture"],
+      "expected": "<PRIVATE_TERM>"
+    },
+    {
+      "id": "known-company-name",
+      "kind": "known_private_term",
+      "input": "Example Fixture Labs",
+      "knownPrivateTerms": ["Example Fixture Labs"],
+      "expected": "<PRIVATE_TERM>"
+    },
+    {
+      "id": "private-git-remote",
+      "kind": "private_git_remote",
+      "input": "git@example.test:fixture-labs/private-orchid.git",
+      "expected": "<PRIVATE_GIT_REMOTE>"
+    },
+    {
+      "id": "internal-url",
+      "kind": "internal_url",
+      "input": "https://build.internal:8443/job/fixture",
+      "expected": "<INTERNAL_URL>"
+    },
+    {
+      "id": "private-ip-10",
+      "kind": "private_ip",
+      "input": "10.24.7.19",
+      "expected": "<PRIVATE_IP>"
+    },
+    {
+      "id": "private-ip-172",
+      "kind": "private_ip",
+      "input": "172.20.8.14",
+      "expected": "<PRIVATE_IP>"
+    },
+    {
+      "id": "private-ip-192",
+      "kind": "private_ip",
+      "input": "192.168.5.8",
+      "expected": "<PRIVATE_IP>"
+    },
+    {
+      "id": "session-id",
+      "kind": "session_id",
+      "input": "Session ID: SESSIONFIXTURE123456",
+      "expected": "<SESSION_ID>"
+    },
+    {
+      "id": "request-id",
+      "kind": "request_id",
+      "input": "Request ID: REQUESTFIXTURE123456",
+      "expected": "<REQUEST_ID>"
+    },
+    {
+      "id": "account-id",
+      "kind": "account_id",
+      "input": "Account ID: ACCOUNTFIXTURE123456",
+      "expected": "<ACCOUNT_ID>"
+    },
+    {
+      "id": "bearer-secret",
+      "kind": "secret",
+      "input": "Authorization: Bearer FICTIONAL_BEARER_7qX9pL4nV8mK2sR6",
+      "expectedMustContain": "<SECRET>",
+      "expectedMustNotContain": "FICTIONAL_BEARER_7qX9pL4nV8mK2sR6"
+    },
+    {
+      "id": "password",
+      "kind": "secret",
+      "input": "password=DefinitelyFixture42!",
+      "expected": "<SECRET>"
+    },
+    {
+      "id": "long-random-string",
+      "kind": "possible_secret",
+      "input": "Z7qP4nV8mK2sR6tY9wB3cD5fG1hJ8kL0",
+      "expected": "<POSSIBLE_SECRET>"
+    }
+  ],
+  "globalAssertions": [
+    "The original value must not appear in sanitized text.",
+    "Only finding kind and count may appear in the simple privacy summary.",
+    "No redaction rule may claim 100 percent safety.",
+    "A known private term list comes only from the user's submitted text or explicit fixture context; discovering it must not scan projects."
+  ]
+}

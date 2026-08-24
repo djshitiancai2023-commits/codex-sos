@@ -1,0 +1,82 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-10",
+  "title": "公开预览前拦截并遮盖多类虚构隐私",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "Authentication failed\nName: Rowan Fixture\nEmail: rowan.fixture@example.test\nPath: C:\\Users\\Rowan.Fixture\\Documents\\Project-Orchid-Fixture\\trace.log\nProject: Project-Orchid-Fixture\nCompany: Example Fixture Labs\nPrivate remote: git@example.test:fixture-labs/private-orchid.git\nInternal URL: https://build.internal:8443/job/fixture\nPrivate IP: 10.24.7.19\nSession ID: SESSIONFIXTURE123456\nRequest ID: REQUESTFIXTURE123456\nAccount ID: ACCOUNTFIXTURE123456\nAuthorization: Bearer FICTIONAL_BEARER_7qX9pL4nV8mK2sR6\npassword=DefinitelyFixture42!\nRandom: Z7qP4nV8mK2sR6tY9wB3cD5fG1hJ8kL0",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": "",
+    "knownPrivateTerms": ["Rowan Fixture", "Project-Orchid-Fixture", "Example Fixture Labs"]
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<LOCAL_APP_INSTALL>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 360,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "submittedStableTerms": ["authentication failed"],
+    "issues": []
+  },
+  "expected": {
+    "category": "Login",
+    "confidence": "PossiblyRelated",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "privacyReviewRequired": true,
+    "exportButtonEnabledBeforeReview": false,
+    "exportButtonEnabledAfterReview": true,
+    "expectedFindingKinds": ["known_private_term", "email", "local_path", "private_git_remote", "internal_url", "private_ip", "session_id", "request_id", "account_id", "secret", "possible_secret"],
+    "mustContain": ["我们准备公开这些信息", "还需要你看一眼", "程序无法保证 100% 识别所有隐私"],
+    "mustNotContain": ["100% 安全", "已经确定根因", "自动上传", "自动提交"],
+    "publicPreviewMustNotContain": [
+      "Rowan Fixture",
+      "rowan.fixture@example.test",
+      "C:\\Users\\Rowan.Fixture",
+      "Project-Orchid-Fixture",
+      "Example Fixture Labs",
+      "git@example.test:fixture-labs/private-orchid.git",
+      "https://build.internal:8443/job/fixture",
+      "10.24.7.19",
+      "SESSIONFIXTURE123456",
+      "REQUESTFIXTURE123456",
+      "ACCOUNTFIXTURE123456",
+      "FICTIONAL_BEARER_7qX9pL4nV8mK2sR6",
+      "DefinitelyFixture42!",
+      "Z7qP4nV8mK2sR6tY9wB3cD5fG1hJ8kL0"
+    ],
+    "searchRequestMustEqual": ["authentication failed"],
+    "safeActionIds": ["review_public_material", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "upload_screenshot", "upload_logs", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true,
+      "rawInputIncluded": false
+    }
+  }
+}

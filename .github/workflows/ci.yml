@@ -1,0 +1,45 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.400
+
+      - name: Static secret and local-path check
+        shell: pwsh
+        run: ./scripts/check-source-secrets.ps1
+
+      - name: Build, test, and create portable package
+        shell: pwsh
+        run: ./scripts/build-release.ps1 -Version "0.1.0-ci.${{ github.run_number }}" -SkipInstaller
+
+      - name: Upload verification artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Codex-SOS-windows-${{ github.run_number }}
+          path: |
+            artifacts/Codex-SOS-*-win-x64/
+            artifacts/packages/*.zip
+            artifacts/FILE-MANIFEST.txt
+            artifacts/SHA256SUMS.txt
+            artifacts/RELEASE-CHECK.md
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>CodexSOS.Core</AssemblyName>
+    <RootNamespace>CodexSOS.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

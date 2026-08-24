@@ -1,0 +1,78 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-09",
+  "title": "只有泛词重合时不得强行匹配",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "今天感觉 Codex 不太对。",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Unknown",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<SANITIZED_INSTALL_HINT>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 350,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "submittedStableTerms": [],
+    "issues": [
+      {
+        "number": 900101,
+        "title": "Generic Codex error on Windows fixture",
+        "body": "Fictional unrelated report with only generic words: Codex, error, issue, Windows and not working.",
+        "htmlUrl": "https://issues.example.test/openai/codex/900101",
+        "state": "open",
+        "labels": ["fixture"]
+      },
+      {
+        "number": 900102,
+        "title": "Codex issue fixture",
+        "body": "Another fictional and deliberately unrelated report.",
+        "htmlUrl": "https://issues.example.test/openai/codex/900102",
+        "state": "closed",
+        "labels": ["fixture"]
+      }
+    ]
+  },
+  "expected": {
+    "category": "DoctorCannotExplain",
+    "confidence": "CannotDetermine",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "highSimilarityCount": 0,
+    "possibleSimilarityCount": 0,
+    "mustContain": ["暂未找到足够相似的问题", "这份检查无法解释当前故障"],
+    "mustNotContain": ["只有你遇到", "没有别人遇到", "高度相似", "已经确定根因", "Codex 没问题"],
+    "safeActionIds": ["retry_check", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "upload_screenshot", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

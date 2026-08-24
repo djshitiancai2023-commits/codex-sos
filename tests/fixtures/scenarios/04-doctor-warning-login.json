@@ -1,0 +1,78 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-04",
+  "title": "官方体检给出与登录描述一致的异常",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "Codex 一直让我重新登录。",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<LOCAL_APP_INSTALL>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 430,
+    "exitCode": 1,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "warning",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {
+        "auth.credentials": {
+          "id": "auth.credentials",
+          "category": "auth",
+          "status": "warning",
+          "summary": "fixture authentication check needs attention",
+          "details": {},
+          "issues": [
+            {
+              "severity": "warning",
+              "cause": "fixture login state could not be confirmed",
+              "measured": "fixture unavailable",
+              "expected": "fixture signed in",
+              "remedy": "open the official sign-in help page",
+              "fields": []
+            }
+          ],
+          "remediation": "Review the official sign-in help page.",
+          "durationMs": 15
+        }
+      }
+    },
+    "expectedState": "Warning",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "issues": []
+  },
+  "expected": {
+    "category": "Login",
+    "confidence": "LikelyRelated",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "mustContain": ["登录问题", "很可能有关", "官方体检也发现了相关线索"],
+    "mustNotContain": ["已经确定根因", "100%", "自动重置登录", "删除登录资料"],
+    "safeActionIds": ["restart_codex", "open_official_signin_help", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "upload_screenshot", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

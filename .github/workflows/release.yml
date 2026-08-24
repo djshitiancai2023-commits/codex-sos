@@ -1,0 +1,84 @@
+name: publish-v0.1.0
+
+on:
+  push:
+    tags: [v0.1.0]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-v0.1.0
+  cancel-in-progress: false
+
+env:
+  APP_VERSION: 0.1.0
+  RELEASE_TAG: v0.1.0
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out the public source commit
+        uses: actions/checkout@v4
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.400
+
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Verify source contains no local secrets or private paths
+        shell: pwsh
+        run: ./scripts/check-source-secrets.ps1
+
+      - name: Build, run all tests, and create release packages
+        shell: pwsh
+        run: ./scripts/build-release.ps1 -Version $env:APP_VERSION
+
+      - name: Upload clean-build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Codex-SOS-v0.1.0-release-candidate
+          path: |
+            artifacts/packages/*
+            artifacts/FILE-MANIFEST.txt
+            artifacts/SHA256SUMS.txt
+            artifacts/RELEASE-CHECK.md
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release once
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $env:RELEASE_TAG already exists; leaving it unchanged."
+            exit 0
+          }
+
+          $installer = "artifacts/packages/Codex-SOS-Setup-$env:APP_VERSION.exe"
+          $portable = "artifacts/packages/Codex-SOS-$env:APP_VERSION-win-x64-portable.zip"
+          $checksums = "artifacts/SHA256SUMS.txt"
+          $manifest = "artifacts/FILE-MANIFEST.txt"
+          $preflight = "artifacts/RELEASE-CHECK.md"
+
+          foreach ($required in @($installer, $portable, $checksums, $manifest, $preflight)) {
+            if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
+              throw "Required release asset missing: $required"
+            }
+          }
+
+          gh release create $env:RELEASE_TAG `
+            --repo $env:GITHUB_REPOSITORY `
+            --target $env:GITHUB_SHA `
+            --title "Codex SOS v0.1.0" `
+            --notes-file "docs/release-notes/v0.1.0.md" `
+            $installer $portable $checksums $manifest $preflight

@@ -1,0 +1,59 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-17",
+  "title": "信息太少时首屏只追问一次大白话选择",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "Codex 用着用着就不行了，说不上来具体哪里不对。",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<SANITIZED_INSTALL_HINT>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 120,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "submittedStableTerms": [],
+    "issues": []
+  },
+  "expected": {
+    "category": "DoctorCannotExplain",
+    "confidence": "CannotDetermine",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "mustContain": ["这份检查无法解释当前故障。", "还差一个选择", "刚才更像是哪一种情况？", "（推荐）"],
+    "mustNotContain": ["已经确定根因", "Codex 没问题", "最常见", "命令行"],
+    "safeActionIds": ["retry_check", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "upload_screenshot", "call_openai_api", "second_follow_up_question"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-08",
+  "title": "找到三个高度相似的虚构公开问题",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "Windows 桌面版突然显示 Stream disconnected before completion，然后一直 reconnecting。",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<LOCAL_APP_INSTALL>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 370,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "submittedStableTerms": ["stream disconnected before completion", "reconnecting"],
+    "issues": [
+      {
+        "number": 900001,
+        "title": "Stream disconnected before completion in Windows desktop fixture",
+        "body": "Fictional report: the Codex desktop connection disconnected and remained reconnecting on Windows.",
+        "htmlUrl": "https://issues.example.test/openai/codex/900001",
+        "state": "open",
+        "labels": ["fixture", "desktop"]
+      },
+      {
+        "number": 900002,
+        "title": "Windows app reconnecting after Stream disconnected before completion",
+        "body": "Fictional report: the desktop connection stopped during a long task and reconnecting did not finish.",
+        "htmlUrl": "https://issues.example.test/openai/codex/900002",
+        "state": "open",
+        "labels": ["fixture", "connection"]
+      },
+      {
+        "number": 900003,
+        "title": "Stream disconnected before completion on Codex desktop",
+        "body": "Fictional closed report: Windows desktop disconnected and reconnecting appeared after a connection timeout.",
+        "htmlUrl": "https://issues.example.test/openai/codex/900003",
+        "state": "closed",
+        "labels": ["fixture", "desktop"]
+      }
+    ]
+  },
+  "expected": {
+    "category": "Connection",
+    "confidence": "PossiblyRelated",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "highSimilarityCount": 3,
+    "openHighSimilarityCount": 2,
+    "minimumScorePerHighMatch": 75,
+    "requiredReasonKindsPerHighMatch": ["exact_phrase", "same_category"],
+    "mustContain": ["找到了 3 个高度相似的公开问题，其中 2 个仍未关闭", "相同的固定错误短语", "故障类型一致"],
+    "mustNotContain": ["已经确定是同一个问题", "官方已确认根因", "100%", "自动评论", "自动提交"],
+    "safeActionIds": ["restart_codex", "open_similar_issues", "open_status_page", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "comment_github_issue", "upload_screenshot", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

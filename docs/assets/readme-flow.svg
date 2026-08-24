@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Codex SOS 使用流程</title>
+  <desc id="desc">用户提供截图或一句描述，应用自动检查，最后显示四块大白话结果。</desc>
+  <rect width="1200" height="360" rx="28" fill="#eef4f7"/>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif">
+    <text x="600" y="58" text-anchor="middle" font-size="30" font-weight="700" fill="#132a3a">Codex 一卡住，按一下救生圈</text>
+
+    <rect x="58" y="104" width="290" height="184" rx="22" fill="#ffffff" stroke="#cbdde4" stroke-width="2"/>
+    <circle cx="106" cy="152" r="25" fill="#2d9ba5"/>
+    <circle cx="106" cy="152" r="13" fill="#ffffff"/>
+    <text x="146" y="161" font-size="23" font-weight="700" fill="#132a3a">只给一样</text>
+    <text x="88" y="214" font-size="20" fill="#335a69">报错截图</text>
+    <text x="197" y="214" font-size="18" fill="#8294a3">或</text>
+    <text x="235" y="214" font-size="20" fill="#335a69">一句描述</text>
+    <text x="88" y="255" font-size="16" fill="#718391">不用找日志和版本</text>
+
+    <path d="M368 196 H435" stroke="#2d9ba5" stroke-width="5" stroke-linecap="round"/>
+    <path d="M423 182 L439 196 L423 210" fill="none" stroke="#2d9ba5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="458" y="104" width="290" height="184" rx="22" fill="#132a3a"/>
+    <text x="603" y="154" text-anchor="middle" font-size="23" font-weight="700" fill="#ffffff">其余自动完成</text>
+    <text x="603" y="198" text-anchor="middle" font-size="18" fill="#d8e9ef">官方体检 · 本机识字</text>
+    <text x="603" y="230" text-anchor="middle" font-size="18" fill="#d8e9ef">相似问题 · 隐私遮盖</text>
+    <text x="603" y="263" text-anchor="middle" font-size="16" fill="#9fcbd0">不用 Key，不调用大模型</text>
+
+    <path d="M768 196 H835" stroke="#2d9ba5" stroke-width="5" stroke-linecap="round"/>
+    <path d="M823 182 L839 196 L823 210" fill="none" stroke="#2d9ba5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="858" y="104" width="284" height="184" rx="22" fill="#ffffff" stroke="#cbdde4" stroke-width="2"/>
+    <text x="1000" y="154" text-anchor="middle" font-size="23" font-weight="700" fill="#132a3a">直接告诉你</text>
+    <text x="892" y="199" font-size="18" fill="#335a69">① 大概是什么</text>
+    <text x="892" y="230" font-size="18" fill="#335a69">② 别人是否遇到</text>
+    <text x="892" y="261" font-size="18" fill="#335a69">③ 最安全下一步</text>
+
+    <text x="600" y="328" text-anchor="middle" font-size="15" fill="#718391">截图默认不保存、不上传，也不进入公开报告</text>
+  </g>
+</svg>

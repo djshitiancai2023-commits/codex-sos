@@ -1,0 +1,77 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-03",
+  "title": "官方体检全绿但解释不了用户刚才的异常",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "刚才 Codex 明显不正常，现在又恢复了。",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Unknown",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<SANITIZED_INSTALL_HINT>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 410,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {
+        "installation": {
+          "id": "installation",
+          "category": "install",
+          "status": "ok",
+          "summary": "fixture installation check passed",
+          "details": {},
+          "remediation": null,
+          "durationMs": 8
+        },
+        "network.env": {
+          "id": "network.env",
+          "category": "network",
+          "status": "ok",
+          "summary": "fixture network check passed",
+          "details": {},
+          "remediation": null,
+          "durationMs": 10
+        }
+      }
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "issues": []
+  },
+  "expected": {
+    "category": "DoctorCannotExplain",
+    "confidence": "CannotDetermine",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "mustContain": ["官方体检暂未发现异常", "这份检查无法解释当前故障"],
+    "mustNotContain": ["Codex 没问题", "没有故障", "已经确定根因", "100%"],
+    "safeActionIds": ["restart_codex", "retry_check", "save_materials"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "upload_screenshot", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

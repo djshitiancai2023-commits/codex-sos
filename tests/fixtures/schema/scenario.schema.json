@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-sos.example.test/schema/scenario.schema.json",
+  "title": "Codex SOS fictional acceptance scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixtureVersion",
+    "id",
+    "title",
+    "allDataFictional",
+    "frozenClockUtc",
+    "input",
+    "system",
+    "doctor",
+    "issueSearch",
+    "expected"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "fixtureVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^UI-[0-9]{2}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "allDataFictional": { "const": true },
+    "frozenClockUtc": { "type": "string", "format": "date-time" },
+    "input": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["description", "screenshotProvided"],
+      "properties": {
+        "description": { "type": "string" },
+        "screenshotProvided": { "type": "boolean" },
+        "screenshotSource": { "type": ["string", "null"] },
+        "mockOcrText": { "type": "string" },
+        "knownPrivateTerms": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "system": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["windowsVersion", "architecture", "surface", "codexVersion", "codexIsRunning", "possibleDuplicateInstall"]
+    },
+    "doctor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["autoRun", "behavior", "expectedState", "rawOutputMustNotPersist"],
+      "properties": {
+        "autoRun": { "const": true },
+        "behavior": { "enum": ["exit", "timeout"] },
+        "expectedState": { "enum": ["Ok", "Warning", "Failed", "Unsupported", "TimedOut", "Malformed", "Unavailable"] },
+        "rawOutputMustNotPersist": { "const": true }
+      }
+    },
+    "issueSearch": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["succeeded", "issues"],
+      "properties": {
+        "succeeded": { "type": "boolean" },
+        "issues": { "type": "array" }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "category",
+        "confidence",
+        "resultPageReached",
+        "mustContain",
+        "mustNotContain",
+        "safeActionIds",
+        "forbiddenActions",
+        "publicExport"
+      ]
+    }
+  }
+}

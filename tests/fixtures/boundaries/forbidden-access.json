@@ -1,0 +1,98 @@
+{
+  "fixtureVersion": 1,
+  "allDataFictional": true,
+  "description": "A temporary sandbox layout for proving Codex SOS does not read private Codex or project material.",
+  "sandboxFiles": [
+    {
+      "relativePath": "fake-user/.codex/auth.json",
+      "contentCanary": "AUTH_CANARY_DO_NOT_READ_2030"
+    },
+    {
+      "relativePath": "fake-user/.codex/sessions/session-fixture/rollout.jsonl",
+      "contentCanary": "SESSION_CANARY_DO_NOT_READ_2030"
+    },
+    {
+      "relativePath": "fake-user/.codex/archived_sessions/archive-fixture.jsonl",
+      "contentCanary": "ARCHIVED_SESSION_CANARY_DO_NOT_READ_2030"
+    },
+    {
+      "relativePath": "fake-user/private-project/source.fixture.cs",
+      "contentCanary": "PROJECT_CANARY_DO_NOT_READ_2030"
+    },
+    {
+      "relativePath": "fake-user/private-project/.git/config",
+      "contentCanary": "PRIVATE_GIT_CANARY_DO_NOT_READ_2030"
+    },
+    {
+      "relativePath": "app-owned/input/description.txt",
+      "contentCanary": "USER_PROVIDED_FIXTURE_INPUT_ALLOWED"
+    }
+  ],
+  "filesystemAssertions": {
+    "allowedExactReads": [
+      "{TEMP_ROOT}/app-owned/input/description.txt",
+      "{TEMP_ROOT}/app-owned/fixture-doctor-output.json"
+    ],
+    "forbiddenReadOrEnumerationPrefixes": [
+      "{TEMP_ROOT}/fake-user/.codex",
+      "{TEMP_ROOT}/fake-user/private-project"
+    ],
+    "forbiddenCanariesInAnyOutput": [
+      "AUTH_CANARY_DO_NOT_READ_2030",
+      "SESSION_CANARY_DO_NOT_READ_2030",
+      "ARCHIVED_SESSION_CANARY_DO_NOT_READ_2030",
+      "PROJECT_CANARY_DO_NOT_READ_2030",
+      "PRIVATE_GIT_CANARY_DO_NOT_READ_2030"
+    ],
+    "notes": [
+      "The fake codex child process is tested separately; Codex SOS must not open the forbidden paths itself.",
+      "The test must record open, stat and directory-enumeration attempts, not merely inspect final output."
+    ]
+  },
+  "networkAssertions": {
+    "automaticAllowedRequests": [
+      {
+        "method": "GET",
+        "host": "api.github.com",
+        "pathPrefix": "/search/issues",
+        "bodyMustBeEmpty": true,
+        "queryMustAlreadyBeSanitized": true
+      }
+    ],
+    "forbiddenMethods": ["POST", "PUT", "PATCH", "DELETE"],
+    "forbiddenHosts": [
+      "api.openai.com",
+      "chatgpt.com",
+      "uploads.github.com",
+      "telemetry.example.test"
+    ],
+    "forbiddenPayloadKinds": [
+      "screenshot_bytes",
+      "doctor_raw_output",
+      "windows_event_raw_text",
+      "project_file_content",
+      "conversation_content",
+      "prompt_content"
+    ],
+    "offlineExpectedBehavior": "The result page still opens and offers a sanitized browser-search link without claiming that no similar issue exists."
+  },
+  "environmentAssertions": {
+    "setButMustNotRead": {
+      "OPENAI_API_KEY": "OPENAI_KEY_CANARY_DO_NOT_READ_2030"
+    },
+    "forbiddenCanariesInAnyOutput": ["OPENAI_KEY_CANARY_DO_NOT_READ_2030"]
+  },
+  "packageAssertions": {
+    "mustNotContain": [
+      "auth.json",
+      "rollout.jsonl",
+      "AUTH_CANARY_DO_NOT_READ_2030",
+      "SESSION_CANARY_DO_NOT_READ_2030",
+      "PROJECT_CANARY_DO_NOT_READ_2030",
+      "OPENAI_KEY_CANARY_DO_NOT_READ_2030",
+      "real user profile paths",
+      "temporary diagnostic material"
+    ],
+    "mustNotShipDirectories": ["tests/fixtures", "TestResults", "private-material", "tmp"]
+  }
+}

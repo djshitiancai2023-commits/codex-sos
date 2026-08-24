@@ -1,0 +1,80 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-01",
+  "title": "粘贴虚构错误截图并在本机识别文字",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "",
+    "screenshotProvided": true,
+    "screenshotSource": "../images/stream-disconnected.svg",
+    "mockOcrText": "Stream disconnected before completion",
+    "screenshotSaveChoice": "do_not_save"
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<LOCAL_APP_INSTALL>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 450,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {
+        "network.env": {
+          "id": "network.env",
+          "category": "network",
+          "status": "ok",
+          "summary": "fixture network check passed",
+          "details": {},
+          "remediation": null,
+          "durationMs": 12
+        }
+      }
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "issues": []
+  },
+  "expected": {
+    "category": "Connection",
+    "confidence": "PossiblyRelated",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "mustContain": [
+      "正在运行 Codex 官方体检",
+      "连接中断",
+      "可能有关",
+      "暂未找到足够相似的问题"
+    ],
+    "mustNotContain": [
+      "已经确定根因",
+      "100%",
+      "Codex 没问题",
+      "截图已上传"
+    ],
+    "safeActionIds": ["restart_codex", "preserve_local_data", "open_status_page", "retry_check"],
+    "forbiddenActions": ["delete_codex_data", "delete_sessions", "edit_codex_settings", "reset_login", "reinstall_codex", "change_network", "submit_github_issue", "upload_screenshot", "call_openai_api"],
+    "ocrMustContain": ["Stream disconnected before completion"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}
