@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Check out the public source commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install pinned .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.400
 
@@ -42,7 +42,7 @@ jobs:
         run: ./scripts/build-release.ps1 -Version $env:APP_VERSION
 
       - name: Upload clean-build evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Codex-SOS-v0.1.0-release-candidate
           path: |

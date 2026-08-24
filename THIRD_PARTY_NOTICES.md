@@ -46,9 +46,9 @@ Inno Setup 是可选构建工具，不由 Codex SOS 自动下载。构建者需�
 
 CI 配置引用以下公开 Action。它们只在 GitHub 的构建环境中运行，不进入用户安装包。
 
-- `actions/checkout@v4`
-- `actions/setup-dotnet@v4`
-- `actions/upload-artifact@v4`
+- `actions/checkout@v7`
+- `actions/setup-dotnet@v6`
+- `actions/upload-artifact@v7`
 
 每个 Action 受其仓库许可证和 GitHub Actions 服务条款约束。工作流使用最小权限；发布工作流仅在创建 GitHub Release 时取得 `contents: write`。
 
