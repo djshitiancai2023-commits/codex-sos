@@ -28,6 +28,8 @@ internal static class Program
             ("doctor process: unsupported, timeout, malformed, exit 1", TestFakeDoctorProcessAsync),
             ("diagnosis: green doctor never says Codex is fine", TestGreenDoctorCannotExplainAsync),
             ("diagnosis: one Chinese sentence identifies task recovery", TestChineseRecoveryDescriptionAsync),
+            ("diagnosis: repeated desktop exits stay cautious without an event", TestRepeatedDesktopExitDiagnosisAsync),
+            ("events: crash parser filters leak warnings and unrelated ChatGPT", TestWindowsFaultEventParserAsync),
             ("diagnosis: screenshot states, menu words, and all-clear input stay honest", TestScreenshotStatesAsync),
             ("orchestrator: fixed signal survives path redaction", TestPathFixedSignalProductionAsync),
             ("search: three states and narrow terms", TestSearchStatesAsync),
@@ -38,6 +40,7 @@ internal static class Program
             ("system collection: remote paths are skipped", TestSystemPathSafetyAsync),
             ("packaging: Windows manifest is declared", TestWindowsManifestAsync),
             ("similar issues: high matches and no-match restraint", TestSimilarityAsync),
+            ("similar issues: crash exception codes are explainable", TestCrashCodeSimilarityAsync),
             ("orchestrator: every collector failure degrades safely", TestOrchestratorFailureFallbackAsync),
             ("public export: privacy canaries never escape", TestPublicExportPrivacyAsync),
             ("follow-up: at most one plain-language choice", TestAtMostOneFollowUpAsync),
@@ -195,6 +198,95 @@ internal static class Program
             "Chinese recovery description did not produce a cautious useful confidence.");
         Contains(diagnosis.SafeNextStep, "不要删除", "Recovery safe action");
         NotContains(diagnosis.PlainSummary, "已经确定", "Recovery overclaim");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestRepeatedDesktopExitDiagnosisAsync()
+    {
+        var engine = new DiagnosisEngine();
+        const string description = "Codex 最近反复自己关掉，重新打开后过一会儿又退出了，正在做的任务也被打断。";
+
+        var withoutEvent = engine.Diagnose(
+            new UserEvidence(description, string.Empty, false, FrozenNow),
+            FixtureSystem(CodexSurface.Desktop),
+            DoctorResult.Unavailable("fixture"),
+            []);
+        Equal(IncidentCategory.DesktopApplication, withoutEvent.Category, "Repeated desktop exit category");
+        Equal(ConfidenceLevel.PossiblyRelated, withoutEvent.Confidence, "Exit without Windows event stays cautious");
+        Contains(withoutEvent.Limitations.Single(item => item.Contains("Windows", StringComparison.Ordinal)),
+            "不等于没有闪退", "Missing Windows event limitation");
+        Contains(withoutEvent.SafeNextStep, "不要删除", "Repeated exit safe action");
+
+        var confirmed = engine.Diagnose(
+            new UserEvidence(description, string.Empty, false, FrozenNow),
+            FixtureSystem(CodexSurface.Desktop),
+            DoctorResult.Unavailable("fixture"),
+            [new FaultEvent(FrozenNow, "Codex.exe", "KERNELBASE.dll", "c0000409")]);
+        Equal(IncidentCategory.DesktopApplication, confirmed.Category, "Confirmed desktop crash category");
+        Equal(ConfidenceLevel.LikelyRelated, confirmed.Confidence, "Description plus event confidence");
+        Contains(confirmed.Evidence.Single(item => item.Contains("异常记录", StringComparison.Ordinal)),
+            "异常记录", "Confirmed event evidence");
+        NotContains(confirmed.PlainSummary, "已经确定根因", "Confirmed crash must not claim root cause");
+
+        var normalClose = engine.Diagnose(
+            new UserEvidence("我手动关闭了 Codex，之后没有问题。", string.Empty, false, FrozenNow),
+            FixtureSystem(CodexSurface.Desktop),
+            DoctorResult.Unavailable("fixture"),
+            []);
+        Assert(normalClose.Category != IncidentCategory.DesktopApplication,
+            "A normal user-requested close was treated as a crash.");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestWindowsFaultEventParserAsync()
+    {
+        const string xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+              <System><EventID>1000</EventID><TimeCreated SystemTime="2030-01-02T03:04:05Z" /></System>
+              <EventData>
+                <Data Name="AppName">C:\\Fixture\\Codex.exe</Data>
+                <Data Name="ModuleName">KERNELBASE.dll</Data>
+                <Data Name="ExceptionCode">c0000409</Data>
+              </EventData>
+            </Event>
+            <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+              <System><EventID>1001</EventID><TimeCreated SystemTime="2030-01-02T03:04:06Z" /></System>
+              <EventData>
+                <Data Name="EventName">RADAR_PRE_LEAK_64</Data>
+                <Data Name="AppName">Codex.exe</Data>
+              </EventData>
+            </Event>
+            <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+              <System><EventID>1001</EventID><TimeCreated SystemTime="2030-01-02T03:04:07Z" /></System>
+              <EventData>
+                <Data Name="EventName">APPCRASH</Data>
+                <Data Name="P1">ChatGPT.exe</Data>
+                <Data Name="PackageFullName">OpenAI.Codex_2p2nqsd0c76g0</Data>
+                <Data Name="P4">KERNELBASE.dll</Data>
+                <Data Name="P7">c06d007f</Data>
+              </EventData>
+            </Event>
+            <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+              <System><EventID>1000</EventID><TimeCreated SystemTime="2030-01-02T03:04:08Z" /></System>
+              <EventData>
+                <Data Name="AppName">ChatGPT.exe</Data>
+                <Data Name="ModuleName">KERNELBASE.dll</Data>
+                <Data Name="ExceptionCode">c0000409</Data>
+              </EventData>
+            </Event>
+            """;
+
+        var parsed = WindowsFaultEventParser.Parse(xml);
+        Equal(2, parsed.Count, "Crash parser accepted only Codex crash records");
+        Assert(parsed.Any(item => item.Application.Equals("Codex.exe", StringComparison.OrdinalIgnoreCase) &&
+                                  item.ExceptionCode == "c0000409"),
+            "Codex Application Error was lost.");
+        Assert(parsed.Any(item => item.Application.Equals("ChatGPT.exe", StringComparison.OrdinalIgnoreCase) &&
+                                  item.ExceptionCode == "c06d007f"),
+            "Official Codex package using ChatGPT.exe was lost.");
+        Assert(parsed.All(item => item.ExceptionCode is "c0000409" or "c06d007f"),
+            "Unexpected event data escaped the parser.");
         return Task.CompletedTask;
     }
 
@@ -549,6 +641,31 @@ internal static class Program
             null);
         Equal(0, unrelated.Matches.Count, "Unrelated issue must not be surfaced");
         Equal("暂未找到足够相似的问题。", unrelated.PlainSummary, "No-match summary");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestCrashCodeSimilarityAsync()
+    {
+        var terms = new StableTermExtractor(new PrivacyRedactor()).Extract("Windows desktop crash c0000409");
+        Equal("c0000409", terms.Single(), "Crash exception code stable search term");
+
+        var issue = new PublicIssue(
+            920001,
+            "Codex desktop crash c0000409 on Windows fixture",
+            "Fictional Codex desktop application crash with exception c0000409.",
+            "https://issues.example.test/openai/codex/920001",
+            "open",
+            ["fixture", "desktop"]);
+        var match = new SimilarIssueMatcher().Match(
+            "Windows desktop Codex c0000409",
+            IncidentCategory.DesktopApplication,
+            CodexSurface.Desktop,
+            [issue],
+            IssueSearchState.Completed,
+            null);
+        Equal(IssueSimilarityTier.High, match.Matches.Single().Tier, "Crash exception code high match");
+        Assert(match.Matches.Single().Reasons.Any(reason => reason.Contains("固定错误短语", StringComparison.Ordinal)),
+            "Crash code match lacks an explainable exact reason.");
         return Task.CompletedTask;
     }
 

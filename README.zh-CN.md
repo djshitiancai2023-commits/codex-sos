@@ -2,7 +2,7 @@
 
 ![Codex SOS 横幅](docs/assets/codex-sos-banner.png)
 
-[返回英文首页](README.md) · [下载最新版](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest)
+[返回英文首页](README.md) · [下载最新版](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest) · [代码签名说明](CODE_SIGNING_POLICY.md)
 
 > **Codex 一卡住，按一下救生圈。**
 
@@ -52,6 +52,13 @@ Codex SOS 会自动启动 Codex 自带的官方体检。官方体检为了完成
 自动遮盖不能保证 100% 认出人名、内部产品名等私人信息。因此，只有在用户选择保存完整材料时，界面才会请用户快速看一眼将要保存的内容。这不会打断前面的自动检查。
 
 更多细节见 [隐私说明](PRIVACY.md)。
+
+## 代码签名说明
+
+代码签名安排和维护者职责见 [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)。
+v0.1.0 首次公开包没有签名；只有安装包和便携版主程序都通过 Windows
+验证后，后续版本才会写成“已签名”。签名不能保证 Windows 永远不显示
+SmartScreen 提醒。
 
 ## 下载与运行
 

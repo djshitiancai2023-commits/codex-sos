@@ -4,6 +4,20 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Treat repeated Codex desktop exits as a cautious desktop-application clue,
+  distinguish confirmed crash events from suspected exits, and exclude
+  `RADAR_PRE_LEAK_64` resource warnings from crash evidence.
+- Recognize the official Codex package when older Windows records identify the
+  process as `ChatGPT.exe`, and use sanitized exception codes when searching
+  similar public issues.
+
+### Security
+
+- Added the public [Code signing policy](CODE_SIGNING_POLICY.md) and kept
+  signing credentials outside the repository and CI logs.
+
 ### Planned
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.

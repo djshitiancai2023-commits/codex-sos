@@ -12,6 +12,8 @@ public sealed class SimilarIssueMatcher
         "absolutepathbuf deserialized without a base path",
         "windows sandbox failed",
         "spawn setup refresh",
+        "c0000409",
+        "c06d007f",
         "kernelbase.dll"
     ];
 
@@ -151,7 +153,7 @@ public sealed class SimilarIssueMatcher
             IncidentCategory.Connection => ContainsAny(text, "disconnect", "websocket", "connection", "reconnecting", "timeout"),
             IncidentCategory.InstallationOrVersion => ContainsAny(text, "install", "version", "update", "upgrade", "not recognized", "command not found"),
             IncidentCategory.DuplicateInstallation => ContainsAny(text, "multiple install", "duplicate install", "two versions"),
-            IncidentCategory.DesktopApplication => ContainsAny(text, "desktop", "freeze", "crash", "kernelbase", "cpu"),
+            IncidentCategory.DesktopApplication => ContainsAny(text, "desktop", "freeze", "crash", "kernelbase", "c0000409", "c06d007f", "appcrash", "cpu"),
             IncidentCategory.CodexService => ContainsAny(text, "service", "outage", "backend", "server"),
             IncidentCategory.TaskRecovery => ContainsAny(text, "resume", "recover", "interrupted", "task", "thread"),
             IncidentCategory.DoctorFailure => ContainsAny(text, "doctor", "health check"),

@@ -13,6 +13,8 @@ public sealed class StableTermExtractor
         "windows sandbox failed",
         "spawn setup refresh",
         "reconnecting",
+        "c0000409",
+        "c06d007f",
         "kernelbase.dll",
         "unexpected argument '--json'",
         "authentication failed",

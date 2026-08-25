@@ -75,13 +75,15 @@ public sealed class DiagnosticOrchestrator
         var diagnosis = _diagnosis.Diagnose(diagnosticEvidence, system, doctor, events, status);
 
         progress?.Report("正在寻找相似的 Codex 公开问题…");
+        var faultSearchEvidence = BuildFaultSearchEvidence(events);
         var stableTerms = _terms.Extract(
             diagnosticEvidence.Description,
             diagnosticEvidence.OcrText,
+            faultSearchEvidence,
             string.Join('\n', doctor.Checks.Where(c => c.Status is "warning" or "fail").Select(c => c.Summary)));
         var search = await SafeIssueSearch(stableTerms, cancellationToken).ConfigureAwait(false);
         var similarity = _matcher.Match(
-            $"{diagnosticEvidence.Description}\n{diagnosticEvidence.OcrText}",
+            $"{diagnosticEvidence.Description}\n{diagnosticEvidence.OcrText}\n{faultSearchEvidence}",
             diagnosis.Candidates,
             system.Surface,
             search.Issues,
@@ -112,6 +114,26 @@ public sealed class DiagnosticOrchestrator
         safeSignals.Count == 0
             ? sanitizedText ?? string.Empty
             : string.Join('\n', new[] { sanitizedText ?? string.Empty }.Concat(safeSignals));
+
+    private static string BuildFaultSearchEvidence(IReadOnlyList<FaultEvent> events) =>
+        string.Join('\n', events
+            .SelectMany(item => new[] { FileNameOnly(item.FaultModule), item.ExceptionCode })
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!));
+
+    private static string? FileNameOnly(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        var separator = Math.Max(trimmed.LastIndexOf('\\'), trimmed.LastIndexOf('/'));
+        return separator >= 0 && separator + 1 < trimmed.Length
+            ? trimmed[(separator + 1)..]
+            : trimmed;
+    }
 
     private async Task<DoctorResult> SafeDoctor(CancellationToken cancellationToken)
     {

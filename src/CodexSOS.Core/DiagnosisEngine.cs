@@ -51,7 +51,12 @@ public sealed class DiagnosisEngine
             Add(IncidentCategory.Login, 6, "截图或描述里出现了登录特征");
         }
 
-        if (ContainsAny(text, "freeze", "not responding", "kernelbase.dll", "闪退", "卡死", "没反应", "一直转圈"))
+        var userReportedDesktopExit = ContainsAny(text,
+            "freeze", "not responding", "kernelbase.dll", "crash", "crashed", "crashes",
+            "closed itself", "keeps closing", "exited unexpectedly", "app disappeared",
+            "闪退", "自己关掉", "突然退出", "自动退出", "反复退出", "反复闪退",
+            "一打开就退出", "窗口没了", "窗口突然没了", "崩溃", "崩了", "卡死", "没反应", "一直转圈");
+        if (userReportedDesktopExit)
         {
             Add(IncidentCategory.DesktopApplication, 6, "截图或描述里出现了桌面应用卡住或退出特征");
         }
@@ -181,6 +186,11 @@ public sealed class DiagnosisEngine
                 "两类线索目前分数相同，所以没有硬选其中一类",
                 "这些是可核对的线索，不是已经确定的根因"
             };
+            if (candidateCategories.Contains(IncidentCategory.DesktopApplication) &&
+                userReportedDesktopExit && faultEvents.Count == 0)
+            {
+                tiedLimitations.Add("故障时间附近暂未找到可确认的 Windows 记录；这不等于没有闪退");
+            }
             if (doctor.State == DoctorState.Ok)
             {
                 tiedLimitations.Add("官方体检暂未发现异常，但这份检查无法解释当前故障");
@@ -224,6 +234,10 @@ public sealed class DiagnosisEngine
         {
             "这些是可核对的线索，不是已经确定的根因"
         };
+        if (best.Key == IncidentCategory.DesktopApplication && userReportedDesktopExit && faultEvents.Count == 0)
+        {
+            limitations.Add("故障时间附近暂未找到可确认的 Windows 记录；这不等于没有闪退");
+        }
         if (doctor.State == DoctorState.Ok)
         {
             limitations.Add("官方体检暂未发现异常，但这份检查无法解释当前故障");

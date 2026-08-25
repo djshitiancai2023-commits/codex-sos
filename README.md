@@ -12,7 +12,7 @@ Codex SOS is an unofficial, local-first Windows helper for people who use Codex 
 
 **No API key. No model call. No automatic repair or posting.**
 
-[中文说明](README.zh-CN.md) · [Download the latest Windows release](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest) · [Privacy](PRIVACY.md) · [Security](SECURITY.md)
+[中文说明](README.zh-CN.md) · [Download the latest Windows release](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest) · [Privacy](PRIVACY.md) · [Security](SECURITY.md) · [Code signing policy](CODE_SIGNING_POLICY.md)
 
 > **Unofficial community project. Not affiliated with or endorsed by OpenAI.** Codex SOS does not use OpenAI branding or logos.
 
@@ -56,6 +56,13 @@ The result page answers four questions:
 - Reports are not posted automatically. The user must review and save them manually.
 
 Automatic redaction is not a guarantee. Review exported material before publishing it. See [PRIVACY.md](PRIVACY.md) for the exact boundary.
+
+## Code signing
+
+Public Windows releases use the signing policy in [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
+The first release, v0.1.0, was published unsigned. A later release will only
+be described as signed after its installer and portable application pass
+Windows Authenticode verification.
 
 ## Download
 
