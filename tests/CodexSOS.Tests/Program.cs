@@ -275,6 +275,14 @@ internal static class Program
                 <Data Name="ExceptionCode">c0000409</Data>
               </EventData>
             </Event>
+            <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+              <System><EventID>1000</EventID><TimeCreated SystemTime="2030-01-02T03:04:09Z" /></System>
+              <EventData>
+                <Data Name="AppName">notcodex-helper.exe</Data>
+                <Data Name="ModuleName">KERNELBASE.dll</Data>
+                <Data Name="ExceptionCode">c0000409</Data>
+              </EventData>
+            </Event>
             """;
 
         var parsed = WindowsFaultEventParser.Parse(xml);

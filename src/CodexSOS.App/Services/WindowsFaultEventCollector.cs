@@ -87,7 +87,7 @@ public static class WindowsFaultEventParser
                 var applicationValue = First(
                     "AppName", "FaultingApplicationName", "ApplicationName", "P1") ?? string.Empty;
                 var packageValue = First("PackageFullName", "ApplicationPackageFullName", "PackageName") ?? string.Empty;
-                if (!IsOfficialCodexApplication(applicationValue, packageValue, values))
+                if (!IsOfficialCodexApplication(applicationValue, packageValue))
                 {
                     continue;
                 }
@@ -131,12 +131,13 @@ public static class WindowsFaultEventParser
 
     private static bool IsOfficialCodexApplication(
         string application,
-        string package,
-        IReadOnlyList<EventValue> values)
+        string package)
     {
         var appName = FileNameOnly(application);
-        if (appName.Contains("codex", StringComparison.OrdinalIgnoreCase) ||
-            package.Contains("OpenAI.Codex", StringComparison.OrdinalIgnoreCase))
+        if (IsCodexPackage(package) ||
+            appName.Equals("codex.exe", StringComparison.OrdinalIgnoreCase) ||
+            appName.Equals("codex", StringComparison.OrdinalIgnoreCase) ||
+            appName.Equals("openai.codex.exe", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
@@ -150,9 +151,12 @@ public static class WindowsFaultEventParser
         // Older official Codex desktop builds have appeared as ChatGPT.exe.
         // Require the package identity too, so a browser/ordinary ChatGPT
         // record cannot be mistaken for a Codex crash.
-        return package.Contains("OpenAI.Codex", StringComparison.OrdinalIgnoreCase) ||
-               values.Any(value => value.Value.Contains("OpenAI.Codex", StringComparison.OrdinalIgnoreCase));
+        return IsCodexPackage(package);
     }
+
+    private static bool IsCodexPackage(string package) =>
+        package.Equals("OpenAI.Codex", StringComparison.OrdinalIgnoreCase) ||
+        package.StartsWith("OpenAI.Codex_", StringComparison.OrdinalIgnoreCase);
 
     private static string FileNameOnly(string value)
     {
