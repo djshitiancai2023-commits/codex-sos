@@ -18,7 +18,7 @@ Codex SOS is an unofficial, local-first Windows helper for people who use Codex 
 
 ## Quick download (Windows x64)
 
-[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip)
+[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.1/Codex-SOS-0.1.1-win-x64-portable.zip)
 
 Directly download the ZIP. Then right-click it, choose **Extract All**, and double-click `CodexSOS.exe`. No GitHub sign-in or star is required.
 
@@ -74,10 +74,10 @@ Windows Authenticode verification.
 
 ## Download
 
-For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip). It runs without installation:
+For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.1/Codex-SOS-0.1.1-win-x64-portable.zip). It runs without installation:
 
-- `Codex-SOS-0.1.0-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
-- `Codex-SOS-Setup-0.1.0.exe` — optional when you want a Start-menu entry and an uninstaller
+- `Codex-SOS-0.1.1-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
+- `Codex-SOS-Setup-0.1.1.exe` — optional when you want a Start-menu entry and an uninstaller
 - `SHA256SUMS.txt` — integrity checksums
 
 The current public builds are unsigned, so Windows may show an unknown-publisher warning. Verify the SHA-256 checksum from the release page and do not disable Windows security protections to bypass a warning.

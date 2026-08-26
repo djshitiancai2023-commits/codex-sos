@@ -14,7 +14,7 @@
 
 ## 先下载哪个（Windows x64）
 
-[直接下载便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip)
+[直接下载便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.1/Codex-SOS-0.1.1-win-x64-portable.zip)
 
 直接下载该压缩包即可。
 下载后右键选择“全部解压”，再双击 CodexSOS.exe。
@@ -72,9 +72,9 @@ SmartScreen 提醒。
 
 ## 下载与运行
 
-v0.1.0 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip)。直接下载该压缩包即可。下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
+v0.1.1 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.1/Codex-SOS-0.1.1-win-x64-portable.zip)。直接下载该压缩包即可。下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
 
-如果你需要开始菜单入口和卸载功能，可选安装程序 `Codex-SOS-Setup-0.1.0.exe`。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
+如果你需要开始菜单入口和卸载功能，可选安装程序 `Codex-SOS-Setup-0.1.1.exe`。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
 
 发布页也提供 `SHA256SUMS.txt`，可用于核对文件是否完整。
 
