@@ -12,6 +12,16 @@
 
 > **非官方社区工具，与 OpenAI 无隶属关系。** 本项目不使用 OpenAI 官方 Logo，也不代表 OpenAI 提供支持或担保。
 
+## 先下载哪个（Windows x64）
+
+[直接下载便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip)
+
+直接下载该压缩包即可。
+下载后右键选择“全部解压”，再双击 CodexSOS.exe。
+下载和使用不需要登录 GitHub，也不需要点赞。
+
+如果你需要开始菜单入口和卸载功能，再选择安装程序；它只是可选项。
+
 ## 你只需要做两步
 
 1. 双击打开 Codex SOS。
@@ -56,18 +66,17 @@ Codex SOS 会自动启动 Codex 自带的官方体检。官方体检为了完成
 ## 代码签名说明
 
 代码签名安排和维护者职责见 [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)。
-v0.1.0 首次公开包没有签名；只有安装包和便携版主程序都通过 Windows
+v0.1.0 和 v0.1.1 没有签名；只有安装包和便携版主程序都通过 Windows
 验证后，后续版本才会写成“已签名”。签名不能保证 Windows 永远不显示
 SmartScreen 提醒。
 
 ## 下载与运行
 
-v0.1.0 已通过公开仓库发布。普通用户从 [GitHub Releases](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest) 下载 Windows 安装包，双击安装，再从开始菜单打开。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
+v0.1.0 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip)。直接下载该压缩包即可。下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
 
-发布页同时提供两种形式。
+如果你需要开始菜单入口和卸载功能，可选安装程序 `Codex-SOS-Setup-0.1.0.exe`。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
 
-- `Codex-SOS-Setup-0.1.0.exe`，普通用户推荐，按向导安装
-- `Codex-SOS-0.1.0-win-x64-portable.zip`，解压后双击 `CodexSOS.exe`
+发布页也提供 `SHA256SUMS.txt`，可用于核对文件是否完整。
 
 首个公开版本尚未签名，Windows 可能显示来源提醒。运行前请核对发布页上的 SHA-256。不要为了绕过提醒而关闭 Windows 安全保护。
 
@@ -91,7 +100,7 @@ v0.1.0 已通过公开仓库发布。普通用户从 [GitHub Releases](https://g
 - 截取正在打开的 Codex 依赖目标窗口可见；失败时仍可粘贴截图或选择图片。
 - GitHub 公共搜索可能遇到断网或限流。此时会给出经过遮盖的浏览器搜索入口，不会谎称“没有相似问题”。
 - 固定规则只能整理线索，不能保证找到真正根因。
-- 未签名安装包可能触发 Windows 来源提醒。后续会根据公开项目维护情况申请开源代码签名。
+- v0.1.1 尚未签名，可能触发 Windows 来源提醒。开源代码签名申请仍在审核，通过后再用于后续版本。
 
 ## 为什么不直接截图发给聊天工具
 

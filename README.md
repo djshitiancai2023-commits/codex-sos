@@ -16,6 +16,14 @@ Codex SOS is an unofficial, local-first Windows helper for people who use Codex 
 
 > **Unofficial community project. Not affiliated with or endorsed by OpenAI.** Codex SOS does not use OpenAI branding or logos.
 
+## Quick download (Windows x64)
+
+[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip)
+
+Directly download the ZIP. Then right-click it, choose **Extract All**, and double-click `CodexSOS.exe`. No GitHub sign-in or star is required.
+
+The installer is optional when you want a Start-menu entry and an uninstaller.
+
 ## Why it exists
 
 A screenshot alone often leaves maintainers asking for the Codex version, Windows version, exact error text, reproduction steps, and diagnostic output. Running `codex doctor --json` helps, but the report does not know what appeared on the user's screen, does not compare similar public issues, and a green report cannot rule out runtime failures.
@@ -60,19 +68,19 @@ Automatic redaction is not a guarantee. Review exported material before publishi
 ## Code signing
 
 Public Windows releases use the signing policy in [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
-The first release, v0.1.0, was published unsigned. A later release will only
+The v0.1.0 and v0.1.1 releases are unsigned. A later release will only
 be described as signed after its installer and portable application pass
 Windows Authenticode verification.
 
 ## Download
 
-Download the current Windows x64 installer from [GitHub Releases](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest):
+For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.0/Codex-SOS-0.1.0-win-x64-portable.zip). It runs without installation:
 
-- `Codex-SOS-Setup-0.1.0.exe` — recommended for ordinary users
-- `Codex-SOS-0.1.0-win-x64-portable.zip` — portable version
+- `Codex-SOS-0.1.0-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
+- `Codex-SOS-Setup-0.1.0.exe` — optional when you want a Start-menu entry and an uninstaller
 - `SHA256SUMS.txt` — integrity checksums
 
-The first public build is unsigned, so Windows may show an unknown-publisher warning. Verify the SHA-256 checksum from the release page and do not disable Windows security protections to bypass a warning.
+The current public builds are unsigned, so Windows may show an unknown-publisher warning. Verify the SHA-256 checksum from the release page and do not disable Windows security protections to bypass a warning.
 
 ## What it will not do
 
@@ -88,7 +96,7 @@ The first public build is unsigned, so Windows may show an unknown-publisher war
 - Windows x64 first, with Windows 11 as the primary acceptance target
 - Common English error text for local screenshot OCR; Chinese descriptions can be typed directly
 - Fixed, explainable diagnostic rules rather than model-generated diagnosis
-- Unsigned installer in v0.1.0
+- Unsigned Windows builds in v0.1.0 and v0.1.1
 
 ## Build and test
 
