@@ -44,6 +44,7 @@ internal static class Program
             ("orchestrator: every collector failure degrades safely", TestOrchestratorFailureFallbackAsync),
             ("public export: privacy canaries never escape", TestPublicExportPrivacyAsync),
             ("follow-up: at most one plain-language choice", TestAtMostOneFollowUpAsync),
+            ("localization: Simplified Chinese default plus complete Traditional Chinese and English UI", TestLocalizationAsync),
             ("boundaries: no private-state read, OpenAI API, or write request", TestSourceBoundariesAsync),
             ("fake doctor: no dependency on real user data", TestFakeDoctorDoesNotNeedRealUserDataAsync)
         };
@@ -837,6 +838,40 @@ internal static class Program
         Equal(OneQuestionRules.UnrecognizedLabel,
             unknown!.Choices.Single(choice => choice.Recommended).Label,
             "An unrecognized error should recommend the unrecognized-error choice.");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestLocalizationAsync()
+    {
+        Equal(UiLanguage.SimplifiedChinese, default(UiLanguage), "Default UI language");
+        Assert(UiText.Keys.Count >= 35, "The visible UI localization catalog is unexpectedly incomplete.");
+        foreach (var key in UiText.Keys)
+        {
+            foreach (var language in Enum.GetValues<UiLanguage>())
+            {
+                var value = UiText.Get(language, key);
+                Assert(!string.IsNullOrWhiteSpace(value), $"Localization key {key} is empty for {language}.");
+                Assert(!string.Equals(value, key, StringComparison.Ordinal),
+                    $"Localization key {key} is missing for {language}.");
+            }
+        }
+
+        foreach (var key in new[] { "StartTitle", "StartSubtitle", "StartButton", "ResultWhat", "ReviewWarning", "Footer" })
+        {
+            var english = UiText.Get(UiLanguage.English, key);
+            Assert(!Regex.IsMatch(english, @"[\u4e00-\u9fff]"), $"English UI text still contains Chinese characters: {key}");
+        }
+
+        var diagnosis = new Diagnosis(
+            IncidentCategory.Connection,
+            ConfidenceLevel.PossiblyRelated,
+            "可能有关：Codex 连接中断。",
+            "先重新打开 Codex，并查看官方服务状态；不要修改系统网络设置。",
+            ["截图或描述里出现了连接中断特征"],
+            ["这些是可核对的线索，不是已经确定的根因"]);
+        Contains(UiText.DiagnosisSummary(UiLanguage.TraditionalChinese, diagnosis), "可能", "Traditional diagnosis");
+        Contains(UiText.DiagnosisSummary(UiLanguage.English, diagnosis), "Possibly", "English diagnosis");
+        Contains(UiText.SafeNextStep(UiLanguage.English, diagnosis), "Do not", "English safe next step");
         return Task.CompletedTask;
     }
 

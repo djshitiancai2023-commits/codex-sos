@@ -13,9 +13,7 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <UseSystemDrawing>false</UseSystemDrawing>
     <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
-    <Version>0.1.0</Version>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.1.0.0</FileVersion>
+    <Version>0.1.2</Version>
     <Product>Codex SOS</Product>
     <Company>Codex SOS community contributors</Company>
     <Description>Windows-first local helper for Codex troubleshooting.</Description>

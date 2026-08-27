@@ -5,6 +5,7 @@ param(
     [string]$OutputDirectory = "artifacts/ui-acceptance/screenshots",
     [string]$ClickButtonName = "帮我看看",
     [string]$ClickAfterName = "",
+    [ValidateSet('简体中文', '繁體中文', 'English')][string]$Language = '简体中文',
     [int]$WindowHeight = 0,
     [int]$WaitSeconds = 20
 )
@@ -64,6 +65,25 @@ try {
     [CodexSosWindowNative]::SetForegroundWindow([IntPtr]$process.MainWindowHandle) | Out-Null
     Start-Sleep -Milliseconds 350
 
+    if ($Language -ne '简体中文') {
+        $comboCondition = New-Object System.Windows.Automation.PropertyCondition(
+            [System.Windows.Automation.AutomationElement]::AutomationIdProperty,
+            'LanguageSelector')
+        $combo = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $comboCondition)
+        if ($null -eq $combo) { throw 'Language selector not found.' }
+        $expand = $combo.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
+        $expand.Expand()
+        Start-Sleep -Milliseconds 250
+        $itemCondition = New-Object System.Windows.Automation.PropertyCondition(
+            [System.Windows.Automation.AutomationElement]::NameProperty,
+            $Language)
+        $item = $combo.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $itemCondition)
+        if ($null -eq $item) { throw "Language option not found: $Language" }
+        $selection = $item.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
+        $selection.Select()
+        Start-Sleep -Milliseconds 350
+    }
+
     $buttonCondition = New-Object System.Windows.Automation.PropertyCondition(
         [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
         [System.Windows.Automation.ControlType]::Button)
@@ -114,6 +134,7 @@ try {
         title = $window.Current.Name
         bounds = [ordered]@{ width = [int]$bounds.Width; height = [int]$bounds.Height }
         allDataFictional = $true
+        language = $Language
         capturedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
     }
     $receiptPath = [IO.Path]::ChangeExtension($outputPath, '.receipt.json')

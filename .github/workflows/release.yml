@@ -1,19 +1,19 @@
-name: publish-v0.1.1
+name: publish-v0.1.2
 
 on:
   push:
-    tags: [v0.1.1]
+    tags: [v0.1.2]
 
 permissions:
   contents: write
 
 concurrency:
-  group: publish-v0.1.1
+  group: publish-v0.1.2
   cancel-in-progress: false
 
 env:
-  APP_VERSION: 0.1.1
-  RELEASE_TAG: v0.1.1
+  APP_VERSION: 0.1.2
+  RELEASE_TAG: v0.1.2
 
 jobs:
   release:
@@ -44,7 +44,7 @@ jobs:
       - name: Upload clean-build evidence
         uses: actions/upload-artifact@v7
         with:
-          name: Codex-SOS-v0.1.1-release-candidate
+          name: Codex-SOS-v0.1.2-release-candidate
           path: |
             artifacts/packages/*
             artifacts/FILE-MANIFEST.txt
@@ -79,6 +79,6 @@ jobs:
           gh release create $env:RELEASE_TAG `
             --repo $env:GITHUB_REPOSITORY `
             --target $env:GITHUB_SHA `
-            --title "Codex SOS v0.1.1" `
-            --notes-file "docs/release-notes/v0.1.1.md" `
+            --title "Codex SOS v0.1.2" `
+            --notes-file "docs/release-notes/v0.1.2.md" `
             $installer $portable $checksums $manifest $preflight

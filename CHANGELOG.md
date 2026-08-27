@@ -4,6 +4,25 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Planned
+
+- Maintenance updates based on real user feedback and future `codex doctor` schema changes.
+
+## [0.1.2] - 2026-08-27
+
+### Added
+
+- Simplified Chinese remains the default, with a prominent in-app switch for Traditional Chinese and English.
+- The start page, progress, results, clarification, privacy review, save messages, and exported report follow the selected language.
+
+### Security
+
+- Localization changes presentation only; diagnostic rules, collection boundaries, and read-only network behavior are unchanged.
+
+### Known limitations
+
+- The v0.1.2 Windows packages are unsigned and may show an unknown-publisher warning.
+
 ### Fixed
 
 - Treat repeated Codex desktop exits as a cautious desktop-application clue,
@@ -17,10 +36,6 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Added the public [Code signing policy](CODE_SIGNING_POLICY.md) and kept
   signing credentials outside the repository and CI logs.
-
-### Planned
-
-- Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
 ## [0.1.0] - 2026-08-23
 
@@ -54,5 +69,6 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.2
 [0.1.0]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.0

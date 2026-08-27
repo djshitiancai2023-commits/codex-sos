@@ -58,11 +58,19 @@
                     </Border>
                     <StackPanel>
                         <TextBlock Text="Codex SOS" Foreground="White" FontSize="24" FontWeight="SemiBold" />
-                        <TextBlock Text="一卡住，按一下救生圈" Foreground="#BBD4DE" FontSize="13" />
+                        <TextBlock x:Uid="Tagline" Text="一卡住，按一下救生圈" Foreground="#BBD4DE" FontSize="13" />
                     </StackPanel>
                 </StackPanel>
-                <TextBlock DockPanel.Dock="Right" Text="非官方社区工具，与 OpenAI 无隶属关系" Foreground="#BBD4DE"
-                           FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Uid="UnofficialNotice" Text="非官方社区工具，与 OpenAI 无隶属关系" Foreground="#BBD4DE"
+                               FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0" />
+                    <ComboBox x:Name="LanguageSelector" Width="122" Height="34" VerticalContentAlignment="Center"
+                              SelectionChanged="LanguageSelector_SelectionChanged" AutomationProperties.Name="语言 / Language">
+                        <ComboBoxItem Content="简体中文" />
+                        <ComboBoxItem Content="繁體中文" />
+                        <ComboBoxItem Content="English" />
+                    </ComboBox>
+                </StackPanel>
             </DockPanel>
         </Border>
 
@@ -70,8 +78,8 @@
             <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Auto">
                 <Grid>
                     <StackPanel x:Name="StartPanel">
-                        <TextBlock Text="Codex 出问题了" FontSize="34" FontWeight="Bold" />
-                        <TextBlock Text="截一下错误，或随便说一句发生了什么。其他信息交给我们。"
+                        <TextBlock x:Uid="StartTitle" Text="Codex 出问题了" FontSize="34" FontWeight="Bold" />
+                        <TextBlock x:Uid="StartSubtitle" Text="截一下错误，或随便说一句发生了什么。其他信息交给我们。"
                                    FontSize="17" Foreground="{StaticResource MutedBrush}" Margin="0,7,0,24" />
 
                         <Grid>
@@ -82,18 +90,18 @@
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource Card}" MinHeight="290">
                                 <StackPanel>
-                                    <TextBlock Text="A  有画面" FontSize="21" FontWeight="SemiBold" />
-                                    <TextBlock Text="选最顺手的一种就行" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,18" />
-                                    <Button x:Name="CaptureButton" Content="截取正在打开的 Codex" Style="{StaticResource PrimaryButton}" Click="CaptureButton_Click" />
+                                    <TextBlock x:Uid="WithImageTitle" Text="A  有画面" FontSize="21" FontWeight="SemiBold" />
+                                    <TextBlock x:Uid="WithImageHint" Text="选最顺手的一种就行" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,18" />
+                                    <Button x:Uid="CaptureButton" x:Name="CaptureButton" Content="截取正在打开的 Codex" Style="{StaticResource PrimaryButton}" Click="CaptureButton_Click" />
                                     <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" x:Name="PasteButton" Content="粘贴截图" Style="{StaticResource SoftButton}" Click="PasteButton_Click" />
-                                        <Button Grid.Column="2" x:Name="ChooseButton" Content="选择已有截图" Style="{StaticResource SoftButton}" Click="ChooseButton_Click" />
+                                        <Button Grid.Column="0" x:Uid="PasteButton" x:Name="PasteButton" Content="粘贴截图" Style="{StaticResource SoftButton}" Click="PasteButton_Click" />
+                                        <Button Grid.Column="2" x:Uid="ChooseButton" x:Name="ChooseButton" Content="选择已有截图" Style="{StaticResource SoftButton}" Click="ChooseButton_Click" />
                                     </Grid>
                                     <Border x:Name="PreviewBorder" Background="#F1F5F7" CornerRadius="8" Height="105" Margin="0,12,0,0">
                                         <Grid>
                                             <Image x:Name="ScreenshotPreview" Stretch="Uniform" Margin="6" Visibility="Collapsed" />
-                                            <TextBlock x:Name="ScreenshotEmptyText" Text="还没有截图" Foreground="{StaticResource MutedBrush}"
+                                            <TextBlock x:Uid="ScreenshotEmpty" x:Name="ScreenshotEmptyText" Text="还没有截图" Foreground="{StaticResource MutedBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Grid>
                                     </Border>
@@ -104,26 +112,26 @@
 
                             <Border Grid.Column="2" Style="{StaticResource Card}" MinHeight="290">
                                 <StackPanel>
-                                    <TextBlock Text="B  没画面" FontSize="21" FontWeight="SemiBold" />
-                                    <TextBlock Text="一句话就够，不用写报错单" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,18" />
+                                    <TextBlock x:Uid="NoImageTitle" Text="B  没画面" FontSize="21" FontWeight="SemiBold" />
+                                    <TextBlock x:Uid="NoImageHint" Text="一句话就够，不用写报错单" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,18" />
                                     <Grid>
                                         <TextBox x:Name="DescriptionBox" MinHeight="165" MaxLength="1200" AcceptsReturn="True"
                                                  TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="13"
                                                  TextChanged="DescriptionBox_TextChanged" />
-                                        <TextBlock x:Name="DescriptionHint" Text="例如：Codex 做了很久突然断开，再也续不上。"
+                                        <TextBlock x:Uid="DescriptionHint" x:Name="DescriptionHint" Text="例如：Codex 做了很久突然断开，再也续不上。"
                                                    Foreground="#8A98A9" FontSize="15" TextWrapping="Wrap"
                                                    Margin="16,15" IsHitTestVisible="False" />
                                     </Grid>
-                                    <TextBlock Text="不用找日志，不用懂版本，也不用会 GitHub。" Foreground="{StaticResource MutedBrush}"
+                                    <TextBlock x:Uid="NoSkillsNeeded" Text="不用找日志，不用懂版本，也不用会 GitHub。" Foreground="{StaticResource MutedBrush}"
                                                FontSize="12" Margin="0,9,0,0" />
                                 </StackPanel>
                             </Border>
                         </Grid>
 
                         <TextBlock x:Name="StartError" Foreground="#B42318" FontSize="13" Margin="0,13,0,0" Visibility="Collapsed" />
-                        <Button x:Name="StartButton" Content="帮我看看" Style="{StaticResource PrimaryButton}"
+                        <Button x:Uid="StartButton" x:Name="StartButton" Content="帮我看看" Style="{StaticResource PrimaryButton}"
                                 FontSize="18" Width="260" Margin="0,18,0,0" HorizontalAlignment="Center" Click="StartButton_Click" />
-                        <TextBlock Text="接下来会自动完成官方体检、查找相似问题和隐私检查。"
+                        <TextBlock x:Uid="AutoCheckHint" Text="接下来会自动完成官方体检、查找相似问题和隐私检查。"
                                    Foreground="{StaticResource MutedBrush}" FontSize="12" HorizontalAlignment="Center" Margin="0,10,0,0" />
                     </StackPanel>
 
@@ -131,17 +139,17 @@
                         <Border Width="94" Height="94" Background="#DDEFF2" CornerRadius="47" HorizontalAlignment="Center">
                             <TextBlock Text="◎" Foreground="{StaticResource OceanBrush}" FontSize="66" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <TextBlock Text="正在帮你检查" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,20,0,8" />
+                        <TextBlock x:Uid="ProgressTitle" Text="正在帮你检查" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,20,0,8" />
                         <TextBlock x:Name="ProgressText" Text="正在准备…" FontSize="17" Foreground="{StaticResource MutedBrush}"
                                    TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
                         <ProgressBar IsIndeterminate="True" Width="440" Height="7" Margin="0,24,0,0" Foreground="{StaticResource OceanBrush}" />
-                        <TextBlock Text="不用找日志，也不会上传你的截图或聊天。" Foreground="{StaticResource MutedBrush}"
+                        <TextBlock x:Uid="ProgressPrivacy" Text="不用找日志，也不会上传你的截图或聊天。" Foreground="{StaticResource MutedBrush}"
                                    FontSize="12" HorizontalAlignment="Center" Margin="0,18,0,0" />
                     </StackPanel>
 
                     <StackPanel x:Name="ResultPanel" Visibility="Collapsed">
                         <TextBlock x:Name="ResultTitle" Text="检查好了" FontSize="32" FontWeight="Bold" />
-                        <TextBlock Text="先看最重要的四件事" FontSize="16" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,20" />
+                        <TextBlock x:Uid="ResultSubtitle" Text="先看最重要的四件事" FontSize="16" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,20" />
                         <Border x:Name="ClarifyingPanel" Style="{StaticResource Card}" Margin="0,0,0,16" Visibility="Collapsed">
                             <StackPanel>
                                 <TextBlock x:Name="ClarifyingQuestionText" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" />
@@ -152,58 +160,58 @@
                         </Border>
                         <UniformGrid Columns="2" Rows="2">
                             <Border Style="{StaticResource Card}" Margin="0,0,10,10">
-                                <StackPanel><TextBlock Text="1  这大概是什么" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
+                                <StackPanel><TextBlock x:Uid="ResultWhat" Text="1  这大概是什么" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
                                     <TextBlock x:Name="DiagnosisText" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,0" /></StackPanel>
                             </Border>
                             <Border Style="{StaticResource Card}" Margin="10,0,0,10">
                                 <StackPanel>
-                                    <TextBlock Text="2  是不是只有我" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
+                                    <TextBlock x:Uid="ResultOthers" Text="2  是不是只有我" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
                                     <TextBlock x:Name="SimilarText" FontSize="18" TextWrapping="Wrap" Margin="0,12,0,0" />
                                     <StackPanel x:Name="SimilarMatchesPanel" Margin="0,12,0,0" />
-                                    <Button x:Name="BrowserFallbackButton" Content="在浏览器里搜索相似问题"
+                                    <Button x:Uid="BrowserFallback" x:Name="BrowserFallbackButton" Content="在浏览器里搜索相似问题"
                                             Style="{StaticResource SoftButton}" HorizontalAlignment="Left"
                                             Padding="16,8" Margin="0,12,0,0" Visibility="Collapsed"
                                             Click="BrowserFallbackButton_Click" />
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource Card}" Margin="0,10,10,0">
-                                <StackPanel><TextBlock Text="3  现在最安全怎么做" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
+                                <StackPanel><TextBlock x:Uid="ResultNext" Text="3  现在最安全怎么做" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
                                     <TextBlock x:Name="NextStepText" FontSize="18" TextWrapping="Wrap" Margin="0,12,0,0" /></StackPanel>
                             </Border>
                             <Border Style="{StaticResource Card}" Margin="10,10,0,0">
-                                <StackPanel><TextBlock Text="4  还不行怎么办" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
-                                    <TextBlock Text="已经为你准备好完整材料，可以先查看，再保存或复制。" FontSize="18" TextWrapping="Wrap" Margin="0,12,0,0" /></StackPanel>
+                                <StackPanel><TextBlock x:Uid="ResultMore" Text="4  还不行怎么办" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
+                                    <TextBlock x:Uid="ResultMoreAnswer" Text="已经为你准备好完整材料，可以先查看，再保存或复制。" FontSize="18" TextWrapping="Wrap" Margin="0,12,0,0" /></StackPanel>
                             </Border>
                         </UniformGrid>
                         <Border Background="#EAF4F5" CornerRadius="10" Padding="16" Margin="0,20,0,0">
                             <TextBlock x:Name="ResultNote" TextWrapping="Wrap" Foreground="#335A69" />
                         </Border>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0">
-                            <Button Content="查看并保存完整材料" Style="{StaticResource PrimaryButton}" Click="ReviewButton_Click" Margin="0,0,10,0" />
-                            <Button Content="复制这四条结果" Style="{StaticResource SoftButton}" Click="CopyResultButton_Click" Margin="0,0,10,0" />
-                            <Button Content="再检查一次" Style="{StaticResource SoftButton}" Click="ResetButton_Click" />
+                            <Button x:Uid="ReviewButton" Content="查看并保存完整材料" Style="{StaticResource PrimaryButton}" Click="ReviewButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="CopyResultButton" Content="复制这四条结果" Style="{StaticResource SoftButton}" Click="CopyResultButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="ResetButton" Content="再检查一次" Style="{StaticResource SoftButton}" Click="ResetButton_Click" />
                         </StackPanel>
                     </StackPanel>
 
                     <StackPanel x:Name="ReviewPanel" Visibility="Collapsed">
-                        <TextBlock Text="保存前，快速看一眼" FontSize="32" FontWeight="Bold" />
-                        <TextBlock Text="我们准备公开这些信息：" FontSize="19" Margin="0,8,0,18" />
+                        <TextBlock x:Uid="ReviewTitle" Text="保存前，快速看一眼" FontSize="32" FontWeight="Bold" />
+                        <TextBlock x:Uid="ReviewSubtitle" Text="我们准备公开这些信息：" FontSize="19" Margin="0,8,0,18" />
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
-                                <TextBlock Text="会保存：你的一句话、识别出的错误文字、版本和体检结论、相似公开问题链接。" TextWrapping="Wrap" FontSize="16" />
-                                <TextBlock Text="不会保存：原截图、完整聊天、提示词、项目代码、账号文件、密钥或 cookie。" TextWrapping="Wrap" FontSize="16" Margin="0,10,0,0" />
+                                <TextBlock x:Uid="ReviewIncludes" Text="会保存：你的一句话、识别出的错误文字、版本和体检结论、相似公开问题链接。" TextWrapping="Wrap" FontSize="16" />
+                                <TextBlock x:Uid="ReviewExcludes" Text="不会保存：原截图、完整聊天、提示词、项目代码、账号文件、密钥或 cookie。" TextWrapping="Wrap" FontSize="16" Margin="0,10,0,0" />
                                 <TextBlock x:Name="PrivacyCountText" TextWrapping="Wrap" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" Margin="0,10,0,0" />
                             </StackPanel>
                         </Border>
-                        <Expander Header="查看完整公开材料" Margin="0,14,0,0">
+                        <Expander x:Uid="ReviewExpander" Header="查看完整公开材料" Margin="0,14,0,0">
                             <TextBox x:Name="ReportPreview" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                                      VerticalScrollBarVisibility="Auto" Height="260" Padding="12" />
                         </Expander>
-                        <TextBlock Text="自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。"
+                        <TextBlock x:Uid="ReviewWarning" Text="自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。"
                                    Foreground="#8A4B13" FontSize="13" Margin="0,14,0,0" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
-                            <Button Content="保存到电脑" Style="{StaticResource PrimaryButton}" Click="SaveButton_Click" Margin="0,0,10,0" />
-                            <Button Content="返回结果" Style="{StaticResource SoftButton}" Click="BackToResultButton_Click" />
+                            <Button x:Uid="SaveButton" Content="保存到电脑" Style="{StaticResource PrimaryButton}" Click="SaveButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="BackButton" Content="返回结果" Style="{StaticResource SoftButton}" Click="BackToResultButton_Click" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -211,7 +219,7 @@
         </Grid>
 
         <Border Grid.Row="2" Background="#E3ECEF" Padding="22,10">
-            <TextBlock Text="默认只在本机处理 · 不用 API Key · 正常运行不调用大模型 · 不自动发布"
+            <TextBlock x:Uid="Footer" Text="默认只在本机处理 · 不用 API Key · 正常运行不调用大模型 · 不自动发布"
                        Foreground="#52697A" FontSize="12" HorizontalAlignment="Center" />
         </Border>
     </Grid>
