@@ -413,6 +413,7 @@ public partial class MainWindow : Window
 
     private const string IssueUrlPrefix = "https://github.com/openai/codex/issues/";
     private const string FallbackUrlPrefix = "https://github.com/openai/codex/issues?q=";
+    private const string OfficialFeedbackUrl = "https://github.com/openai/codex/issues/new?template=1-codex-app.yml";
 
     private void RenderSimilarIssues(SimilarIssueSummary similar)
     {
@@ -473,16 +474,22 @@ public partial class MainWindow : Window
         return button;
     }
 
-    private void OpenSafeExternalUrl(string? url, string allowedPrefix)
+    private bool OpenSafeExternalUrl(string? url, string allowedPrefix)
     {
         try
         {
-            if (url is null || !url.StartsWith(allowedPrefix, StringComparison.Ordinal)) return;
+            if (url is null) return false;
+            var allowed = string.Equals(allowedPrefix, OfficialFeedbackUrl, StringComparison.Ordinal)
+                ? string.Equals(url, OfficialFeedbackUrl, StringComparison.Ordinal)
+                : url.StartsWith(allowedPrefix, StringComparison.Ordinal);
+            if (!allowed) return false;
             using var _ = Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            return true;
         }
         catch (Exception)
         {
             ResultNote.Text = L("暂时打不开这个链接。请稍后再试，或自己在浏览器打开 GitHub 的 Codex issues 页面。", "暫時無法開啟這個連結。請稍後再試，或在瀏覽器中開啟 GitHub 的 Codex issues 頁面。", "This link could not be opened. Try again later or open the Codex issues page on GitHub in your browser.");
+            return false;
         }
     }
 
@@ -494,8 +501,39 @@ public partial class MainWindow : Window
         PrivacyCountText.Text = count == 0
             ? L("自动检查暂未发现需要遮住的内容。", "自動檢查暫未發現需要遮蔽的內容。", "The automatic check found nothing that needed redaction.")
             : L($"自动检查已经遮住 {count} 处可能的私人信息。", $"自動檢查已遮蔽 {count} 處可能的私人資訊。", $"The automatic check redacted {count} possible piece(s) of private information.");
+        FeedbackStatusText.Text = string.Empty;
         ShowPanel(ReviewPanel);
         MainScroll.ScrollToTop();
+    }
+
+    private void OfficialFeedbackButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_report is null) return;
+
+        try
+        {
+            var draft = new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(_report);
+            Clipboard.SetText(draft);
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            FeedbackStatusText.Text = L(
+                "剪贴板暂时正忙，材料没有复制，也没有打开网页。请再点一次。",
+                "剪貼簿暫時忙碌，資料沒有複製，也沒有開啟網頁。請再點一次。",
+                "The clipboard is busy. Nothing was copied and no page was opened. Please try again.");
+            return;
+        }
+
+        var opened = OpenSafeExternalUrl(OfficialFeedbackUrl, OfficialFeedbackUrl);
+        FeedbackStatusText.Text = opened
+            ? L(
+                "已复制官方需要的材料并打开反馈页。请按页面栏目粘贴、快速检查后再提交；SOS 不会代你发布。账号套餐需要你自己选择。",
+                "已複製官方需要的資料並開啟回報頁。請依頁面欄位貼上、快速檢查後再提交；SOS 不會代你發佈。帳號方案需要你自己選擇。",
+                "The official-format draft was copied and the bug form opened. Paste it into the matching fields, review it, and submit only when ready. SOS never submits for you; select your subscription yourself.")
+            : L(
+                "材料已经复制，但网页暂时打不开。稍后打开 openai/codex 的 Codex App Bug 页面再粘贴即可。",
+                "資料已複製，但網頁暫時無法開啟。稍後開啟 openai/codex 的 Codex App Bug 頁面再貼上即可。",
+                "The draft was copied, but the page could not be opened. Later, open the Codex App Bug form in openai/codex and paste the draft.");
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)

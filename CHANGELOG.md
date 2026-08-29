@@ -8,6 +8,24 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
+## [0.1.3] - 2026-08-29
+
+### Added
+
+- After the existing privacy preview, users can copy a draft aligned with the current official Codex App bug form and open that exact form.
+- The draft includes safe-to-share version, platform, symptom, reproduction, expected-behavior, diagnostic, fault-event, and similar-issue sections; subscription, session, and usage details remain explicitly uncollected.
+- When a highly similar issue already exists, the UI recommends confirming it and adding a 👍 instead of creating a duplicate report.
+
+### Security
+
+- The feedback page is an exact allow-listed URL with no report content in its query string.
+- Codex SOS does not auto-login, paste, upload, react, or submit. The copied draft receives another privacy-redaction pass and remains marked `NOT SUBMITTED`.
+
+### Known limitations
+
+- Public reporting may require GitHub sign-in; users must paste the draft into the matching fields and select their subscription themselves.
+- The v0.1.3 Windows packages are unsigned and may show an unknown-publisher warning.
+
 ## [0.1.2] - 2026-08-27
 
 ### Added
@@ -69,6 +87,7 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.3
 [0.1.2]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.2
 [0.1.0]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.0

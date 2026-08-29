@@ -43,6 +43,7 @@ internal static class Program
             ("similar issues: crash exception codes are explainable", TestCrashCodeSimilarityAsync),
             ("orchestrator: every collector failure degrades safely", TestOrchestratorFailureFallbackAsync),
             ("public export: privacy canaries never escape", TestPublicExportPrivacyAsync),
+            ("official feedback: form fields are complete and privacy checked", TestOfficialFeedbackDraftAsync),
             ("follow-up: at most one plain-language choice", TestAtMostOneFollowUpAsync),
             ("localization: Simplified Chinese default plus complete Traditional Chinese and English UI", TestLocalizationAsync),
             ("boundaries: no private-state read, OpenAI API, or write request", TestSourceBoundariesAsync),
@@ -768,6 +769,67 @@ internal static class Program
         return Task.CompletedTask;
     }
 
+    private static Task TestOfficialFeedbackDraftAsync()
+    {
+        var report = new DiagnosticReport(
+            Guid.Parse("00000000-0000-0000-0000-000000001313"),
+            FrozenNow,
+            new UserEvidence(
+                "Codex exited while working. Contact rowan.fixture@example.test; details were under C:\\Users\\Rowan.Fixture\\Private-Fixture.",
+                "The app exited unexpectedly.",
+                true,
+                FrozenNow),
+            FixtureSystem(CodexSurface.Desktop),
+            new DoctorResult(DoctorState.Ok, "0.99.7-fixture", [],
+                "The official check found no current warning; it cannot explain every runtime failure.", 0),
+            new Diagnosis(
+                IncidentCategory.DesktopApplication,
+                ConfidenceLevel.PossiblyRelated,
+                "Possibly related to a Codex desktop app problem.",
+                "Fully close and reopen Codex. Do not delete local tasks or data.",
+                ["The description says the desktop app exited"],
+                ["No root cause has been confirmed"]),
+            new SimilarIssueSummary(
+                [new MatchedIssue(
+                    new PublicIssue(1313, "Fictional Codex desktop exit", "Fictional body",
+                        "https://github.com/openai/codex/issues/1313", "open", ["app"]),
+                    IssueSimilarityTier.High, 82, ["Same problem type"])],
+                true,
+                "One highly similar public issue was found."),
+            ServiceStatusResult.Unavailable(),
+            [new FaultEvent(FrozenNow, "Codex.exe", "C:\\Users\\Rowan.Fixture\\KERNELBASE.dll", "c0000409")],
+            [],
+            false,
+            "fictional public report",
+            "fictional privacy review");
+
+        var draft = new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(report);
+        foreach (var heading in new[]
+                 {
+                     "What version of the Codex App are you using?",
+                     "What subscription do you have?",
+                     "What platform is your computer?",
+                     "What issue are you seeing?",
+                     "What steps can reproduce the bug?",
+                     "What is the expected behavior?",
+                     "Additional information"
+                 })
+        {
+            Contains(draft, heading, $"Official feedback field {heading}");
+        }
+
+        Contains(draft, "NOT SUBMITTED", "Official feedback local-only status");
+        Contains(draft, "Suggested title: [Windows] Codex App exits unexpectedly", "Official feedback suggested title");
+        Contains(draft, "Session ID, token limit usage, and context window usage: not collected", "Official feedback optional private fields");
+        Contains(draft, "original screenshot is not included", "Official feedback screenshot boundary");
+        Contains(draft, "https://github.com/openai/codex/issues/1313", "Official feedback similar issue");
+        Contains(draft, "<EMAIL>", "Official feedback email redaction");
+        Contains(draft, "<LOCAL_PATH>", "Official feedback path redaction");
+        NotContains(draft, "rowan.fixture@example.test", "Official feedback raw email");
+        NotContains(draft, "C:\\Users\\Rowan.Fixture", "Official feedback raw path");
+        return Task.CompletedTask;
+    }
+
     private static Task TestAtMostOneFollowUpAsync()
     {
         var cannotDetermine = new Diagnosis(
@@ -911,6 +973,11 @@ internal static class Program
         Assert(requestMethods.Length >= 2, "Expected read-only public network clients were not found.");
         Assert(requestMethods.All(method => string.Equals(method, "Get", StringComparison.Ordinal)),
             "A non-GET automatic request was found.");
+        Contains(all,
+            "https://github.com/openai/codex/issues/new?template=1-codex-app.yml",
+            "Exact official Codex App bug-form URL");
+        NotContains(all, "issues/new?template=1-codex-app.yml&", "Official feedback URL must not carry report data");
+        NotContains(all, "issues/new?body=", "Official feedback URL must not carry a report body");
         return Task.CompletedTask;
     }
 

@@ -38,7 +38,7 @@ public static class UiText
         ["BrowserFallback"] = ["在浏览器里搜索相似问题", "在瀏覽器中搜尋相似問題", "Search similar issues in a browser"],
         ["ResultNext"] = ["3  现在最安全怎么做", "3  現在最安全怎麼做", "3  Safest next step"],
         ["ResultMore"] = ["4  还不行怎么办", "4  還是不行怎麼辦", "4  If that does not work"],
-        ["ResultMoreAnswer"] = ["已经为你准备好完整材料，可以先查看，再保存或复制。", "已經為你準備好完整資料，可以先查看，再儲存或複製。", "A complete report is ready for you to review, save, or copy."],
+        ["ResultMoreAnswer"] = ["已经准备好完整材料。先看一眼，再保存，或交给 Codex 官方。", "已準備好完整資料。先看一眼，再儲存，或交給 Codex 官方。", "A complete report is ready. Review it, save it, or share it with the Codex maintainers."],
         ["ReviewButton"] = ["查看并保存完整材料", "查看並儲存完整資料", "Review and save full report"],
         ["CopyResultButton"] = ["复制这四条结果", "複製這四項結果", "Copy these four results"],
         ["ResetButton"] = ["再检查一次", "再檢查一次", "Check again"],
@@ -48,7 +48,9 @@ public static class UiText
         ["ReviewExcludes"] = ["不会保存：原截图、完整聊天、提示词、项目代码、账号文件、密钥或 cookie。", "不會儲存：原始截圖、完整聊天、提示詞、專案程式碼、帳號檔案、金鑰或 Cookie。", "Not included: the original screenshot, full chats, prompts, project code, account files, keys, or cookies."],
         ["ReviewExpander"] = ["查看完整公开材料", "查看完整公開資料", "View the complete public report"],
         ["ReviewWarning"] = ["自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。", "自動遮蔽無法保證 100% 安全。Codex SOS 不會自動發佈這些資料。", "Automatic redaction cannot guarantee 100% safety. Codex SOS never publishes this report automatically."],
+        ["OfficialFeedbackHint"] = ["如果上面已有高度相似的问题，先打开它确认；确实一样就点 👍，避免重复提交。否则可把已检查的材料交给 Codex 官方。诊断和保存不需要 GitHub，只有公开反馈时才可能需要登录。", "如果上面已有高度相似的問題，先開啟它確認；確實相同就點 👍，避免重複提交。否則可把已檢查的資料交給 Codex 官方。診斷和儲存不需要 GitHub，只有公開回報時才可能需要登入。", "If a highly similar issue appears above, open it first and add a 👍 when it is the same problem. Otherwise, you can share the reviewed report with the Codex maintainers. Checking and saving need no GitHub account; public reporting may require sign-in."],
         ["SaveButton"] = ["保存到电脑", "儲存到電腦", "Save to this computer"],
+        ["OfficialFeedbackButton"] = ["复制材料并打开官方反馈页", "複製資料並開啟官方回報頁", "Copy report and open official bug form"],
         ["BackButton"] = ["返回结果", "返回結果", "Back to results"],
         ["Footer"] = ["默认只在本机处理 · 不用 API Key · 正常运行不调用大模型 · 不自动发布", "預設只在本機處理 · 不用 API Key · 正常執行不呼叫大型模型 · 不自動發佈", "Local-first · No API key · No model calls in normal use · Never auto-publishes"]
     };
