@@ -8,6 +8,22 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
+## [0.1.4] - 2026-08-30
+
+### Fixed
+
+- A clearly unrelated browser, web page, startup item, or other-program window is no longer presented as a Codex problem or routed to the Codex bug form.
+- Chinese symptoms such as “没反应” and “闪退” remain available to local diagnosis when a preceding Windows path is redacted.
+
+### Security
+
+- Out-of-scope reports stay local: no Codex issue search is sent and the official-feedback action is hidden.
+- Path redaction still removes the full path; only allow-listed generic symptom constants survive for diagnosis and narrow search.
+
+### Known limitations
+
+- The v0.1.4 Windows packages are unsigned and may show an unknown-publisher warning.
+
 ## [0.1.3] - 2026-08-29
 
 ### Added
@@ -87,7 +103,8 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.4
 [0.1.3]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.3
 [0.1.2]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.2
 [0.1.0]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.0

@@ -180,7 +180,7 @@
                             </Border>
                             <Border Style="{StaticResource Card}" Margin="10,10,0,0">
                                 <StackPanel><TextBlock x:Uid="ResultMore" Text="4  还不行怎么办" Foreground="{StaticResource OceanBrush}" FontWeight="SemiBold" FontSize="15" />
-                                    <TextBlock x:Uid="ResultMoreAnswer" Text="已经准备好完整材料。先看一眼，再保存，或交给 Codex 官方。" FontSize="18" TextWrapping="Wrap" Margin="0,12,0,0" /></StackPanel>
+                                    <TextBlock x:Uid="ResultMoreAnswer" x:Name="ResultMoreAnswer" Text="已经准备好完整材料。先看一眼，再保存，或交给 Codex 官方。" FontSize="18" TextWrapping="Wrap" Margin="0,12,0,0" /></StackPanel>
                             </Border>
                         </UniformGrid>
                         <Border Background="#EAF4F5" CornerRadius="10" Padding="16" Margin="0,20,0,0">
@@ -209,12 +209,12 @@
                         </Expander>
                         <TextBlock x:Uid="ReviewWarning" Text="自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。"
                                    Foreground="#8A4B13" FontSize="13" Margin="0,14,0,0" />
-                        <TextBlock x:Uid="OfficialFeedbackHint"
+                        <TextBlock x:Uid="OfficialFeedbackHint" x:Name="OfficialFeedbackHint"
                                    Text="如果上面已有高度相似的问题，先打开它确认；确实一样就点 👍，避免重复提交。否则可把已检查的材料交给 Codex 官方。诊断和保存不需要 GitHub，只有公开反馈时才可能需要登录。"
                                    Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" FontSize="13" Margin="0,10,0,0" />
                         <WrapPanel HorizontalAlignment="Center" Margin="0,18,0,0">
                             <Button x:Uid="SaveButton" Content="保存到电脑" Style="{StaticResource PrimaryButton}" Click="SaveButton_Click" Margin="0,0,10,0" />
-                            <Button x:Uid="OfficialFeedbackButton" Content="复制材料并打开官方反馈页" Style="{StaticResource SoftButton}"
+                            <Button x:Uid="OfficialFeedbackButton" x:Name="OfficialFeedbackButton" Content="复制材料并打开官方反馈页" Style="{StaticResource SoftButton}"
                                     Click="OfficialFeedbackButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="BackButton" Content="返回结果" Style="{StaticResource SoftButton}" Click="BackToResultButton_Click" />
                         </WrapPanel>

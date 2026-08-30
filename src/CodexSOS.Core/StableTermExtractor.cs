@@ -18,7 +18,9 @@ public sealed class StableTermExtractor
         "kernelbase.dll",
         "unexpected argument '--json'",
         "authentication failed",
-        "login required"
+        "login required",
+        "not responding",
+        "exited unexpectedly"
     ];
 
     private static readonly HashSet<string> EnglishStopWords = new(StringComparer.OrdinalIgnoreCase)
@@ -41,6 +43,15 @@ public sealed class StableTermExtractor
         ("任务恢复", "failed to resume task"),
         ("一直转圈", "not responding"),
         ("卡死", "not responding"),
+        ("卡住", "not responding"),
+        ("卡在那里", "not responding"),
+        ("没反应", "not responding"),
+        ("闪退", "exited unexpectedly"),
+        ("自己关掉", "exited unexpectedly"),
+        ("突然退出", "exited unexpectedly"),
+        ("自动退出", "exited unexpectedly"),
+        ("反复退出", "exited unexpectedly"),
+        ("窗口没了", "exited unexpectedly"),
         ("登录失败", "authentication failed")
     ];
 

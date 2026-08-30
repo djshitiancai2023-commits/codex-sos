@@ -147,7 +147,8 @@ public sealed record Diagnosis(
     string SafeNextStep,
     IReadOnlyList<string> Evidence,
     IReadOnlyList<string> Limitations,
-    IReadOnlyList<IncidentCategory>? CandidateCategories = null)
+    IReadOnlyList<IncidentCategory>? CandidateCategories = null,
+    bool OfficialFeedbackAppropriate = true)
 {
     public IReadOnlyList<IncidentCategory> Candidates =>
         CandidateCategories is { Count: > 0 } ? CandidateCategories : [Category];

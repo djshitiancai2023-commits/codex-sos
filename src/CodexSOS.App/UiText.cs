@@ -95,6 +95,10 @@ public static class UiText
             return Get(language, diagnosis.PlainSummary, "這份檢查無法解釋目前的故障。", "This check cannot explain the current problem.");
         if (diagnosis.Category == IncidentCategory.Unknown)
         {
+            if (diagnosis.PlainSummary.Contains("看不出这是 Codex 自己的问题", StringComparison.Ordinal))
+                return Get(language, diagnosis.PlainSummary,
+                    "目前看不出這是 Codex 自己的問題，更像是另一個程式或開機項目的視窗。",
+                    "This does not currently look like a Codex problem. It looks more like another program or startup item.");
             if (diagnosis.PlainSummary.Contains("没有从这张截图里读到", StringComparison.Ordinal))
                 return Get(language, diagnosis.PlainSummary, "沒有從這張截圖讀到足夠文字，暫時不能判斷，也不能當作正常。", "Not enough text was read from this screenshot to judge the problem, and it should not be treated as normal.");
             if (diagnosis.PlainSummary.Contains("像是有报错", StringComparison.Ordinal))
@@ -118,6 +122,10 @@ public static class UiText
     public static string SafeNextStep(UiLanguage language, Diagnosis diagnosis)
     {
         if (language == UiLanguage.SimplifiedChinese) return diagnosis.SafeNextStep;
+        if (!diagnosis.OfficialFeedbackAppropriate)
+            return Get(language, diagnosis.SafeNextStep,
+                "先不要刪除 Codex、該程式或本機資料；先確認這個視窗屬於哪個程式。如果 Codex 自己也退出、卡住或報錯，再把當時的截圖交給 SOS。",
+                "Do not delete Codex, the other program, or local data. First identify which program owns the window. If Codex itself also exits, freezes, or shows an error, give SOS a screenshot from that moment.");
         if (diagnosis.SafeNextStep.StartsWith("现在不需要做任何修复操作", StringComparison.Ordinal))
             return Get(language, diagnosis.SafeNextStep,
                 "現在不需要做任何修復操作；之後如果出現具體錯誤，再截一張圖給 SOS 即可。",
@@ -160,6 +168,10 @@ public static class UiText
     public static string SimilarSummary(UiLanguage language, SimilarIssueSummary similar)
     {
         if (language == UiLanguage.SimplifiedChinese) return similar.PlainSummary;
+        if (similar.PlainSummary.StartsWith("这更像其他程序的问题", StringComparison.Ordinal))
+            return Get(language, similar.PlainSummary,
+                "這更像其他程式的問題，因此沒有搜尋 Codex 官方問題。",
+                "This looks more like another program's problem, so no Codex issues were searched.");
         if (similar.SearchState == IssueSearchState.NoUsableTerms)
             return Get(language, similar.PlainSummary, "暫時沒有足夠穩定的錯誤文字，所以不會亂猜。", "There is not enough stable error text to make a reliable match.");
         if (similar.SearchState == IssueSearchState.Unavailable)
@@ -353,6 +365,7 @@ public static class UiText
             "截图或描述里出现了任务恢复特征" => Get(language, source, "截圖或描述中出現任務恢復特徵", "The screenshot or description contains signs of a task recovery problem"),
             "截图或描述里出现了登录特征" => Get(language, source, "截圖或描述中出現登入特徵", "The screenshot or description contains signs of a sign-in problem"),
             "截图或描述里出现了桌面应用卡住或退出特征" => Get(language, source, "截圖或描述中出現桌面應用程式卡住或退出的特徵", "The screenshot or description contains signs that the desktop app froze or exited"),
+            "描述明确提到了浏览器、网页、开机项目或另一款程序" => Get(language, source, "描述明確提到瀏覽器、網頁、開機項目或另一個程式", "The description explicitly mentions a browser, web page, startup item, or another program"),
             "截图或描述里出现了安装或版本特征" => Get(language, source, "截圖或描述中出現安裝或版本特徵", "The screenshot or description contains signs of an installation or version problem"),
             "官方体检这次没有完成" => Get(language, source, "官方檢查這次沒有完成", "The official check did not complete"),
             _ => source

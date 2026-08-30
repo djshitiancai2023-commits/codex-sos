@@ -18,7 +18,7 @@ Codex SOS is an unofficial, local-first Windows helper for people who use Codex 
 
 ## Quick download (Windows x64)
 
-[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.3/Codex-SOS-0.1.3-win-x64-portable.zip)
+[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.4/Codex-SOS-0.1.4-win-x64-portable.zip)
 
 Directly download the ZIP. Then right-click it, choose **Extract All**, and double-click `CodexSOS.exe`. No GitHub sign-in or star is required.
 
@@ -54,6 +54,7 @@ The result page answers four questions:
 - Explainable fixed rules for conservative classification and safe next steps
 - A second redaction pass before any report is saved
 - After the privacy preview, an optional button copies a draft aligned with the current official Codex App bug form and opens that exact form
+- Descriptions that clearly concern a browser, web page, startup item, or another program stay local and are not routed to Codex issue search or reporting
 
 ## Privacy and networking
 
@@ -63,6 +64,7 @@ The result page answers four questions:
 - To check public service health, it reads OpenAI's public status page.
 - To look for known problems, it may send a few redacted error terms to GitHub's public issue search. The original screenshot, full description, and full report are not sent.
 - Reports are not posted automatically. If the user explicitly opens the official bug form, the report is copied only to the local clipboard; no report text is put in the URL, uploaded, pasted, or submitted by Codex SOS.
+- When the evidence clearly points to another program, Codex SOS does not search Codex issues or offer the official Codex bug form.
 - Public reporting may require GitHub sign-in and a user-selected subscription plan. Diagnosis and local saving do not.
 
 Automatic redaction is not a guarantee. Review exported material before publishing it. See [PRIVACY.md](PRIVACY.md) for the exact boundary.
@@ -70,16 +72,16 @@ Automatic redaction is not a guarantee. Review exported material before publishi
 ## Code signing
 
 Public Windows releases use the signing policy in [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
-The v0.1.0 through v0.1.3 releases are unsigned. A later release will only
+The v0.1.0 through v0.1.4 releases are unsigned. A later release will only
 be described as signed after its installer and portable application pass
 Windows Authenticode verification.
 
 ## Download
 
-For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.3/Codex-SOS-0.1.3-win-x64-portable.zip). It runs without installation:
+For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.4/Codex-SOS-0.1.4-win-x64-portable.zip). It runs without installation:
 
-- `Codex-SOS-0.1.3-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
-- `Codex-SOS-Setup-0.1.3.exe` — optional when you want a Start-menu entry and an uninstaller
+- `Codex-SOS-0.1.4-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
+- `Codex-SOS-Setup-0.1.4.exe` — optional when you want a Start-menu entry and an uninstaller
 - `SHA256SUMS.txt` — integrity checksums
 
 The current public builds are unsigned, so Windows may show an unknown-publisher warning. Verify the SHA-256 checksum from the release page and do not disable Windows security protections to bypass a warning.
@@ -99,7 +101,7 @@ The current public builds are unsigned, so Windows may show an unknown-publisher
 - Common English error text for local screenshot OCR; Chinese descriptions can be typed directly
 - Simplified Chinese by default, with a prominent switch for Traditional Chinese and English
 - Fixed, explainable diagnostic rules rather than model-generated diagnosis
-- Unsigned Windows builds through v0.1.3
+- Unsigned Windows builds through v0.1.4
 
 ## Build and test
 
@@ -108,7 +110,7 @@ The repository contains the original application source, executable tests with s
 ```powershell
 pwsh ./scripts/check-source-secrets.ps1
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.3
+pwsh ./scripts/build-release.ps1 -Version 0.1.4
 ```
 
 See [BUILDING.md](BUILDING.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

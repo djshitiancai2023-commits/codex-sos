@@ -50,6 +50,7 @@ public static class OneQuestionRules
         OcrAttemptOutcome ocrAttempt)
     {
         if (alreadyAsked) return null;
+        if (!diagnosis.OfficialFeedbackAppropriate) return null;
         if (diagnosis.Confidence != ConfidenceLevel.CannotDetermine) return null;
 
         var unreadable = screenshotProvided && ocrAttempt is
@@ -302,6 +303,12 @@ public partial class MainWindow : Window
         DiagnosisText.Text = UiText.DiagnosisSummary(_language, report.Diagnosis);
         SimilarText.Text = UiText.SimilarSummary(_language, report.SimilarIssues);
         NextStepText.Text = UiText.SafeNextStep(_language, report.Diagnosis);
+        ResultMoreAnswer.Text = report.Diagnosis.OfficialFeedbackAppropriate
+            ? UiText.Get(_language, "ResultMoreAnswer")
+            : L(
+                "这更像其他程序的问题。材料可以留在本机，但先别交给 Codex 官方。",
+                "這更像其他程式的問題。資料可以留在本機，但先不要交給 Codex 官方。",
+                "This looks more like another program's problem. You can save the report locally, but do not send it to the Codex maintainers yet.");
         var screenshotNote = report.PublicEvidence.ScreenshotProvided
             ? _ocrAttempt switch
             {
@@ -501,6 +508,15 @@ public partial class MainWindow : Window
         PrivacyCountText.Text = count == 0
             ? L("自动检查暂未发现需要遮住的内容。", "自動檢查暫未發現需要遮蔽的內容。", "The automatic check found nothing that needed redaction.")
             : L($"自动检查已经遮住 {count} 处可能的私人信息。", $"自動檢查已遮蔽 {count} 處可能的私人資訊。", $"The automatic check redacted {count} possible piece(s) of private information.");
+        OfficialFeedbackHint.Text = _report.Diagnosis.OfficialFeedbackAppropriate
+            ? UiText.Get(_language, "OfficialFeedbackHint")
+            : L(
+                "这次更像其他程序的问题，所以不会提供 Codex 官方反馈入口。你仍可把材料保存在本机。",
+                "這次更像其他程式的問題，因此不會提供 Codex 官方回報入口。你仍可把資料儲存在本機。",
+                "This appears to concern another program, so the Codex bug-report action is unavailable. You can still save the report locally.");
+        OfficialFeedbackButton.Visibility = _report.Diagnosis.OfficialFeedbackAppropriate
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         FeedbackStatusText.Text = string.Empty;
         ShowPanel(ReviewPanel);
         MainScroll.ScrollToTop();
@@ -509,6 +525,14 @@ public partial class MainWindow : Window
     private void OfficialFeedbackButton_Click(object sender, RoutedEventArgs e)
     {
         if (_report is null) return;
+        if (!_report.Diagnosis.OfficialFeedbackAppropriate)
+        {
+            FeedbackStatusText.Text = L(
+                "这次更像其他程序的问题，没有打开 Codex 官方反馈页。",
+                "這次更像其他程式的問題，沒有開啟 Codex 官方回報頁。",
+                "This appears to concern another program, so the Codex bug form was not opened.");
+            return;
+        }
 
         try
         {
@@ -572,10 +596,13 @@ public partial class MainWindow : Window
     private void CopyResultButton_Click(object sender, RoutedEventArgs e)
     {
         if (_report is null) return;
+        var fourthResult = _report.Diagnosis.OfficialFeedbackAppropriate
+            ? L("完整材料已经准备好，可在 Codex SOS 中查看并保存。", "完整資料已經準備好，可在 Codex SOS 中查看並儲存。", "The complete report is ready to review and save in Codex SOS.")
+            : L("这更像其他程序的问题；材料可以保存在本机，但先别交给 Codex 官方。", "這更像其他程式的問題；資料可以儲存在本機，但先不要交給 Codex 官方。", "This looks more like another program's problem; save the report locally, but do not send it to the Codex maintainers yet.");
         var text = $"1. {UiText.DiagnosisSummary(_language, _report.Diagnosis)}\n\n" +
                    $"2. {UiText.SimilarSummary(_language, _report.SimilarIssues)}\n\n" +
                    $"3. {UiText.SafeNextStep(_language, _report.Diagnosis)}\n\n" +
-                   $"4. {L("完整材料已经准备好，可在 Codex SOS 中查看并保存。", "完整資料已經準備好，可在 Codex SOS 中查看並儲存。", "The complete report is ready to review and save in Codex SOS.")}";
+                   $"4. {fourthResult}";
         try
         {
             Clipboard.SetText(text);

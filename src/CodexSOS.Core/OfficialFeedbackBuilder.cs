@@ -11,6 +11,12 @@ public sealed class OfficialFeedbackBuilder
 
     public string Build(DiagnosticReport report)
     {
+        if (!report.Diagnosis.OfficialFeedbackAppropriate)
+        {
+            throw new InvalidOperationException(
+                "This report appears to concern another program and must not be prepared as a Codex bug report.");
+        }
+
         var text = new StringBuilder();
         text.AppendLine("# Codex App bug report draft");
         text.AppendLine();

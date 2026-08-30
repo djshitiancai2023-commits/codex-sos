@@ -76,19 +76,32 @@ public sealed class DiagnosticOrchestrator
 
         progress?.Report("正在寻找相似的 Codex 公开问题…");
         var faultSearchEvidence = BuildFaultSearchEvidence(events);
-        var stableTerms = _terms.Extract(
-            diagnosticEvidence.Description,
-            diagnosticEvidence.OcrText,
-            faultSearchEvidence,
-            string.Join('\n', doctor.Checks.Where(c => c.Status is "warning" or "fail").Select(c => c.Summary)));
-        var search = await SafeIssueSearch(stableTerms, cancellationToken).ConfigureAwait(false);
-        var similarity = _matcher.Match(
-            $"{diagnosticEvidence.Description}\n{diagnosticEvidence.OcrText}\n{faultSearchEvidence}",
-            diagnosis.Candidates,
-            system.Surface,
-            search.Issues,
-            search.State,
-            search.FallbackUrl);
+        SimilarIssueSummary similarity;
+        if (!diagnosis.OfficialFeedbackAppropriate)
+        {
+            similarity = new SimilarIssueSummary(
+                [],
+                false,
+                "这更像其他程序的问题，所以没有搜索 Codex 官方问题。",
+                null,
+                IssueSearchState.NoUsableTerms);
+        }
+        else
+        {
+            var stableTerms = _terms.Extract(
+                diagnosticEvidence.Description,
+                diagnosticEvidence.OcrText,
+                faultSearchEvidence,
+                string.Join('\n', doctor.Checks.Where(c => c.Status is "warning" or "fail").Select(c => c.Summary)));
+            var search = await SafeIssueSearch(stableTerms, cancellationToken).ConfigureAwait(false);
+            similarity = _matcher.Match(
+                $"{diagnosticEvidence.Description}\n{diagnosticEvidence.OcrText}\n{faultSearchEvidence}",
+                diagnosis.Candidates,
+                system.Surface,
+                search.Issues,
+                search.State,
+                search.FallbackUrl);
+        }
 
         progress?.Report("正在做最后一次隐私检查…");
         var runId = Guid.NewGuid();

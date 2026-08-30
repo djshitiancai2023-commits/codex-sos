@@ -55,7 +55,8 @@ public sealed class DiagnosisEngine
             "freeze", "not responding", "kernelbase.dll", "crash", "crashed", "crashes",
             "closed itself", "keeps closing", "exited unexpectedly", "app disappeared",
             "闪退", "自己关掉", "突然退出", "自动退出", "反复退出", "反复闪退",
-            "一打开就退出", "窗口没了", "窗口突然没了", "崩溃", "崩了", "卡死", "没反应", "一直转圈");
+            "一打开就退出", "窗口没了", "窗口突然没了", "崩溃", "崩了", "卡死", "卡住", "卡在那里", "卡在",
+            "没反应", "一直转圈");
         if (userReportedDesktopExit)
         {
             Add(IncidentCategory.DesktopApplication, 6, "截图或描述里出现了桌面应用卡住或退出特征");
@@ -103,6 +104,25 @@ public sealed class DiagnosisEngine
             serviceStatus.Indicator is not ("none" or "operational"))
         {
             Add(IncidentCategory.CodexService, 4, "官方状态页当前显示服务异常");
+        }
+
+        var hasDirectCodexEvidence = system.PossibleDuplicateInstall ||
+            doctor.Checks.Any(check => check.Status is "warning" or "fail") ||
+            faultEvents.Any(faultEvent => ContainsAny(
+                $"{faultEvent.Application} {faultEvent.FaultModule}".ToLowerInvariant(),
+                "codex", "openai.codex", "chatgpt")) ||
+            serviceStatus is { Succeeded: true, IsCodexSpecific: true } &&
+                serviceStatus.Indicator is not ("none" or "operational");
+        if (LooksLikeAnotherProgram(text) && !hasDirectCodexEvidence)
+        {
+            return Build(
+                IncidentCategory.Unknown,
+                ConfidenceLevel.CannotDetermine,
+                "目前看不出这是 Codex 自己的问题，更像是另一款程序或开机项目的窗口。",
+                "先别删除 Codex、这个程序或本地资料；先确认这个窗口属于哪个程序。如果 Codex 自己也退出、卡住或报错，再把那一刻的截图交给 SOS。",
+                ["描述明确提到了浏览器、网页、开机项目或另一款程序"],
+                ["Codex SOS 只检查 Codex，不能替其他程序判断根因"],
+                officialFeedbackAppropriate: false);
         }
 
         var ordered = scores
@@ -276,8 +296,66 @@ public sealed class DiagnosisEngine
         string nextStep,
         IReadOnlyList<string> evidence,
         IReadOnlyList<string> limitations,
-        IReadOnlyList<IncidentCategory>? candidates = null) =>
-        new(category, confidence, summary, nextStep, evidence, limitations, candidates);
+        IReadOnlyList<IncidentCategory>? candidates = null,
+        bool officialFeedbackAppropriate = true) =>
+        new(category, confidence, summary, nextStep, evidence, limitations, candidates,
+            officialFeedbackAppropriate);
+
+    private static bool LooksLikeAnotherProgram(string text)
+    {
+        var explicitlyNotCodex = ContainsAny(text,
+            "不是 codex", "并非 codex", "不属于 codex", "not codex");
+        if (explicitlyNotCodex)
+        {
+            return true;
+        }
+
+        // Words such as "browser", "startup" or "another program" may only
+        // describe what happened immediately before Codex failed. Once the
+        // user explicitly identifies a Codex symptom, keep the Codex route.
+        if (LooksLikeExplicitCodexProblem(text))
+        {
+            return false;
+        }
+
+        var explicitlyAnotherProgram = ContainsAny(text,
+                "其他程序", "另一个程序", "另一款程序",
+                "其他软件", "另一个软件", "另一款软件", "别的软件",
+                "其他工具", "另一个工具", "另一款工具",
+                "another app", "other app", "different app") ||
+            LooksLikeNamedOtherProgram(text);
+        if (explicitlyAnotherProgram)
+        {
+            return true;
+        }
+
+        return ContainsAny(text,
+                "浏览器", "网页", "网站", "开机启动", "开机自动运行", "启动项",
+                "browser", "chrome", "firefox", "startup item", "startup program") ||
+            ContainsAny(text, "黑窗口", "黑色窗口", "blank window") &&
+                ContainsAny(text, "开机", "启动", "startup", "boot");
+    }
+
+    private static bool LooksLikeNamedOtherProgram(string text) =>
+        !text.Contains("codex", StringComparison.OrdinalIgnoreCase) &&
+        System.Text.RegularExpressions.Regex.IsMatch(
+            text,
+            @"(?<![a-z0-9])(?:[a-z][a-z0-9_.-]*[ \t]+){1,4}(?:程序|软件|工具|app)",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    private static bool LooksLikeExplicitCodexProblem(string text)
+    {
+        var clauses = System.Text.RegularExpressions.Regex.Split(text, @"[，,。；;！？!?\r\n]+");
+        return clauses.Any(clause =>
+            clause.Contains("codex", StringComparison.OrdinalIgnoreCase) &&
+            ContainsAny(clause,
+                "闪退", "崩溃", "退出", "自己关掉", "突然退出", "自动退出", "反复退出", "窗口没了",
+                "突然断开", "连接中断", "连不上", "无法恢复", "恢复不了", "续不上",
+                "登录", "账号", "一直转圈", "卡住", "卡在那里", "卡在", "没反应", "报错", "窗口",
+                "crash", "crashed", "exited", "closed", "freeze", "frozen",
+                "stream disconnected", "websocket", "reconnecting", "login", "sign in", "authentication",
+                "resume", "not responding", "error"));
+    }
 
     private static IncidentCategory? CheckCategory(string checkText)
     {

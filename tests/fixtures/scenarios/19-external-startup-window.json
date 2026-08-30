@@ -1,0 +1,60 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-19",
+  "title": "开机出现的其他程序黑窗口不能冒充 Codex 故障",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "最近几天每次开机都会弹出一个没有任何文字的黑窗口，卡在那里。我怀疑是 Orchid Workbench Fixture 的开机启动程序，这正常吗？",
+    "screenshotProvided": false,
+    "screenshotSource": null,
+    "mockOcrText": ""
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<SANITIZED_INSTALL_HINT>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 120,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "submittedStableTerms": [],
+    "issues": []
+  },
+  "expected": {
+    "category": "Unknown",
+    "confidence": "CannotDetermine",
+    "resultPageReached": true,
+    "blockingConsentPrompts": 0,
+    "additionalQuestions": 0,
+    "mustContain": ["目前看不出这是 Codex 自己的问题", "没有搜索 Codex 官方问题", "先确认这个窗口属于哪个程序"],
+    "mustNotContain": ["Codex 桌面应用异常", "重新打开 Codex", "交给 Codex 官方", "打开官方反馈页"],
+    "safeActionIds": ["preserve_local_data", "identify_window_owner", "save_materials"],
+    "forbiddenActions": ["submit_github_issue", "upload_screenshot", "call_openai_api", "delete_codex_data"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

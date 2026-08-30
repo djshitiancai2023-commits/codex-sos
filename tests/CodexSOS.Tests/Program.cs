@@ -29,6 +29,7 @@ internal static class Program
             ("diagnosis: green doctor never says Codex is fine", TestGreenDoctorCannotExplainAsync),
             ("diagnosis: one Chinese sentence identifies task recovery", TestChineseRecoveryDescriptionAsync),
             ("diagnosis: repeated desktop exits stay cautious without an event", TestRepeatedDesktopExitDiagnosisAsync),
+            ("diagnosis: external startup window does not become a Codex bug", TestExternalStartupScopeAsync),
             ("events: crash parser filters leak warnings and unrelated ChatGPT", TestWindowsFaultEventParserAsync),
             ("diagnosis: screenshot states, menu words, and all-clear input stay honest", TestScreenshotStatesAsync),
             ("orchestrator: fixed signal survives path redaction", TestPathFixedSignalProductionAsync),
@@ -416,6 +417,139 @@ internal static class Program
         Assert(reviewMatch.Success, "Production privacy review did not show a count.");
         Equal(privacyCount, int.Parse(reviewMatch.Groups[1].Value),
             "Production privacy screen/export count parity");
+
+        var chineseIssueClient = new CapturingIssues();
+        var chineseOrchestrator = new DiagnosticOrchestrator(
+            new FixtureDoctor(),
+            new FixtureSystemCollector(),
+            new FixtureEvents(),
+            chineseIssueClient,
+            new FixtureStatus(),
+            redactor,
+            new StableTermExtractor(redactor),
+            new DiagnosisEngine(),
+            new SimilarIssueMatcher(),
+            new PublicReportBuilder(redactor));
+        var chineseReport = await chineseOrchestrator.RunAsync(
+            new UserEvidence(
+                "Codex 路径是 C:\\Users\\Fixture.User\\Apps\\Codex\\Codex.exe，双击以后没反应；PATH_ORDER_CANARY_FIXTURE",
+                string.Empty,
+                false,
+                FrozenNow),
+            null,
+            CancellationToken.None).ConfigureAwait(false);
+
+        Equal(IncidentCategory.DesktopApplication, chineseReport.Diagnosis.Category,
+            "Path-masked Chinese symptom category");
+        Assert(chineseIssueClient.LastTerms.Contains("not responding", StringComparer.OrdinalIgnoreCase),
+            "Path-masked Chinese symptom was not converted to a stable search term.");
+        Assert(chineseIssueClient.LastTerms.All(term =>
+                !term.Contains("PATH_ORDER_CANARY_FIXTURE", StringComparison.OrdinalIgnoreCase)),
+            "Path-order canary leaked into search terms.");
+        NotContains(chineseReport.PublicReportMarkdown, "C:\\Users\\Fixture.User",
+            "Chinese symptom fixture path leaked into public report");
+        NotContains(chineseReport.PublicReportMarkdown, "PATH_ORDER_CANARY_FIXTURE",
+            "Chinese symptom fixture canary leaked into public report");
+    }
+
+    private static async Task TestExternalStartupScopeAsync()
+    {
+        const string description =
+            "最近几天每次开机都会弹出一个没有任何文字的黑窗口，卡在那里。我怀疑是另一款工具的开机启动程序，这正常吗？";
+        var diagnosis = new DiagnosisEngine().Diagnose(
+            new UserEvidence(description, string.Empty, false, FrozenNow),
+            FixtureSystem(CodexSurface.Desktop),
+            new DoctorResult(DoctorState.Ok, "0.99.7-fixture", [],
+                "Codex 官方体检暂未发现异常；这份检查无法单独解释所有使用中的故障。"),
+            []);
+
+        Equal(IncidentCategory.Unknown, diagnosis.Category, "External startup category");
+        Assert(!diagnosis.OfficialFeedbackAppropriate,
+            "An external startup program must not offer the Codex bug form.");
+        Contains(diagnosis.PlainSummary, "看不出这是 Codex 自己的问题", "External startup summary");
+        NotContains(diagnosis.SafeNextStep, "重新打开 Codex", "External startup next step");
+        Assert(OneQuestionRules.Build(false, diagnosis, false, OcrAttemptOutcome.None) is null,
+            "A clearly external startup program should not trigger a Codex symptom question.");
+
+        var redactor = new PrivacyRedactor();
+        var issueClient = new CapturingIssues();
+        var orchestrator = new DiagnosticOrchestrator(
+            new FixtureDoctor(),
+            new FixtureSystemCollector(),
+            new FixtureEvents(),
+            issueClient,
+            new FixtureStatus(),
+            redactor,
+            new StableTermExtractor(redactor),
+            new DiagnosisEngine(),
+            new SimilarIssueMatcher(),
+            new PublicReportBuilder(redactor));
+        var report = await orchestrator.RunAsync(
+            new UserEvidence(description, string.Empty, false, FrozenNow),
+            null,
+            CancellationToken.None).ConfigureAwait(false);
+        Equal(0, issueClient.CallCount, "External startup issue-search call count");
+        Contains(report.SimilarIssues.PlainSummary, "没有搜索 Codex 官方问题",
+            "External startup search summary");
+
+        var feedbackBlocked = false;
+        try
+        {
+            _ = new OfficialFeedbackBuilder(redactor).Build(report);
+        }
+        catch (InvalidOperationException)
+        {
+            feedbackBlocked = true;
+        }
+        Assert(feedbackBlocked, "External startup report must not become an official Codex draft.");
+
+        var namedOtherProgram = new DiagnosisEngine().Diagnose(
+            new UserEvidence("Orchid Workbench 程序闪退了，不是 Codex。", string.Empty, false, FrozenNow),
+            FixtureSystem(CodexSurface.Desktop),
+            DoctorResult.Unavailable("fixture"),
+            []);
+        Assert(!namedOtherProgram.OfficialFeedbackAppropriate,
+            "An explicitly named other program must not become a Codex bug.");
+
+        foreach (var externalDescription in new[]
+                 {
+                     "Codex 没问题，是另一个程序闪退了。",
+                     "Codex 正常，Chrome 崩溃了。"
+                 })
+        {
+            var externalDiagnosis = new DiagnosisEngine().Diagnose(
+                new UserEvidence(externalDescription, string.Empty, false, FrozenNow),
+                FixtureSystem(CodexSurface.Desktop),
+                DoctorResult.Unavailable("fixture"),
+                []);
+            Equal(IncidentCategory.Unknown, externalDiagnosis.Category,
+                $"Explicitly healthy Codex category: {externalDescription}");
+            Assert(!externalDiagnosis.OfficialFeedbackAppropriate,
+                $"Another program's failure must not become a Codex bug: {externalDescription}");
+        }
+
+        var realCodexDescriptions = new[]
+        {
+            "Codex 打开网页时突然断开，再也连不上。",
+            "Codex 登录时跳到浏览器，然后一直转圈进不去。",
+            "开机后 Codex 弹出黑窗口，卡在那里。",
+            "安装另一个程序后，Codex 开始闪退。",
+            "Codex 正常打开网页时突然断开，再也连不上。",
+            "Codex 正常使用浏览器时突然断开。",
+            "Codex 正常启动后黑窗口卡住了。"
+        };
+        foreach (var codexDescription in realCodexDescriptions)
+        {
+            var codexDiagnosis = new DiagnosisEngine().Diagnose(
+                new UserEvidence(codexDescription, string.Empty, false, FrozenNow),
+                FixtureSystem(CodexSurface.Desktop),
+                DoctorResult.Unavailable("fixture"),
+                []);
+            Assert(codexDiagnosis.OfficialFeedbackAppropriate,
+                $"A real Codex symptom was incorrectly routed away: {codexDescription}");
+            NotContains(codexDiagnosis.PlainSummary, "另一款程序",
+                "Real Codex symptom external-program summary");
+        }
     }
 
     private static async Task TestSearchStatesAsync()
@@ -934,6 +1068,30 @@ internal static class Program
         Contains(UiText.DiagnosisSummary(UiLanguage.TraditionalChinese, diagnosis), "可能", "Traditional diagnosis");
         Contains(UiText.DiagnosisSummary(UiLanguage.English, diagnosis), "Possibly", "English diagnosis");
         Contains(UiText.SafeNextStep(UiLanguage.English, diagnosis), "Do not", "English safe next step");
+
+        var externalDiagnosis = new Diagnosis(
+            IncidentCategory.Unknown,
+            ConfidenceLevel.CannotDetermine,
+            "目前看不出这是 Codex 自己的问题，更像是另一款程序或开机项目的窗口。",
+            "先别删除 Codex、这个程序或本地资料；先确认这个窗口属于哪个程序。",
+            ["描述明确提到了浏览器、网页、开机项目或另一款程序"],
+            ["Codex SOS 只检查 Codex，不能替其他程序判断根因"],
+            OfficialFeedbackAppropriate: false);
+        Contains(UiText.DiagnosisSummary(UiLanguage.TraditionalChinese, externalDiagnosis), "另一個程式",
+            "Traditional external-program diagnosis");
+        Contains(UiText.DiagnosisSummary(UiLanguage.English, externalDiagnosis), "another program",
+            "English external-program diagnosis");
+        Contains(UiText.SafeNextStep(UiLanguage.English, externalDiagnosis), "identify",
+            "English external-program next step");
+        NotContains(UiText.SafeNextStep(UiLanguage.English, externalDiagnosis), "reopen Codex",
+            "English external-program next step must not restart Codex");
+        var externalSimilar = new SimilarIssueSummary(
+            [],
+            false,
+            "这更像其他程序的问题，所以没有搜索 Codex 官方问题。",
+            SearchState: IssueSearchState.NoUsableTerms);
+        Contains(UiText.SimilarSummary(UiLanguage.English, externalSimilar),
+            "no Codex issues were searched", "English external-program search summary");
         return Task.CompletedTask;
     }
 
@@ -1167,11 +1325,13 @@ internal static class Program
     private sealed class CapturingIssues : IIssueSearchClient
     {
         public IReadOnlyList<string> LastTerms { get; private set; } = [];
+        public int CallCount { get; private set; }
 
         public Task<IssueSearchResult> SearchAsync(
             IReadOnlyList<string> stableTerms,
             CancellationToken cancellationToken)
         {
+            CallCount++;
             LastTerms = stableTerms.ToArray();
             return Task.FromResult(new IssueSearchResult([], IssueSearchState.Completed));
         }

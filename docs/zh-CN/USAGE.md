@@ -8,9 +8,9 @@ Codex SOS 适合 Codex 突然断开、卡住、闪退、恢复不了任务，或
 
 v0.1 支持 Windows x64。安装包和便携版会自带运行所需组件，不要求 Python、.NET、OCR 或 API Key。
 
-普通用户推荐下载 `Codex-SOS-0.1.3-win-x64-portable.zip`，右键选择“全部解压”，再双击文件夹里的 `CodexSOS.exe`。需要开始菜单和卸载入口时，才选择 `Codex-SOS-Setup-0.1.3.exe`。
+普通用户推荐下载 `Codex-SOS-0.1.4-win-x64-portable.zip`，右键选择“全部解压”，再双击文件夹里的 `CodexSOS.exe`。需要开始菜单和卸载入口时，才选择 `Codex-SOS-Setup-0.1.4.exe`。
 
-v0.1.3 目前没有代码签名。遇到 Windows 来源提醒时，先核对发布页上的文件名和 SHA-256。不要关闭 Windows 安全保护，也不要从转载站下载。
+v0.1.4 目前没有代码签名。遇到 Windows 来源提醒时，先核对发布页上的文件名和 SHA-256。不要关闭 Windows 安全保护，也不要从转载站下载。
 
 ## 有报错画面
 
