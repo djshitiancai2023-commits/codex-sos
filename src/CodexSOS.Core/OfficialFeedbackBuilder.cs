@@ -84,7 +84,26 @@ public sealed class OfficialFeedbackBuilder
         text.AppendLine("- Limits: these clues do not prove a root cause. No match does not mean nobody else has encountered it.");
         text.AppendLine("- Privacy boundary: Codex SOS did not include the original screenshot or read full chats, prompts, project code, auth.json, tokens, or cookies.");
 
+        Heading(text, "OpenAI technical follow-up");
+        text.AppendLine($"- Incident/check time and time zone: {report.PublicEvidence.StartedAt:O}");
+        text.AppendLine(VisibleErrorEvidence(report.PublicEvidence));
+        text.AppendLine("- Feedback ID: not collected by Codex SOS. If OpenAI Support asks and an affected or relevant existing thread still opens, run `/feedback` in that thread and send the returned ID privately. Do not reproduce the bug just to obtain one, and do not paste the ID into a public issue unless Support explicitly asks.");
+        text.AppendLine("- Reproducibility, whether this affects one task or several, first occurrence, affected account/user, and failure stage: not inferred automatically. Add only facts you already know.");
+        text.AppendLine("- Existing logs or diagnostic packages: attach only reviewed, sanitized material that Support has not already received. Do not repeat collection or recreate the failure without a specific request.");
+
         return _redactor.Redact(text.ToString()).SanitizedText;
+    }
+
+    private static string VisibleErrorEvidence(UserEvidence evidence)
+    {
+        if (!string.IsNullOrWhiteSpace(evidence.OcrText))
+        {
+            return "- Visible error evidence: locally recognized error text is included above; the original screenshot is not included.";
+        }
+
+        return evidence.ScreenshotProvided
+            ? "- Visible error evidence: SOS did not capture readable error text from the screenshot. If the app closed silently, say so; do not trigger another failure to check."
+            : "- Visible error evidence: no screenshot or error text was provided. If the app closed silently, say so; do not trigger another failure to check.";
     }
 
     private static string ExpectedBehavior(IncidentCategory category) => category switch

@@ -14,7 +14,7 @@
 
 ## 先下载哪个（Windows x64）
 
-[直接下载便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.4/Codex-SOS-0.1.4-win-x64-portable.zip)
+[直接下载便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.5/Codex-SOS-0.1.5-win-x64-portable.zip)
 
 直接下载该压缩包即可。
 下载后右键选择“全部解压”，再双击 CodexSOS.exe。
@@ -38,6 +38,7 @@
 - 用固定规则给出保守判断和安全下一步
 - 再做一次隐私遮盖，并准备可公开的问题材料
 - 用户确认隐私预览后，可一键复制官方需要的栏目材料并打开 Codex App 官方问题页
+- 复制出的材料还会整理事故时间和时区、屏幕上是否有错误文字、可选的私下 Feedback ID 提示，以及影响范围和已有记录提醒；不增加一张表，也不会要求重现故障
 - 如果描述明显属于浏览器、网页或其他开机程序，会明确告诉用户先别向 Codex 官方反馈
 
 结果页只先回答四件事。
@@ -70,15 +71,15 @@ Codex SOS 会自动启动 Codex 自带的官方体检。官方体检为了完成
 ## 代码签名说明
 
 代码签名安排和维护者职责见 [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)。
-v0.1.0 到 v0.1.4 没有签名；只有安装包和便携版主程序都通过 Windows
+v0.1.0 到 v0.1.5 没有签名；只有安装包和便携版主程序都通过 Windows
 验证后，后续版本才会写成“已签名”。签名不能保证 Windows 永远不显示
 SmartScreen 提醒。
 
 ## 下载与运行
 
-v0.1.4 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.4/Codex-SOS-0.1.4-win-x64-portable.zip)。直接下载该压缩包即可。下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
+v0.1.5 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.5/Codex-SOS-0.1.5-win-x64-portable.zip)。直接下载该压缩包即可。下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
 
-如果你需要开始菜单入口和卸载功能，可选安装程序 `Codex-SOS-Setup-0.1.4.exe`。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
+如果你需要开始菜单入口和卸载功能，可选安装程序 `Codex-SOS-Setup-0.1.5.exe`。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
 
 程序默认显示简体中文，右上角可以随时切换为繁體中文或 English；首页、检查过程、结果和导出材料会一起切换。
 
@@ -106,7 +107,7 @@ v0.1.4 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩
 - 截取正在打开的 Codex 依赖目标窗口可见；失败时仍可粘贴截图或选择图片。
 - GitHub 公共搜索可能遇到断网或限流。此时会给出经过遮盖的浏览器搜索入口，不会谎称“没有相似问题”。
 - 固定规则只能整理线索，不能保证找到真正根因。
-- v0.1.4 尚未签名，可能触发 Windows 来源提醒。开源代码签名申请仍在审核，通过后再用于后续版本。
+- v0.1.5 尚未签名，可能触发 Windows 来源提醒。
 - 公开反馈仍需用户自己最后确认；GitHub 可能要求登录，官方表单里的账号套餐需要用户自己选择。
 
 ## 为什么不直接截图发给聊天工具
@@ -123,7 +124,7 @@ v0.1.4 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩
 
 ```powershell
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.4
+pwsh ./scripts/build-release.ps1 -Version 0.1.5
 ```
 
 测试与 UI 验收只能使用仓库里的虚构资料，构建脚本不会运行测试机上的真实 Codex 官方体检。贡献前请读 [CONTRIBUTING.md](CONTRIBUTING.md)、[项目架构](docs/ARCHITECTURE.md) 和 [安全政策](SECURITY.md)。

@@ -946,7 +946,8 @@ internal static class Program
                      "What issue are you seeing?",
                      "What steps can reproduce the bug?",
                      "What is the expected behavior?",
-                     "Additional information"
+                     "Additional information",
+                     "OpenAI technical follow-up"
                  })
         {
             Contains(draft, heading, $"Official feedback field {heading}");
@@ -955,6 +956,13 @@ internal static class Program
         Contains(draft, "NOT SUBMITTED", "Official feedback local-only status");
         Contains(draft, "Suggested title: [Windows] Codex App exits unexpectedly", "Official feedback suggested title");
         Contains(draft, "Session ID, token limit usage, and context window usage: not collected", "Official feedback optional private fields");
+        Contains(draft, "Incident/check time and time zone", "Official feedback incident time");
+        Contains(draft, "Visible error evidence", "Official feedback visible-error status");
+        Contains(draft, "Feedback ID: not collected", "Official feedback ID boundary");
+        Contains(draft, "run `/feedback`", "Official feedback ID guidance");
+        Contains(draft, "Do not reproduce the bug just to obtain one", "Official feedback no-reproduction guidance");
+        Contains(draft, "whether this affects one task or several", "Official feedback scope guidance");
+        Contains(draft, "attach only reviewed, sanitized material", "Official feedback sanitized-log guidance");
         Contains(draft, "original screenshot is not included", "Official feedback screenshot boundary");
         Contains(draft, "https://github.com/openai/codex/issues/1313", "Official feedback similar issue");
         Contains(draft, "<EMAIL>", "Official feedback email redaction");
@@ -1052,7 +1060,7 @@ internal static class Program
             }
         }
 
-        foreach (var key in new[] { "StartTitle", "StartSubtitle", "StartButton", "ResultWhat", "ReviewWarning", "Footer" })
+        foreach (var key in new[] { "StartTitle", "StartSubtitle", "StartButton", "ResultWhat", "ReviewWarning", "OfficialFeedbackHint", "Footer" })
         {
             var english = UiText.Get(UiLanguage.English, key);
             Assert(!Regex.IsMatch(english, @"[\u4e00-\u9fff]"), $"English UI text still contains Chinese characters: {key}");
@@ -1068,6 +1076,10 @@ internal static class Program
         Contains(UiText.DiagnosisSummary(UiLanguage.TraditionalChinese, diagnosis), "可能", "Traditional diagnosis");
         Contains(UiText.DiagnosisSummary(UiLanguage.English, diagnosis), "Possibly", "English diagnosis");
         Contains(UiText.SafeNextStep(UiLanguage.English, diagnosis), "Do not", "English safe next step");
+        Contains(UiText.Get(UiLanguage.SimplifiedChinese, "OfficialFeedbackHint"), "/feedback",
+            "Simplified Chinese Feedback ID guidance");
+        Contains(UiText.Get(UiLanguage.English, "OfficialFeedbackHint"), "do not reproduce",
+            "English no-reproduction guidance");
 
         var externalDiagnosis = new Diagnosis(
             IncidentCategory.Unknown,

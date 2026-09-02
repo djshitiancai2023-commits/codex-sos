@@ -8,6 +8,23 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
+## [0.1.5] - 2026-09-02
+
+### Added
+
+- The copied official-feedback draft now includes incident time and time zone, visible-error evidence status, optional private Feedback ID guidance, and concise scope/log reminders.
+- The privacy-screen guidance explains that reviewed material can be used in either the public Codex bug form or an existing OpenAI Support email thread.
+
+### Security
+
+- Feedback IDs are not collected automatically and are kept out of public issues unless Support explicitly asks for one.
+- Users are told not to reproduce a failure just to obtain an ID or repeat diagnostics already supplied.
+
+### Known limitations
+
+- Scope, reproducibility, affected accounts, and failure stage are not inferred; users add only facts they already know.
+- The v0.1.5 Windows packages are unsigned and may show an unknown-publisher warning.
+
 ## [0.1.4] - 2026-08-30
 
 ### Fixed
@@ -103,7 +120,8 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.5
 [0.1.4]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.4
 [0.1.3]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.3
 [0.1.2]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.2
