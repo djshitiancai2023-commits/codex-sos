@@ -14,7 +14,8 @@ public sealed class SimilarIssueMatcher
         "spawn setup refresh",
         "c0000409",
         "c06d007f",
-        "kernelbase.dll"
+        "kernelbase.dll",
+        "feedback upload failed"
     ];
 
     public SimilarIssueSummary Match(

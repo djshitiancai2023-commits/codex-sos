@@ -88,6 +88,7 @@ public sealed class OfficialFeedbackBuilder
         text.AppendLine($"- Incident/check time and time zone: {report.PublicEvidence.StartedAt:O}");
         text.AppendLine(VisibleErrorEvidence(report.PublicEvidence));
         text.AppendLine("- Feedback ID: not collected by Codex SOS. If OpenAI Support asks and an affected or relevant existing thread still opens, run `/feedback` in that thread and send the returned ID privately. Do not reproduce the bug just to obtain one, and do not paste the ID into a public issue unless Support explicitly asks.");
+        text.AppendLine("- Delivery proof: a visible or unchanged Feedback ID does not prove that an upload succeeded. Rely on an explicit success confirmation; otherwise keep this local draft as the fallback.");
         text.AppendLine("- Reproducibility, whether this affects one task or several, first occurrence, affected account/user, and failure stage: not inferred automatically. Add only facts you already know.");
         text.AppendLine("- Existing logs or diagnostic packages: attach only reviewed, sanitized material that Support has not already received. Do not repeat collection or recreate the failure without a specific request.");
 

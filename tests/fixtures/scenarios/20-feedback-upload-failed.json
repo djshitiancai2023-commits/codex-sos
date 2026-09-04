@@ -1,0 +1,68 @@
+{
+  "$schema": "../schema/scenario.schema.json",
+  "fixtureVersion": 1,
+  "id": "UI-20",
+  "title": "官方反馈上传失败",
+  "allDataFictional": true,
+  "frozenClockUtc": "2030-01-02T03:04:05Z",
+  "input": {
+    "description": "Codex 里的反馈传不上去，画面显示 Feedback upload failed，反馈编号没有变化。",
+    "screenshotProvided": true,
+    "screenshotSource": "fictional-feedback-error.png",
+    "mockOcrText": "Feedback upload failed. The upload failed, but your Feedback ID is unchanged."
+  },
+  "system": {
+    "windowsVersion": "Windows Fixture Edition 24H2",
+    "architecture": "x64",
+    "surface": "Desktop",
+    "codexVersion": "0.99.7-fixture",
+    "codexIsRunning": true,
+    "possibleDuplicateInstall": false,
+    "sanitizedInstallHints": ["<SANITIZED_INSTALL_HINT>"]
+  },
+  "doctor": {
+    "autoRun": true,
+    "behavior": "exit",
+    "durationMs": 390,
+    "exitCode": 0,
+    "stdoutJson": {
+      "schemaVersion": 1,
+      "generatedAt": "2030-01-02T03:04:05Z",
+      "overallStatus": "ok",
+      "codexVersion": "0.99.7-fixture",
+      "checks": {}
+    },
+    "expectedState": "Ok",
+    "rawOutputMustNotPersist": true
+  },
+  "issueSearch": {
+    "succeeded": true,
+    "submittedStableTerms": ["feedback upload failed"],
+    "issues": [
+      {
+        "number": 990020,
+        "title": "[Windows] Feedback upload failed in fixture",
+        "body": "Fictional upload failure with an unchanged feedback ID.",
+        "url": "https://issues.example.test/openai/codex/990020",
+        "state": "open",
+        "labels": ["fixture"]
+      }
+    ]
+  },
+  "expected": {
+    "category": "Unknown",
+    "confidence": "CannotDetermine",
+    "resultPageReached": true,
+    "additionalQuestions": 1,
+    "mustContain": ["无法判断", "可能相关"],
+    "mustNotContain": ["已经确定根因", "100%", "发送成功"],
+    "safeActionIds": ["restart_codex", "preserve_local_data", "save_materials"],
+    "forbiddenActions": ["retry_feedback_upload", "reproduce_failure", "submit_github_issue", "upload_screenshot", "call_openai_api"],
+    "publicExport": {
+      "allowedAfterReview": true,
+      "screenshotIncluded": false,
+      "rawDoctorIncluded": false,
+      "privateTemporaryMaterialSeparated": true
+    }
+  }
+}

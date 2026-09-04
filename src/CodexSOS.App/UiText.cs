@@ -48,9 +48,10 @@ public static class UiText
         ["ReviewExcludes"] = ["不会保存：原截图、完整聊天、提示词、项目代码、账号文件、密钥或 cookie。", "不會儲存：原始截圖、完整聊天、提示詞、專案程式碼、帳號檔案、金鑰或 Cookie。", "Not included: the original screenshot, full chats, prompts, project code, account files, keys, or cookies."],
         ["ReviewExpander"] = ["查看完整公开材料", "查看完整公開資料", "View the complete public report"],
         ["ReviewWarning"] = ["自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。", "自動遮蔽無法保證 100% 安全。Codex SOS 不會自動發佈這些資料。", "Automatic redaction cannot guarantee 100% safety. Codex SOS never publishes this report automatically."],
-        ["OfficialFeedbackHint"] = ["先看上面的相似问题；确实相同只需点赞。否则可复制材料，打开公开反馈页，或粘贴到原来的 OpenAI 客服邮件。客服如需反馈编号，原任务还能打开时可发送 /feedback 获取；打不开就跳过，不要故意重现故障。SOS 不会代你发送。", "先查看上面的相似問題；確實相同只需按讚。否則可複製資料、開啟公開回報頁，或貼到原本的 OpenAI 客服郵件。客服如需回報編號，原任務仍能開啟時可傳送 /feedback 取得；無法開啟就跳過，不要刻意重現故障。SOS 不會代你傳送。", "Check similar issues above first; if one is the same, only add a thumbs-up. Otherwise, copy the report to the public bug form or your existing OpenAI Support email. If Support asks for a Feedback ID and the relevant thread still opens, run /feedback there; otherwise skip it and do not reproduce the failure. SOS never sends anything for you."],
+        ["OfficialFeedbackHint"] = ["推荐先只复制材料，粘贴到原来的 OpenAI 客服邮件，不需要登录 GitHub。如果官方反馈显示上传失败，反馈编号没有变化也不代表发送成功；不要反复重试或故意重现故障。需要公开报告时，再打开 GitHub 问题页。SOS 不会代你发送。", "建議先只複製資料，貼到原本的 OpenAI 客服郵件，不需要登入 GitHub。如果官方回報顯示上傳失敗，回報編號沒有變化也不代表傳送成功；不要反覆重試或刻意重現故障。需要公開回報時，再開啟 GitHub 問題頁。SOS 不會代你傳送。", "Start by copying the report into your existing OpenAI Support email; no GitHub sign-in is needed. If the official uploader reports failure, an unchanged Feedback ID does not prove delivery. Do not keep retrying or reproduce the failure. Open the public GitHub form only when you want a public report. SOS never sends anything for you."],
         ["SaveButton"] = ["保存到电脑", "儲存到電腦", "Save to this computer"],
-        ["OfficialFeedbackButton"] = ["复制材料并打开官方反馈页", "複製資料並開啟官方回報頁", "Copy report and open official bug form"],
+        ["CopyOfficialFeedbackButton"] = ["只复制反馈材料（无需登录）", "只複製回報資料（無需登入）", "Copy report only (no sign-in)"],
+        ["OpenOfficialFeedbackButton"] = ["复制并打开公开问题页", "複製並開啟公開問題頁", "Copy and open public bug form"],
         ["BackButton"] = ["返回结果", "返回結果", "Back to results"],
         ["Footer"] = ["默认只在本机处理 · 不用 API Key · 正常运行不调用大模型 · 不自动发布", "預設只在本機處理 · 不用 API Key · 正常執行不呼叫大型模型 · 不自動發佈", "Local-first · No API key · No model calls in normal use · Never auto-publishes"]
     };

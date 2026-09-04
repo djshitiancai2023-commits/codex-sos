@@ -514,7 +514,10 @@ public partial class MainWindow : Window
                 "这次更像其他程序的问题，所以不会提供 Codex 官方反馈入口。你仍可把材料保存在本机。",
                 "這次更像其他程式的問題，因此不會提供 Codex 官方回報入口。你仍可把資料儲存在本機。",
                 "This appears to concern another program, so the Codex bug-report action is unavailable. You can still save the report locally.");
-        OfficialFeedbackButton.Visibility = _report.Diagnosis.OfficialFeedbackAppropriate
+        CopyOfficialFeedbackButton.Visibility = _report.Diagnosis.OfficialFeedbackAppropriate
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        OpenOfficialFeedbackButton.Visibility = _report.Diagnosis.OfficialFeedbackAppropriate
             ? Visibility.Visible
             : Visibility.Collapsed;
         FeedbackStatusText.Text = string.Empty;
@@ -522,16 +525,16 @@ public partial class MainWindow : Window
         MainScroll.ScrollToTop();
     }
 
-    private void OfficialFeedbackButton_Click(object sender, RoutedEventArgs e)
+    private bool TryCopyOfficialFeedbackDraft()
     {
-        if (_report is null) return;
+        if (_report is null) return false;
         if (!_report.Diagnosis.OfficialFeedbackAppropriate)
         {
             FeedbackStatusText.Text = L(
-                "这次更像其他程序的问题，没有打开 Codex 官方反馈页。",
-                "這次更像其他程式的問題，沒有開啟 Codex 官方回報頁。",
-                "This appears to concern another program, so the Codex bug form was not opened.");
-            return;
+                "这次更像其他程序的问题，没有准备 Codex 官方反馈材料。",
+                "這次更像其他程式的問題，沒有準備 Codex 官方回報資料。",
+                "This appears to concern another program, so no Codex feedback draft was prepared.");
+            return false;
         }
 
         try
@@ -545,8 +548,24 @@ public partial class MainWindow : Window
                 "剪贴板暂时正忙，材料没有复制，也没有打开网页。请再点一次。",
                 "剪貼簿暫時忙碌，資料沒有複製，也沒有開啟網頁。請再點一次。",
                 "The clipboard is busy. Nothing was copied and no page was opened. Please try again.");
-            return;
+            return false;
         }
+
+        return true;
+    }
+
+    private void CopyOfficialFeedbackButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryCopyOfficialFeedbackDraft()) return;
+        FeedbackStatusText.Text = L(
+            "材料已复制，但尚未发送。现在可以粘贴到原来的 OpenAI 客服邮件；这一步不需要登录 GitHub。",
+            "資料已複製，但尚未傳送。現在可以貼到原本的 OpenAI 客服郵件；這一步不需要登入 GitHub。",
+            "The report was copied but not sent. Paste it into your existing OpenAI Support email; no GitHub sign-in is needed.");
+    }
+
+    private void OpenOfficialFeedbackButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryCopyOfficialFeedbackDraft()) return;
 
         var opened = OpenSafeExternalUrl(OfficialFeedbackUrl, OfficialFeedbackUrl);
         FeedbackStatusText.Text = opened

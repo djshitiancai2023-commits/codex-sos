@@ -5,6 +5,7 @@ param(
     [string]$OutputDirectory = "artifacts/ui-acceptance/screenshots",
     [string]$ClickButtonName = "帮我看看",
     [string]$ClickAfterName = "",
+    [string]$ClickFinalName = "",
     [ValidateSet('简体中文', '繁體中文', 'English')][string]$Language = '简体中文',
     [int]$WindowHeight = 0,
     [int]$WaitSeconds = 20
@@ -106,6 +107,17 @@ try {
         if ($null -eq $afterTarget) { throw "Post-result button not found: $ClickAfterName" }
         $afterInvoke = $afterTarget.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
         $afterInvoke.Invoke()
+        Start-Sleep -Seconds 2
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ClickFinalName)) {
+        $finalButtons = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, $buttonCondition)
+        $finalTarget = $null
+        foreach ($finalButton in $finalButtons) {
+            if ($finalButton.Current.Name -eq $ClickFinalName) { $finalTarget = $finalButton; break }
+        }
+        if ($null -eq $finalTarget) { throw "Final button not found: $ClickFinalName" }
+        $finalInvoke = $finalTarget.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+        $finalInvoke.Invoke()
         Start-Sleep -Seconds 2
     }
     $bounds = $window.Current.BoundingRectangle

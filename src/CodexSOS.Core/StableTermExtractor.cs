@@ -16,6 +16,7 @@ public sealed class StableTermExtractor
         "c0000409",
         "c06d007f",
         "kernelbase.dll",
+        "feedback upload failed",
         "unexpected argument '--json'",
         "authentication failed",
         "login required",
@@ -52,6 +53,8 @@ public sealed class StableTermExtractor
         ("自动退出", "exited unexpectedly"),
         ("反复退出", "exited unexpectedly"),
         ("窗口没了", "exited unexpectedly"),
+        ("反馈上传失败", "feedback upload failed"),
+        ("反馈传不上去", "feedback upload failed"),
         ("登录失败", "authentication failed")
     ];
 

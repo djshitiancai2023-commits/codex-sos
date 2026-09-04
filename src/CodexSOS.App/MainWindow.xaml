@@ -210,12 +210,14 @@
                         <TextBlock x:Uid="ReviewWarning" Text="自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。"
                                    Foreground="#8A4B13" FontSize="13" Margin="0,14,0,0" />
                         <TextBlock x:Uid="OfficialFeedbackHint" x:Name="OfficialFeedbackHint"
-                                   Text="先看上面的相似问题；确实相同只需点赞。否则可复制材料，打开公开反馈页，或粘贴到原来的 OpenAI 客服邮件。客服如需反馈编号，原任务还能打开时可发送 /feedback 获取；打不开就跳过，不要故意重现故障。SOS 不会代你发送。"
+                                   Text="推荐先只复制材料，粘贴到原来的 OpenAI 客服邮件，不需要登录 GitHub。如果官方反馈显示上传失败，反馈编号没有变化也不代表发送成功；不要反复重试或故意重现故障。需要公开报告时，再打开 GitHub 问题页。SOS 不会代你发送。"
                                    Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" FontSize="13" Margin="0,10,0,0" />
                         <WrapPanel HorizontalAlignment="Center" Margin="0,18,0,0">
                             <Button x:Uid="SaveButton" Content="保存到电脑" Style="{StaticResource PrimaryButton}" Click="SaveButton_Click" Margin="0,0,10,0" />
-                            <Button x:Uid="OfficialFeedbackButton" x:Name="OfficialFeedbackButton" Content="复制材料并打开官方反馈页" Style="{StaticResource SoftButton}"
-                                    Click="OfficialFeedbackButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="CopyOfficialFeedbackButton" x:Name="CopyOfficialFeedbackButton" Content="只复制反馈材料（无需登录）" Style="{StaticResource SoftButton}"
+                                    Click="CopyOfficialFeedbackButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="OpenOfficialFeedbackButton" x:Name="OpenOfficialFeedbackButton" Content="复制并打开公开问题页" Style="{StaticResource SoftButton}"
+                                    Click="OpenOfficialFeedbackButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="BackButton" Content="返回结果" Style="{StaticResource SoftButton}" Click="BackToResultButton_Click" />
                         </WrapPanel>
                         <TextBlock x:Name="FeedbackStatusText" Foreground="{StaticResource OceanBrush}" TextWrapping="Wrap"

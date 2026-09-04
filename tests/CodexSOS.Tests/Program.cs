@@ -560,6 +560,12 @@ internal static class Program
             "stream disconnected before completion; kernelbase.dll and incidentalword");
         Equal(1, fixedTerms.Count, "Fixed phrase query width");
         Equal("stream disconnected before completion", fixedTerms[0], "Fixed phrase priority");
+        var feedbackTerms = extractor.Extract("Feedback upload failed. Feedback ID unchanged.");
+        Equal(1, feedbackTerms.Count, "Feedback failure query width");
+        Equal("feedback upload failed", feedbackTerms[0], "Feedback failure fixed phrase");
+        var chineseFeedbackTerms = extractor.Extract("Codex 反馈传不上去，反馈编号没变化。");
+        Equal(1, chineseFeedbackTerms.Count, "Chinese feedback failure query width");
+        Equal("feedback upload failed", chineseFeedbackTerms[0], "Chinese feedback failure mapping");
         Equal(0, extractor.Extract("这是一句没有固定映射的中文描述").Count,
             "Unmapped Chinese terms");
 
@@ -581,6 +587,25 @@ internal static class Program
             CodexSurface.Unknown, [], IssueSearchState.Completed, null);
         Contains(completed.PlainSummary, "暂未找到", "Completed zero-result summary");
         NotContains(completed.PlainSummary, "没能连上", "Completed must not look offline");
+
+        var feedbackMatch = matcher.Match(
+            "feedback upload failed",
+            IncidentCategory.Unknown,
+            CodexSurface.Desktop,
+            [new PublicIssue(
+                990020,
+                "[Windows] Feedback upload failed in fixture",
+                "Fictional upload failure with an unchanged feedback ID.",
+                "https://issues.example.test/openai/codex/990020",
+                "open",
+                ["fixture"])],
+            IssueSearchState.Completed,
+            null);
+        Equal(1, feedbackMatch.Matches.Count, "Feedback failure match count");
+        Equal(IssueSimilarityTier.Possible, feedbackMatch.Matches[0].Tier,
+            "Feedback failure must remain a cautious possible match");
+        Contains(string.Join(' ', feedbackMatch.Matches[0].Reasons), "feedback upload failed",
+            "Feedback failure explainable reason");
     }
 
     private static async Task TestMenuScreenshotNoSearchAsync()
@@ -961,6 +986,7 @@ internal static class Program
         Contains(draft, "Feedback ID: not collected", "Official feedback ID boundary");
         Contains(draft, "run `/feedback`", "Official feedback ID guidance");
         Contains(draft, "Do not reproduce the bug just to obtain one", "Official feedback no-reproduction guidance");
+        Contains(draft, "unchanged Feedback ID does not prove", "Official feedback delivery-proof boundary");
         Contains(draft, "whether this affects one task or several", "Official feedback scope guidance");
         Contains(draft, "attach only reviewed, sanitized material", "Official feedback sanitized-log guidance");
         Contains(draft, "original screenshot is not included", "Official feedback screenshot boundary");
@@ -1060,7 +1086,7 @@ internal static class Program
             }
         }
 
-        foreach (var key in new[] { "StartTitle", "StartSubtitle", "StartButton", "ResultWhat", "ReviewWarning", "OfficialFeedbackHint", "Footer" })
+        foreach (var key in new[] { "StartTitle", "StartSubtitle", "StartButton", "ResultWhat", "ReviewWarning", "OfficialFeedbackHint", "CopyOfficialFeedbackButton", "OpenOfficialFeedbackButton", "Footer" })
         {
             var english = UiText.Get(UiLanguage.English, key);
             Assert(!Regex.IsMatch(english, @"[\u4e00-\u9fff]"), $"English UI text still contains Chinese characters: {key}");
@@ -1076,10 +1102,16 @@ internal static class Program
         Contains(UiText.DiagnosisSummary(UiLanguage.TraditionalChinese, diagnosis), "可能", "Traditional diagnosis");
         Contains(UiText.DiagnosisSummary(UiLanguage.English, diagnosis), "Possibly", "English diagnosis");
         Contains(UiText.SafeNextStep(UiLanguage.English, diagnosis), "Do not", "English safe next step");
-        Contains(UiText.Get(UiLanguage.SimplifiedChinese, "OfficialFeedbackHint"), "/feedback",
-            "Simplified Chinese Feedback ID guidance");
-        Contains(UiText.Get(UiLanguage.English, "OfficialFeedbackHint"), "do not reproduce",
+        Contains(UiText.Get(UiLanguage.SimplifiedChinese, "OfficialFeedbackHint"), "不代表发送成功",
+            "Simplified Chinese delivery-proof guidance");
+        Contains(UiText.Get(UiLanguage.English, "OfficialFeedbackHint"), "reproduce the failure",
             "English no-reproduction guidance");
+        Contains(UiText.Get(UiLanguage.English, "OfficialFeedbackHint"), "does not prove delivery",
+            "English delivery-proof guidance");
+        Contains(UiText.Get(UiLanguage.SimplifiedChinese, "CopyOfficialFeedbackButton"), "无需登录",
+            "Simplified Chinese copy-only sign-in guidance");
+        Contains(UiText.Get(UiLanguage.English, "CopyOfficialFeedbackButton"), "no sign-in",
+            "English copy-only sign-in guidance");
 
         var externalDiagnosis = new Diagnosis(
             IncidentCategory.Unknown,
@@ -1148,6 +1180,8 @@ internal static class Program
             "Exact official Codex App bug-form URL");
         NotContains(all, "issues/new?template=1-codex-app.yml&", "Official feedback URL must not carry report data");
         NotContains(all, "issues/new?body=", "Official feedback URL must not carry a report body");
+        Contains(all, "CopyOfficialFeedbackButton_Click", "Copy-only official-feedback action");
+        Contains(all, "OpenOfficialFeedbackButton_Click", "Explicit public-form action");
         return Task.CompletedTask;
     }
 

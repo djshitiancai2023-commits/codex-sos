@@ -8,6 +8,28 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
+## [0.1.6] - 2026-09-04
+
+### Added
+
+- A copy-only feedback action prepares a Support-ready draft without opening a browser or requiring GitHub sign-in.
+- The stable phrase `feedback upload failed` and its common Chinese descriptions can be used for narrow, explainable public-issue matching.
+
+### Changed
+
+- Opening the public GitHub bug form is now a separate, explicit action instead of being bundled with copying the report.
+- Feedback guidance says that an unchanged Feedback ID is not proof of delivery and discourages repeated retries or reproducing a failure just to report it.
+
+### Security
+
+- Copy-only feedback stays on the local clipboard and never opens or sends data to GitHub.
+- Public-form URLs remain exact allow-listed links without report text, screenshots, paths, or identifiers in the URL.
+
+### Known limitations
+
+- Codex SOS prepares but never sends a Support email or public issue; the user still reviews and pastes the material.
+- The v0.1.6 Windows packages are unsigned and may show an unknown-publisher warning.
+
 ## [0.1.5] - 2026-09-02
 
 ### Added
@@ -120,7 +142,8 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.6
 [0.1.5]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.5
 [0.1.4]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.4
 [0.1.3]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.3
