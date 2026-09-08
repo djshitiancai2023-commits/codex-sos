@@ -41,11 +41,11 @@
 - 不得把真实截图、真实日志、账号、用户名、路径或会话写入 fixture、截图证据、提交历史或发布包。
 - 修改者不能只凭自己的说明判定 Gate 通过。以可重跑测试、UI 截图、运行回执、文件清单和独立复核为准。
 
-常用入口如下。
+常用入口如下。打包示例对应已发布的 v0.1.6；发布其他版本前先核对当前版本说明，不沿用旧示例的版本号。
 
 ```powershell
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.0
+pwsh ./scripts/build-release.ps1 -Version 0.1.6
 ```
 
 构建脚本不得在测试或打包时调用真实 `codex doctor`。构建结果不能自动上传或发布。

@@ -110,6 +110,19 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added the public [Code signing policy](CODE_SIGNING_POLICY.md) and kept
   signing credentials outside the repository and CI logs.
 
+## [0.1.1] - 2026-08-26
+
+### Released
+
+- Published the Windows x64 portable package, optional per-user installer, checksums, and file manifest.
+- Documented the direct-download flow without GitHub sign-in or starring, and retained the screenshot-or-description, diagnostics, similar-issue, and privacy-review flow.
+
+### Known limitations
+
+- Windows packages were unsigned; no API key or model call was required, and GitHub reports were not submitted automatically.
+
+This entry restores the missing release-history heading from the [original v0.1.1 release notes](docs/release-notes/v0.1.1.md) and [published release](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.1). It does not claim a newly implemented feature.
+
 ## [0.1.0] - 2026-08-23
 
 ### Added
@@ -148,4 +161,5 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [0.1.4]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.4
 [0.1.3]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.3
 [0.1.2]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.2
+[0.1.1]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.1
 [0.1.0]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.0

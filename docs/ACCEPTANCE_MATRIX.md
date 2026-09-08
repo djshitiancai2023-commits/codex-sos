@@ -1,8 +1,16 @@
-# Codex SOS v0.1 验收矩阵
+# Codex SOS 验收矩阵
 
 本矩阵是公开前的硬门槛，不是演示脚本。全部测试只使用 [`tests/fixtures`](../tests/fixtures/README.md) 中的虚构资料。
 
-当前自动回归已覆盖：路径后的固定短语、搜索三态与零请求、普通菜单截图零请求（`Settings`/`Version`/`Update`/`Login` 等界面字样不进搜索、版本流水号删除）、三句同分、陌生 doctor、隐私账单同源、浏览器排除/多窗口安全降级、远程 PATH 过滤和 Windows 清单声明，以及 17 份虚构 UI 场景夹具的整体加载校验。自动测试结果以最新 `RESULT: … passed; 0 failed` 为准；真实 doctor 仍明确 `NOT RUN`。真实 UI、真实截图识字与真实 doctor 的最终确认仍需干净 Windows 上的人工验收。
+### 已核实的公开状态：v0.1.6
+
+- 源码与发布提交：`2e90dc0563f14a030c1262939a383d7afcb9a307`。
+- [2026-09-04 Windows 发布记录](https://github.com/djshitiancai2023-commits/codex-sos/actions/runs/33837154773)显示 `26/26 passed; 0 failed`。这是 26 组自动测试，不是 26 次真人界面验收。
+- 当前 `tests/fixtures/scenarios/` 有 20 份虚构场景文件。场景文件数量、自动测试组数、真实操作次数是三种不同指标，不混算。
+- 自动检查故意不运行真实账号的 `codex doctor`；使用受控假进程是隐私隔离设计，不应被写成“官方体检功能未实现”。
+- 以下矩阵列的是验收要求，不是所有条目已经执行的回执。真实鼠标/键盘、真实截图识字和真实官方体检，应分别记录版本、日期与可追溯结果，不能仅凭 CI 或场景加载成功改为 PASS。
+
+[可核验示例与验证边界](EXAMPLES_AND_VERIFICATION.md)集中列出当前公开依据。本次文档更新不重新声明或否定维护者已有的本机验收，也不把缺少公开回执的条目标为已通过。
 
 ## 不可降级的总规则
 

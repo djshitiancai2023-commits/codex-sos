@@ -8,7 +8,7 @@
 
 > **Codex 一卡住，按一下救生圈。 / When Codex gets stuck, press the lifebuoy.**
 
-Codex SOS is an unofficial, local-first Windows helper for people who use Codex but do not want to read logs, run diagnostic commands, or learn GitHub. Paste an error screenshot or describe the problem in one sentence; Codex SOS gathers bounded diagnostics, runs the official `codex doctor --json` when available, looks for similar public issues, protects private details, and suggests a conservative next step.
+Turn a Codex error screenshot or one-sentence description into **privacy-reviewed troubleshooting material and a cautious next step**—without finding logs, running commands, or learning GitHub. Codex SOS is an unofficial, local-first Windows helper built around the official `codex doctor --json` when available. It also helps avoid duplicate reports and sending another application's problems to Codex maintainers.
 
 **No API key. No model call. No automatic repair or posting.**
 
@@ -26,9 +26,17 @@ The installer is optional when you want a Start-menu entry and an uninstaller.
 
 ## Why it exists
 
-A screenshot alone often leaves maintainers asking for the Codex version, Windows version, exact error text, reproduction steps, and diagnostic output. Running `codex doctor --json` helps, but the report does not know what appeared on the user's screen, does not compare similar public issues, and a green report cannot rule out runtime failures.
+A useful support report needs more than a screenshot. Codex SOS helps users gather the relevant context, check what is safe to share, and choose the right place to ask for help. It is designed to reduce missing information, duplicate reports, and unrelated reports—not to replace official support or promise a repair.
 
-Codex SOS combines the user's visible symptom with small, bounded checks and keeps the conclusions deliberately cautious.
+| What happened | What Codex SOS adds |
+|---|---|
+| The user only knows “Codex got stuck” | Bounded diagnostics and a draft that can be copied into an existing Support conversation |
+| `codex doctor` is green, but the task still failed | Keeps the visible symptom separate from the current diagnostic result; does not declare the problem solved |
+| Feedback upload failed, or the issue belongs to another app | Does not claim delivery, and avoids routing clearly unrelated problems to Codex |
+
+**See it before downloading:** [three source-backed examples and verification](docs/EXAMPLES_AND_VERIFICATION.md). These are clearly labelled synthetic test examples, not customer testimonials or screenshots of a new test run.
+
+**Verified release snapshot:** v0.1.6, three UI languages, and **26/26 automated test groups passed** in the [September 4 Windows release run](https://github.com/djshitiancai2023-commits/codex-sos/actions/runs/33837154773). Automated tests are not a claim of live Codex or mouse-and-keyboard acceptance. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
 
 ## What the user does
 

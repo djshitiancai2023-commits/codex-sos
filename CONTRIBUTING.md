@@ -46,7 +46,7 @@ pwsh ./scripts/test.ps1
 使用下面的命令构建本地候选包。
 
 ```powershell
-pwsh ./scripts/build-release.ps1 -Version 0.1.0
+pwsh ./scripts/build-release.ps1 -Version 0.1.6
 ```
 
 缺少 Inno Setup 时仍应生成便携目录和 ZIP，并明确标记安装包未构建。脚本不得静默下载工具、创建远程仓库或发布文件。
@@ -91,3 +91,21 @@ PR 请简短回答下面这些问题。
 普通问题可以开 issue，只写一句发生了什么并附经过遮盖的材料。安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
 
 项目不会要求你公开 `auth.json`、完整会话、项目代码或未经遮盖的截图。有人提出这类要求时请停止，并提醒维护者核对流程。
+
+## Maintenance ownership and evidence
+
+[**djshitiancai2023-commits**](https://github.com/djshitiancai2023-commits) is the repository owner and primary maintainer. The maintainer sets the product scope, privacy boundaries, acceptance criteria, and release decision. Codex assists with investigation, small patches, regression tests, documentation, and packaging; generated changes are not accepted merely because the assistant reports success.
+
+The recurring maintenance work is deliberately narrow: accommodate changes in official Codex diagnostics, keep three-language guidance consistent, prevent private data from escaping in reports or search terms, and keep Windows builds and support drafts working. This public repository is sufficient to review that work; private projects and conversations are not required.
+
+Three shipped examples show the intended public benefit:
+
+- [v0.1.4](docs/release-notes/v0.1.4.md): keep clearly unrelated application problems out of Codex reporting.
+- [v0.1.5](docs/release-notes/v0.1.5.md): add incident context to a draft without demanding a new form or forced reproduction.
+- [v0.1.6](docs/release-notes/v0.1.6.md): copy support material without GitHub sign-in; do not treat an unchanged Feedback ID as delivery confirmation.
+
+[Verification and limitations](docs/EXAMPLES_AND_VERIFICATION.md) distinguish automated checks from real-window acceptance. These examples document shipped behavior, not a measured reduction in support workload or an external-user count. No OpenAI affiliation, endorsement, or program acceptance is claimed.
+
+### 中文摘要
+
+仓库所有者和主要维护者负责产品取舍、隐私边界、验收标准和最终发布；Codex 协助查问题、做小修、补测试和准备发布。后续只围绕官方体检兼容、三语言一致性、隐私遮盖和 Windows 发布维护，不扩大成自动修复平台。上面三个版本链接就是现成维护记录，不需要公开任何私有工作流。
