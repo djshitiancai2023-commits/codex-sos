@@ -14,6 +14,7 @@ public sealed class DoctorRunner : IDoctorRunner
     private readonly string? _explicitCommand;
     private readonly TimeSpan _wallClockLimit;
     private bool _timedOutInThisApp;
+    private Task? _detachedDoctorCompletion;
 
     public DoctorRunner(
         DoctorJsonParser parser,
@@ -27,6 +28,22 @@ public sealed class DoctorRunner : IDoctorRunner
 
     public async Task<DoctorResult> RunAsync(CancellationToken cancellationToken)
     {
+        var detached = _detachedDoctorCompletion;
+        if (detached is not null)
+        {
+            try
+            {
+                await detached.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                if (detached.IsCompleted)
+                {
+                    _detachedDoctorCompletion = null;
+                }
+            }
+        }
+
         if (_timedOutInThisApp)
         {
             return new DoctorResult(DoctorState.TimedOut, null, [],
@@ -47,6 +64,17 @@ public sealed class DoctorRunner : IDoctorRunner
             cancellationToken,
             GetNeutralWorkingDirectory(),
             leaveRunningOnTimeout: true).ConfigureAwait(false);
+
+        if (run.DetachedCompletion is not null)
+        {
+            _detachedDoctorCompletion = run.DetachedCompletion;
+        }
+
+        if (run.Cancelled)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return DoctorResult.Unavailable("Codex 官方体检这次没有完成，但其他检查已继续完成。");
+        }
 
         if (!run.Started)
         {

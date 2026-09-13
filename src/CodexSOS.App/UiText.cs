@@ -24,6 +24,7 @@ public static class UiText
         ["PasteButton"] = ["粘贴截图", "貼上截圖", "Paste screenshot"],
         ["ChooseButton"] = ["选择已有截图", "選擇已有截圖", "Choose a screenshot"],
         ["ScreenshotEmpty"] = ["还没有截图", "還沒有截圖", "No screenshot yet"],
+        ["RemoveScreenshotButton"] = ["移除截图", "移除截圖", "Remove screenshot"],
         ["NoImageTitle"] = ["B  没画面", "B  沒有畫面", "B  No screenshot"],
         ["NoImageHint"] = ["一句话就够，不用写报错单", "一句話就夠，不用填寫錯誤表單", "One sentence is enough—no error form"],
         ["DescriptionHint"] = ["例如：Codex 做了很久突然断开，再也续不上。", "例如：Codex 執行很久後突然斷線，再也無法繼續。", "Example: Codex disconnected after running for a while and cannot resume."],
@@ -39,14 +40,16 @@ public static class UiText
         ["ResultNext"] = ["3  现在最安全怎么做", "3  現在最安全怎麼做", "3  Safest next step"],
         ["ResultMore"] = ["4  还不行怎么办", "4  還是不行怎麼辦", "4  If that does not work"],
         ["ResultMoreAnswer"] = ["已经准备好完整材料。先看一眼，再保存，或交给 Codex 官方。", "已準備好完整資料。先看一眼，再儲存，或交給 Codex 官方。", "A complete report is ready. Review it, save it, or share it with the Codex maintainers."],
-        ["ReviewButton"] = ["查看并保存完整材料", "查看並儲存完整資料", "Review and save full report"],
+        ["ReviewButton"] = ["查看并复制求助材料", "查看並複製求助資料", "Review and copy help material"],
         ["CopyResultButton"] = ["复制这四条结果", "複製這四項結果", "Copy these four results"],
         ["ResetButton"] = ["再检查一次", "再檢查一次", "Check again"],
+        ["NewProblemButton"] = ["换个问题（清空）", "換個問題（清除）", "New problem (clear)"],
+        ["StopWaitingButton"] = ["停止等待", "停止等待", "Stop waiting"],
         ["ReviewTitle"] = ["保存前，快速看一眼", "儲存前，快速看一眼", "Quick review before saving"],
         ["ReviewSubtitle"] = ["我们准备公开这些信息：", "我們準備公開這些資訊：", "This information is ready to share:"],
         ["ReviewIncludes"] = ["会保存：你的一句话、识别出的错误文字、版本和体检结论、相似公开问题链接。", "會儲存：你的一句描述、辨識出的錯誤文字、版本和檢查結論、相似公開問題連結。", "Included: your description, recognized error text, versions, check results, and links to similar public issues."],
         ["ReviewExcludes"] = ["不会保存：原截图、完整聊天、提示词、项目代码、账号文件、密钥或 cookie。", "不會儲存：原始截圖、完整聊天、提示詞、專案程式碼、帳號檔案、金鑰或 Cookie。", "Not included: the original screenshot, full chats, prompts, project code, account files, keys, or cookies."],
-        ["ReviewExpander"] = ["查看完整公开材料", "查看完整公開資料", "View the complete public report"],
+        ["ReviewExpander"] = ["查看将要复制的材料", "查看即將複製的資料", "View the material that will be copied"],
         ["ReviewWarning"] = ["自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。", "自動遮蔽無法保證 100% 安全。Codex SOS 不會自動發佈這些資料。", "Automatic redaction cannot guarantee 100% safety. Codex SOS never publishes this report automatically."],
         ["OfficialFeedbackHint"] = ["推荐先只复制材料，粘贴到原来的 OpenAI 客服邮件，不需要登录 GitHub。如果官方反馈显示上传失败，反馈编号没有变化也不代表发送成功；不要反复重试或故意重现故障。需要公开报告时，再打开 GitHub 问题页。SOS 不会代你发送。", "建議先只複製資料，貼到原本的 OpenAI 客服郵件，不需要登入 GitHub。如果官方回報顯示上傳失敗，回報編號沒有變化也不代表傳送成功；不要反覆重試或刻意重現故障。需要公開回報時，再開啟 GitHub 問題頁。SOS 不會代你傳送。", "Start by copying the report into your existing OpenAI Support email; no GitHub sign-in is needed. If the official uploader reports failure, an unchanged Feedback ID does not prove delivery. Do not keep retrying or reproduce the failure. Open the public GitHub form only when you want a public report. SOS never sends anything for you."],
         ["SaveButton"] = ["保存到电脑", "儲存到電腦", "Save to this computer"],
@@ -78,6 +81,12 @@ public static class UiText
         "检查完成" => Get(language, source, "檢查完成", "Check complete"),
         _ => source
     };
+
+    public static string Elapsed(UiLanguage language, int seconds) => Get(
+        language,
+        $"已用时 {seconds} 秒",
+        $"已用時 {seconds} 秒",
+        $"Elapsed: {seconds}s");
 
     public static string CaptureMessage(UiLanguage language, string source)
     {

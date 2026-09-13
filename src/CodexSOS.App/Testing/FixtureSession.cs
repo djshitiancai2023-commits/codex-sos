@@ -18,6 +18,7 @@ public sealed class FixtureSession
         IReadOnlyList<string> knownPrivateTerms,
         SystemFacts system,
         DoctorResult doctor,
+        int doctorDelayMilliseconds,
         IReadOnlyList<PublicIssue> issues,
         bool issueSearchSucceeded)
     {
@@ -29,6 +30,7 @@ public sealed class FixtureSession
         KnownPrivateTerms = knownPrivateTerms;
         System = system;
         Doctor = doctor;
+        DoctorDelayMilliseconds = doctorDelayMilliseconds;
         Issues = issues;
         IssueSearchSucceeded = issueSearchSucceeded;
     }
@@ -41,6 +43,7 @@ public sealed class FixtureSession
     public IReadOnlyList<string> KnownPrivateTerms { get; }
     public SystemFacts System { get; }
     public DoctorResult Doctor { get; }
+    public int DoctorDelayMilliseconds { get; }
     public IReadOnlyList<PublicIssue> Issues { get; }
     public bool IssueSearchSucceeded { get; }
 
@@ -65,6 +68,7 @@ public sealed class FixtureSession
         var issueSearch = root.GetProperty("issueSearch");
         var redactor = new PrivacyRedactor(GetStringArray(input, "knownPrivateTerms"));
         var doctor = ParseDoctor(doctorElement, redactor);
+        var doctorDelayMilliseconds = Math.Clamp(GetInt(doctorElement, "simulatedDurationMs") ?? 180, 0, 60_000);
         var system = new SystemFacts(
             GetString(systemElement, "windowsVersion") ?? "Windows Fixture Edition",
             GetString(systemElement, "architecture") ?? "x64",
@@ -86,6 +90,7 @@ public sealed class FixtureSession
             GetStringArray(input, "knownPrivateTerms"),
             system,
             doctor,
+            doctorDelayMilliseconds,
             issues,
             GetBool(issueSearch, "succeeded"));
     }
@@ -128,7 +133,7 @@ public sealed class FixtureSession
     public DiagnosticOrchestrator CreateOrchestrator(PrivacyRedactor redactor)
     {
         return new DiagnosticOrchestrator(
-            new FixtureDoctorRunner(Doctor),
+            new FixtureDoctorRunner(Doctor, DoctorDelayMilliseconds),
             new FixtureSystemCollector(System),
             new FixtureFaultEventCollector(),
             new FixtureIssueClient(Issues, IssueSearchSucceeded),
@@ -216,11 +221,11 @@ public sealed class FixtureSession
                 .Select(item => item.GetString()).Where(item => !string.IsNullOrWhiteSpace(item)).Select(item => item!).ToArray()
             : [];
 
-    private sealed class FixtureDoctorRunner(DoctorResult result) : IDoctorRunner
+    private sealed class FixtureDoctorRunner(DoctorResult result, int delayMilliseconds) : IDoctorRunner
     {
         public async Task<DoctorResult> RunAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(180, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(delayMilliseconds, cancellationToken).ConfigureAwait(false);
             return result;
         }
     }

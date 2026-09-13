@@ -14,7 +14,7 @@
 
 ## 先下载哪个（Windows x64）
 
-[直接下载便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.6/Codex-SOS-0.1.6-win-x64-portable.zip)
+[直接下载便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.7/Codex-SOS-0.1.7-win-x64-portable.zip)
 
 直接下载该压缩包即可。
 下载后右键选择“全部解压”，再双击 CodexSOS.exe。
@@ -32,12 +32,14 @@
 
 [不用安装，先看三个可核验示例](docs/EXAMPLES_AND_VERIFICATION.md)。示例来自公开的虚构测试资料，不是外部用户实测，也不是本轮新录制的界面截图。
 
-截至 **v0.1.6（9 月 4 日）**：支持简体中文、繁体中文和英文；[公开 Windows 发布记录](https://github.com/djshitiancai2023-commits/codex-sos/actions/runs/33837154773)显示 **26/26 组自动测试通过**。自动测试与真人界面验收分开说明。[查看维护方式](CONTRIBUTING.md#maintenance-ownership-and-evidence)。
+截至 **v0.1.7（9 月 13 日）**：支持简体中文、繁体中文和英文；本地候选版的 **28/28 组自动测试通过**。自动测试与真人界面验收分开说明。[查看维护方式](CONTRIBUTING.md#maintenance-ownership-and-evidence)。
 
 ## 你只需要做两步
 
 1. 双击打开 Codex SOS。
 2. 粘贴一张报错截图，或写一句发生了什么，然后点“帮我看看”。
+
+截图可以点“粘贴截图”，也可以在截图区域按 Ctrl+V 或拖入一张本机图片；需要换图时可单独移除，文字描述不会被清空。结果页的“再检查一次”会沿用当前输入，“换个问题（清空）”才会清除它们。等待太久时可按“停止等待”，输入仍会保留；右上角选过的语言会在下次打开时记住。
 
 接下来会自动完成这些事情。
 
@@ -50,6 +52,7 @@
 - 用固定规则给出保守判断和安全下一步
 - 再做一次隐私遮盖，并准备可公开的问题材料
 - 用户确认隐私预览后，推荐先只复制官方需要的栏目材料，不打开网页、不需要登录；需要公开时再用另一个按钮打开 Codex App 问题页
+- 复核页展示的文字就是“只复制反馈材料”实际复制的文字；保存和打开公开页面是次要选择，不会自动提交
 - 复制出的材料还会整理事故时间和时区、屏幕上是否有错误文字、可选的私下 Feedback ID 提示，以及影响范围和已有记录提醒；不增加一张表，也不会要求重现故障
 - 看到“feedback upload failed”时会搜索相似公开报告；反馈编号没有变化不会被当成已经发送成功
 - 如果描述明显属于浏览器、网页或其他开机程序，会明确告诉用户先别向 Codex 官方反馈
@@ -84,21 +87,21 @@ Codex SOS 会自动启动 Codex 自带的官方体检。官方体检为了完成
 ## 代码签名说明
 
 代码签名安排和维护者职责见 [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)。
-v0.1.0 到 v0.1.6 没有签名；只有安装包和便携版主程序都通过 Windows
+v0.1.0 到 v0.1.7 没有签名；只有安装包和便携版主程序都通过 Windows
 验证后，后续版本才会写成“已签名”。签名不能保证 Windows 永远不显示
 SmartScreen 提醒。
 
 ## 下载与运行
 
-v0.1.6 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.6/Codex-SOS-0.1.6-win-x64-portable.zip)。直接下载该压缩包即可。下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
+v0.1.7 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩包](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.7/Codex-SOS-0.1.7-win-x64-portable.zip)。直接下载该压缩包即可。下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
 
-如果你需要开始菜单入口和卸载功能，可选安装程序 `Codex-SOS-Setup-0.1.6.exe`。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
+如果你需要开始菜单入口和卸载功能，可选安装程序 `Codex-SOS-Setup-0.1.7.exe`。安装包会自带运行所需组件，用户不需要安装 .NET、Python、OCR 或开发工具。
 
 程序默认显示简体中文，右上角可以随时切换为繁體中文或 English；首页、检查过程、结果和导出材料会一起切换。
 
 发布页也提供 `SHA256SUMS.txt`，可用于核对文件是否完整。
 
-当前 v0.1.6 尚未签名，Windows 可能显示来源提醒。运行前请核对发布页上的 SHA-256。不要为了绕过提醒而关闭 Windows 安全保护。
+当前 v0.1.7 尚未签名，Windows 可能显示来源提醒。运行前请核对发布页上的 SHA-256。不要为了绕过提醒而关闭 Windows 安全保护。
 
 完整图文步骤见 [中文使用说明](docs/zh-CN/USAGE.md)。
 
@@ -120,7 +123,7 @@ v0.1.6 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩
 - 截取正在打开的 Codex 依赖目标窗口可见；失败时仍可粘贴截图或选择图片。
 - GitHub 公共搜索可能遇到断网或限流。此时会给出经过遮盖的浏览器搜索入口，不会谎称“没有相似问题”。
 - 固定规则只能整理线索，不能保证找到真正根因。
-- v0.1.6 尚未签名，可能触发 Windows 来源提醒。
+- v0.1.7 尚未签名，可能触发 Windows 来源提醒。
 - 只复制材料不需要 GitHub 登录；选择公开反馈页时仍需用户最后确认，GitHub 可能要求登录，官方表单里的账号套餐需要用户自己选择。
 
 ## 为什么不直接截图发给聊天工具
@@ -137,7 +140,7 @@ v0.1.6 已通过公开仓库发布。普通 Windows 用户先下载[便携压缩
 
 ```powershell
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.6
+pwsh ./scripts/build-release.ps1 -Version 0.1.7
 ```
 
 测试与 UI 验收只能使用仓库里的虚构资料，构建脚本不会运行测试机上的真实 Codex 官方体检。贡献前请读 [CONTRIBUTING.md](CONTRIBUTING.md)、[项目架构](docs/ARCHITECTURE.md) 和 [安全政策](SECURITY.md)。

@@ -1,8 +1,9 @@
 <Window x:Class="CodexSOS.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Codex SOS" Height="760" Width="1060" MinHeight="680" MinWidth="900"
-        WindowStartupLocation="CenterScreen" Background="#EEF4F7">
+        Title="Codex SOS" Height="760" Width="1060" MinHeight="560" MinWidth="760"
+        WindowStartupLocation="CenterScreen" Background="#EEF4F7"
+        PreviewKeyDown="MainWindow_PreviewKeyDown">
     <Window.Resources>
         <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource OceanBrush}" />
@@ -13,9 +14,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#FF0B6E99" /><Setter TargetName="ButtonBorder" Property="BorderThickness" Value="2" /></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45" /></Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -27,9 +33,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="9" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="9" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#FF0B6E99" /><Setter TargetName="ButtonBorder" Property="BorderThickness" Value="2" /></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45" /></Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -98,13 +109,17 @@
                                         <Button Grid.Column="0" x:Uid="PasteButton" x:Name="PasteButton" Content="粘贴截图" Style="{StaticResource SoftButton}" Click="PasteButton_Click" />
                                         <Button Grid.Column="2" x:Uid="ChooseButton" x:Name="ChooseButton" Content="选择已有截图" Style="{StaticResource SoftButton}" Click="ChooseButton_Click" />
                                     </Grid>
-                                    <Border x:Name="PreviewBorder" Background="#F1F5F7" CornerRadius="8" Height="105" Margin="0,12,0,0">
+                                    <Border x:Name="PreviewBorder" Background="#F1F5F7" CornerRadius="8" Height="105" Margin="0,12,0,0"
+                                            AllowDrop="True" Drop="PreviewBorder_Drop" DragOver="PreviewBorder_DragOver">
                                         <Grid>
                                             <Image x:Name="ScreenshotPreview" Stretch="Uniform" Margin="6" Visibility="Collapsed" />
                                             <TextBlock x:Uid="ScreenshotEmpty" x:Name="ScreenshotEmptyText" Text="还没有截图" Foreground="{StaticResource MutedBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Grid>
+                                            </Grid>
                                     </Border>
+                                    <Button x:Uid="RemoveScreenshotButton" x:Name="RemoveScreenshotButton" Content="移除截图"
+                                            Style="{StaticResource SoftButton}" HorizontalAlignment="Left" Padding="12,6"
+                                            Margin="0,8,0,0" Visibility="Collapsed" Click="RemoveScreenshotButton_Click" />
                                     <TextBlock x:Name="ScreenshotStatus" Text="截图默认不保存，也不会上传。" Foreground="{StaticResource MutedBrush}"
                                                FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0" />
                                 </StackPanel>
@@ -143,8 +158,13 @@
                         <TextBlock x:Name="ProgressText" Text="正在准备…" FontSize="17" Foreground="{StaticResource MutedBrush}"
                                    TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
                         <ProgressBar IsIndeterminate="True" Width="440" Height="7" Margin="0,24,0,0" Foreground="{StaticResource OceanBrush}" />
+                        <TextBlock x:Name="ProgressElapsedText" Text="已用时 0 秒" Foreground="{StaticResource MutedBrush}"
+                                   FontSize="13" HorizontalAlignment="Center" Margin="0,12,0,0" />
                         <TextBlock x:Uid="ProgressPrivacy" Text="不用找日志，也不会上传你的截图或聊天。" Foreground="{StaticResource MutedBrush}"
                                    FontSize="12" HorizontalAlignment="Center" Margin="0,18,0,0" />
+                        <Button x:Uid="StopWaitingButton" x:Name="StopWaitingButton" Content="停止等待"
+                                Style="{StaticResource SoftButton}" HorizontalAlignment="Center" Margin="0,16,0,0"
+                                Click="StopWaitingButton_Click" />
                     </StackPanel>
 
                     <StackPanel x:Name="ResultPanel" Visibility="Collapsed">
@@ -186,11 +206,12 @@
                         <Border Background="#EAF4F5" CornerRadius="10" Padding="16" Margin="0,20,0,0">
                             <TextBlock x:Name="ResultNote" TextWrapping="Wrap" Foreground="#335A69" />
                         </Border>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0">
+                        <WrapPanel HorizontalAlignment="Center" Margin="0,22,0,0">
                             <Button x:Uid="ReviewButton" Content="查看并保存完整材料" Style="{StaticResource PrimaryButton}" Click="ReviewButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="CopyResultButton" Content="复制这四条结果" Style="{StaticResource SoftButton}" Click="CopyResultButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="ResetButton" Content="再检查一次" Style="{StaticResource SoftButton}" Click="ResetButton_Click" />
-                        </StackPanel>
+                            <Button x:Uid="NewProblemButton" x:Name="NewProblemButton" Content="换个问题（清空）" Style="{StaticResource SoftButton}" Click="NewProblemButton_Click" Margin="10,0,0,0" />
+                        </WrapPanel>
                     </StackPanel>
 
                     <StackPanel x:Name="ReviewPanel" Visibility="Collapsed">
@@ -213,9 +234,9 @@
                                    Text="推荐先只复制材料，粘贴到原来的 OpenAI 客服邮件，不需要登录 GitHub。如果官方反馈显示上传失败，反馈编号没有变化也不代表发送成功；不要反复重试或故意重现故障。需要公开报告时，再打开 GitHub 问题页。SOS 不会代你发送。"
                                    Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" FontSize="13" Margin="0,10,0,0" />
                         <WrapPanel HorizontalAlignment="Center" Margin="0,18,0,0">
-                            <Button x:Uid="SaveButton" Content="保存到电脑" Style="{StaticResource PrimaryButton}" Click="SaveButton_Click" Margin="0,0,10,0" />
-                            <Button x:Uid="CopyOfficialFeedbackButton" x:Name="CopyOfficialFeedbackButton" Content="只复制反馈材料（无需登录）" Style="{StaticResource SoftButton}"
+                            <Button x:Uid="CopyOfficialFeedbackButton" x:Name="CopyOfficialFeedbackButton" Content="只复制反馈材料（无需登录）" Style="{StaticResource PrimaryButton}"
                                     Click="CopyOfficialFeedbackButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="SaveButton" Content="保存到电脑" Style="{StaticResource SoftButton}" Click="SaveButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="OpenOfficialFeedbackButton" x:Name="OpenOfficialFeedbackButton" Content="复制并打开公开问题页" Style="{StaticResource SoftButton}"
                                     Click="OpenOfficialFeedbackButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="BackButton" Content="返回结果" Style="{StaticResource SoftButton}" Click="BackToResultButton_Click" />

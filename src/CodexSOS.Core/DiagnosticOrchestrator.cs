@@ -120,13 +120,71 @@ public sealed class DiagnosticOrchestrator
         progress?.Report("检查完成");
         return new DiagnosticReport(runId, now, publicEvidence, system, doctor, diagnosis,
             similarity, status, events, allFindings, ScreenshotSaved: false,
-            built.PublicReport, privacyReview);
+            built.PublicReport, privacyReview, safeSignals);
+    }
+
+    /// <summary>
+    /// Re-evaluates one already completed round using a fixed, user-selected
+    /// signal. It deliberately does not call any collector or issue-search
+    /// client, so the one follow-up choice cannot start a second diagnostic
+    /// round or refresh the original check time.
+    /// </summary>
+    public DiagnosticReport Reevaluate(DiagnosticReport previous, string fixedSignal)
+    {
+        if (string.IsNullOrWhiteSpace(fixedSignal))
+        {
+            return previous;
+        }
+
+        var signal = fixedSignal.Trim();
+        var preservedSignals = (previous.SafeSignals ?? [])
+            .Concat([signal])
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var publicEvidence = previous.PublicEvidence;
+        var diagnosticEvidence = publicEvidence with
+        {
+            Description = AppendSafeSignals(publicEvidence.Description, preservedSignals),
+            OcrText = AppendSafeSignals(publicEvidence.OcrText, previous.SafeSignals ?? [])
+        };
+        var diagnosis = _diagnosis.Diagnose(
+            diagnosticEvidence,
+            previous.System,
+            previous.Doctor,
+            previous.FaultEvents,
+            previous.ServiceStatus);
+        var built = _reports.Build(
+            previous.RunId,
+            previous.CreatedAt,
+            publicEvidence,
+            previous.System,
+            previous.Doctor,
+            diagnosis,
+            previous.SimilarIssues,
+            previous.ServiceStatus,
+            previous.FaultEvents);
+        var allFindings = built.Findings
+            .GroupBy(finding => finding.Kind, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new PrivacyFinding(group.Key, group.Sum(finding => finding.Count)))
+            .OrderBy(finding => finding.Kind, StringComparer.Ordinal)
+            .ToArray();
+        var privacyReview = PublicReportBuilder.BuildPrivacyReview(allFindings);
+        return previous with
+        {
+            PublicEvidence = publicEvidence,
+            Diagnosis = diagnosis,
+            PrivacyFindings = allFindings,
+            PublicReportMarkdown = built.PublicReport,
+            PrivacyReviewMarkdown = privacyReview,
+            SafeSignals = preservedSignals
+        };
     }
 
     private static string AppendSafeSignals(string? sanitizedText, IReadOnlyList<string> safeSignals) =>
         safeSignals.Count == 0
             ? sanitizedText ?? string.Empty
             : string.Join('\n', new[] { sanitizedText ?? string.Empty }.Concat(safeSignals));
+
 
     private static string BuildFaultSearchEvidence(IReadOnlyList<FaultEvent> events) =>
         string.Join('\n', events

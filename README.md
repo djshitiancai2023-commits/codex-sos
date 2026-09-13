@@ -18,7 +18,7 @@ Turn a Codex error screenshot or one-sentence description into **privacy-reviewe
 
 ## Quick download (Windows x64)
 
-[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.6/Codex-SOS-0.1.6-win-x64-portable.zip)
+[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.7/Codex-SOS-0.1.7-win-x64-portable.zip)
 
 Directly download the ZIP. Then right-click it, choose **Extract All**, and double-click `CodexSOS.exe`. No GitHub sign-in or star is required.
 
@@ -36,13 +36,15 @@ A useful support report needs more than a screenshot. Codex SOS helps users gath
 
 **See it before downloading:** [three source-backed examples and verification](docs/EXAMPLES_AND_VERIFICATION.md). These are clearly labelled synthetic test examples, not customer testimonials or screenshots of a new test run.
 
-**Verified release snapshot:** v0.1.6, three UI languages, and **26/26 automated test groups passed** in the [September 4 Windows release run](https://github.com/djshitiancai2023-commits/codex-sos/actions/runs/33837154773). Automated tests are not a claim of live Codex or mouse-and-keyboard acceptance. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
+**Verified release snapshot:** v0.1.7, three UI languages, and **28/28 automated test groups passed** in the local Windows candidate verification. Automated tests are not a claim of live Codex or every mouse-and-keyboard combination. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
 
 ## What the user does
 
 1. Open Codex SOS.
 2. Paste/select a screenshot **or** write one sentence about what happened.
 3. Click the large check button.
+
+You can paste with the button or Ctrl+V, or drop one local image into the screenshot area. Remove the image without losing the description. **Check again** reuses the current input; **New problem (clear)** is the action that clears it. If a check takes too long, **Stop waiting** keeps the input and returns control. The selected language is remembered on the next launch.
 
 The result page answers four questions:
 
@@ -62,6 +64,7 @@ The result page answers four questions:
 - Explainable fixed rules for conservative classification and safe next steps
 - A second redaction pass before any report is saved
 - After the privacy preview, the recommended action copies a support-ready draft without opening a browser or requiring GitHub sign-in; a separate action can open the public Codex App bug form
+- The preview shows the exact text copied by the copy-only action; saving and opening the public form are secondary choices, and Codex SOS never submits for the user
 - The copied draft also carries concise OpenAI follow-up notes: incident time and time zone, visible-error status, optional private Feedback ID guidance, and scope/log reminders—without another form or a forced reproduction
 - A visible `feedback upload failed` message can be matched against similar public reports, while an unchanged Feedback ID is never treated as proof that anything was sent
 - Descriptions that clearly concern a browser, web page, startup item, or another program stay local and are not routed to Codex issue search or reporting
@@ -82,16 +85,16 @@ Automatic redaction is not a guarantee. Review exported material before publishi
 ## Code signing
 
 Public Windows releases use the signing policy in [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
-The v0.1.0 through v0.1.6 releases are unsigned. A later release will only
+The v0.1.0 through v0.1.7 releases are unsigned. A later release will only
 be described as signed after its installer and portable application pass
 Windows Authenticode verification.
 
 ## Download
 
-For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.6/Codex-SOS-0.1.6-win-x64-portable.zip). It runs without installation:
+For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.7/Codex-SOS-0.1.7-win-x64-portable.zip). It runs without installation:
 
-- `Codex-SOS-0.1.6-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
-- `Codex-SOS-Setup-0.1.6.exe` — optional when you want a Start-menu entry and an uninstaller
+- `Codex-SOS-0.1.7-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
+- `Codex-SOS-Setup-0.1.7.exe` — optional when you want a Start-menu entry and an uninstaller
 - `SHA256SUMS.txt` — integrity checksums
 
 The current public builds are unsigned, so Windows may show an unknown-publisher warning. Verify the SHA-256 checksum from the release page and do not disable Windows security protections to bypass a warning.
@@ -111,7 +114,7 @@ The current public builds are unsigned, so Windows may show an unknown-publisher
 - Common English error text for local screenshot OCR; Chinese descriptions can be typed directly
 - Simplified Chinese by default, with a prominent switch for Traditional Chinese and English
 - Fixed, explainable diagnostic rules rather than model-generated diagnosis
-- Unsigned Windows builds through v0.1.6
+- Unsigned Windows builds through v0.1.7
 
 ## Build and test
 
@@ -120,7 +123,7 @@ The repository contains the original application source, executable tests with s
 ```powershell
 pwsh ./scripts/check-source-secrets.ps1
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.6
+pwsh ./scripts/build-release.ps1 -Version 0.1.7
 ```
 
 See [BUILDING.md](BUILDING.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

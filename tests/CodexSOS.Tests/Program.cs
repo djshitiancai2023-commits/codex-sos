@@ -45,6 +45,8 @@ internal static class Program
             ("orchestrator: every collector failure degrades safely", TestOrchestratorFailureFallbackAsync),
             ("public export: privacy canaries never escape", TestPublicExportPrivacyAsync),
             ("official feedback: form fields are complete and privacy checked", TestOfficialFeedbackDraftAsync),
+            ("follow-up: reuses the completed evidence snapshot", TestFollowUpReusesSnapshotAsync),
+            ("settings and export: language persistence and partial-save truth", TestSettingsAndPartialSaveAsync),
             ("follow-up: at most one plain-language choice", TestAtMostOneFollowUpAsync),
             ("localization: Simplified Chinese default plus complete Traditional Chinese and English UI", TestLocalizationAsync),
             ("boundaries: no private-state read, OpenAI API, or write request", TestSourceBoundariesAsync),
@@ -998,6 +1000,89 @@ internal static class Program
         return Task.CompletedTask;
     }
 
+    private static async Task TestFollowUpReusesSnapshotAsync()
+    {
+        var doctor = new CountingDoctor();
+        var system = new CountingSystem();
+        var events = new CountingEvents();
+        var issues = new CountingIssues();
+        var status = new CountingStatus();
+        var redactor = new PrivacyRedactor(["fixture@example.test"]);
+        var orchestrator = new DiagnosticOrchestrator(
+            doctor, system, events, issues, status, redactor,
+            new StableTermExtractor(redactor), new DiagnosisEngine(),
+            new SimilarIssueMatcher(), new PublicReportBuilder(redactor));
+        var first = await orchestrator.RunAsync(
+            new UserEvidence("Codex suddenly disconnected and cannot resume.", string.Empty, false, FrozenNow),
+            progress: null,
+            CancellationToken.None);
+        var before = (doctor: doctor.Count, system: system.Count, events: events.Count, issues: issues.Count, status: status.Count);
+        var second = orchestrator.Reevaluate(first, OneQuestionRules.FrozenLabel);
+        Equal(before.doctor, doctor.Count, "Follow-up doctor call count");
+        Equal(before.system, system.Count, "Follow-up system call count");
+        Equal(before.events, events.Count, "Follow-up event call count");
+        Equal(before.issues, issues.Count, "Follow-up issue-search call count");
+        Equal(before.status, status.Count, "Follow-up status call count");
+        Equal(first.CreatedAt, second.CreatedAt, "Follow-up must retain original check time");
+        Assert(second.SafeSignals is { Count: > 0 } &&
+               second.SafeSignals.Contains(OneQuestionRules.FrozenLabel, StringComparer.Ordinal),
+            "Follow-up lost the fixed signal snapshot");
+        Assert(second.RunId == first.RunId, "Follow-up unexpectedly created a new diagnostic round");
+
+        var fullDescription = new string('x', 1200);
+        var full = await orchestrator.RunAsync(
+            new UserEvidence(fullDescription, string.Empty, false, FrozenNow),
+            progress: null,
+            CancellationToken.None);
+        var fullFollowUp = orchestrator.Reevaluate(full, OneQuestionRules.UnrecognizedLabel);
+        Assert(fullFollowUp.SafeSignals is { Count: > 0 } &&
+               fullFollowUp.SafeSignals.Contains(OneQuestionRules.UnrecognizedLabel, StringComparer.Ordinal),
+            "A full description prevented the fixed follow-up signal");
+    }
+
+    private static Task TestSettingsAndPartialSaveAsync()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "CodexSOS-Fictional-Settings-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var settings = Path.Combine(root, "settings.json");
+            Equal(UiLanguage.SimplifiedChinese, LanguageSettings.Load(settings), "Missing settings default");
+            Assert(LanguageSettings.TrySave(settings, UiLanguage.English), "Language setting was not saved");
+            Equal(UiLanguage.English, LanguageSettings.Load(settings), "Saved English language");
+            var savedSettings = File.ReadAllText(settings);
+            Contains(savedSettings, "English", "Saved language enum");
+            Assert(!savedSettings.Contains("description", StringComparison.OrdinalIgnoreCase),
+                "Settings unexpectedly contained user description data");
+            File.WriteAllText(settings, "{\"language\":\"not-a-language\"}");
+            Equal(UiLanguage.SimplifiedChinese, LanguageSettings.Load(settings), "Invalid language fallback");
+            File.WriteAllText(settings, "[]");
+            Equal(UiLanguage.SimplifiedChinese, LanguageSettings.Load(settings), "Malformed settings shape fallback");
+            Assert(!LanguageSettings.TrySave(root, UiLanguage.TraditionalChinese),
+                "Saving over a directory should fail without blocking startup");
+
+            var outcome = ReportFileWriter.TrySave(
+                Path.Combine(root, "public.md"), "public",
+                Path.Combine(root, "privacy.md"), "privacy",
+                (path, text) =>
+                {
+                    if (path.EndsWith("privacy.md", StringComparison.Ordinal)) throw new IOException("fixture second-write failure");
+                    File.WriteAllText(path, text);
+                });
+            Assert(outcome.PublicReportSaved && !outcome.PrivacyReviewSaved && !outcome.BothSaved,
+                "Partial save was not reported accurately");
+            Contains(outcome.PrivacyError ?? string.Empty, "IOException", "Partial-save error kind");
+        }
+        finally
+        {
+            try { Directory.Delete(root, recursive: true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+
+        return Task.CompletedTask;
+    }
+
     private static Task TestAtMostOneFollowUpAsync()
     {
         var cannotDetermine = new Diagnosis(
@@ -1333,6 +1418,59 @@ internal static class Program
         if (actual.Contains(forbidden, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException($"{context}: forbidden text was present: {forbidden}");
+        }
+    }
+
+    private sealed class CountingDoctor : IDoctorRunner
+    {
+        public int Count { get; private set; }
+        public Task<DoctorResult> RunAsync(CancellationToken cancellationToken)
+        {
+            Count++;
+            return Task.FromResult(new DoctorResult(DoctorState.Ok, "0.99.7-fixture", [],
+                "官方体检暂未发现异常；这份检查无法解释所有故障。"));
+        }
+    }
+
+    private sealed class CountingSystem : ISystemCollector
+    {
+        public int Count { get; private set; }
+        public Task<SystemFacts> CollectAsync(CancellationToken cancellationToken)
+        {
+            Count++;
+            return Task.FromResult(FixtureSystem(CodexSurface.Desktop));
+        }
+    }
+
+    private sealed class CountingEvents : IFaultEventCollector
+    {
+        public int Count { get; private set; }
+        public Task<IReadOnlyList<FaultEvent>> CollectAsync(DateTimeOffset since, CancellationToken cancellationToken)
+        {
+            Count++;
+            return Task.FromResult<IReadOnlyList<FaultEvent>>([]);
+        }
+    }
+
+    private sealed class CountingIssues : IIssueSearchClient
+    {
+        public int Count { get; private set; }
+        public Task<IssueSearchResult> SearchAsync(IReadOnlyList<string> stableTerms, CancellationToken cancellationToken)
+        {
+            Count++;
+            return Task.FromResult<IssueSearchResult>(stableTerms.Count == 0
+                ? IssueSearchResult.NoUsableTerms()
+                : new IssueSearchResult([], IssueSearchState.Completed));
+        }
+    }
+
+    private sealed class CountingStatus : IServiceStatusClient
+    {
+        public int Count { get; private set; }
+        public Task<ServiceStatusResult> GetAsync(CancellationToken cancellationToken)
+        {
+            Count++;
+            return Task.FromResult(ServiceStatusResult.Unavailable());
         }
     }
 

@@ -8,6 +8,33 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
+## [0.1.7] - 2026-09-13
+
+### Added
+
+- Rechecking keeps the current screenshot and description; starting a new problem is the explicit clear action.
+- A single plain-language follow-up choice reuses the completed evidence snapshot instead of rerunning OCR, doctor, or system collection.
+- Screenshot input now supports the existing paste button, Ctrl+V, one local image drop, and removing only the image.
+- The selected interface language is remembered locally without storing screenshots, descriptions, logs, accounts, history, or paths.
+- Long checks show elapsed seconds and offer a safe stop-waiting action without inventing progress or killing the official process.
+
+### Changed
+
+- The privacy-review page makes copy-only support material the shortest path; the preview and clipboard use the same redacted draft.
+- Save feedback distinguishes complete, partial, and failed writes instead of claiming both files succeeded when one did not.
+- Small-window scrolling, keyboard focus, and disabled states were tightened for the existing Windows-first layout.
+
+### Verification
+
+- 28/28 executable tests passed; the candidate was built self-contained for Windows x64, with package privacy checks passing.
+- The local candidate was exercised with fictional visible UI scenarios and a local OCR fixture. Real user accounts, sessions, projects, and official doctor output were not read.
+
+### Known limitations
+
+- Windows packages are unsigned and may show an unknown-publisher warning.
+- The release is Windows x64 only. Rules and redaction do not guarantee a root cause or perfect privacy.
+- Codex SOS prepares material but does not send email, upload screenshots, or submit issues for the user.
+
 ## [0.1.6] - 2026-09-04
 
 ### Added
@@ -155,7 +182,8 @@ This entry restores the missing release-history heading from the [original v0.1.
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.7
 [0.1.6]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.6
 [0.1.5]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.5
 [0.1.4]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.4

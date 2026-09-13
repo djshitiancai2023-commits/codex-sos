@@ -11,7 +11,9 @@ internal sealed record ProcessRunResult(
     int? ExitCode,
     string StandardOutput,
     string StandardError,
-    Exception? StartError = null);
+    Exception? StartError = null,
+    bool Cancelled = false,
+    Task? DetachedCompletion = null);
 
 internal static class BoundedProcess
 {
@@ -76,18 +78,25 @@ internal static class BoundedProcess
             timedOut = true;
             if (leaveRunningOnTimeout)
             {
-                TrackUntilNaturalExit(process, outputTask, errorTask);
-                return new(true, true, null, string.Empty, string.Empty);
+                var detached = TrackUntilNaturalExit(process, outputTask, errorTask);
+                return new(true, true, null, string.Empty, string.Empty,
+                    DetachedCompletion: detached);
             }
 
             TryKillTree(process);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller requested a stop. The cancellation branch below
+            // decides whether the child must be left to exit naturally.
+        }
 
         if (cancellationToken.IsCancellationRequested)
         {
+            Task? detached = null;
             if (leaveRunningOnTimeout)
             {
-                TrackUntilNaturalExit(process, outputTask, errorTask);
+                detached = TrackUntilNaturalExit(process, outputTask, errorTask);
             }
             else
             {
@@ -95,7 +104,8 @@ internal static class BoundedProcess
                 process.Dispose();
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
+            return new(true, false, null, string.Empty, string.Empty,
+                Cancelled: true, DetachedCompletion: detached);
         }
 
         // Killing closes the redirected pipes. Use a small independent ceiling so a broken child
@@ -110,7 +120,7 @@ internal static class BoundedProcess
         return new(true, timedOut, exitCode, output, error);
     }
 
-    private static void TrackUntilNaturalExit(
+    private static Task TrackUntilNaturalExit(
         Process process,
         Task<string> outputTask,
         Task<string> errorTask)
@@ -126,6 +136,7 @@ internal static class BoundedProcess
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
+        return task;
     }
 
     private static async Task FinishDetachedAsync(
@@ -138,7 +149,7 @@ internal static class BoundedProcess
             await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
             await Task.WhenAll(outputTask, errorTask).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or IOException)
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or IOException or OperationCanceledException)
         {
             // A detached official diagnostic may exit while its handles are being observed.
         }

@@ -4,7 +4,10 @@ using System.Net;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using CodexSOS.App.Services;
 using CodexSOS.App.Testing;
 using CodexSOS.Core;
@@ -77,6 +80,8 @@ public static class OneQuestionRules
 
 public partial class MainWindow : Window
 {
+    private const long MaximumScreenshotBytes = 25 * 1024 * 1024;
+    private const int MaximumScreenshotDimension = 4096;
     private readonly HttpClient _httpClient;
     private readonly DiagnosticOrchestrator _orchestrator;
     private readonly DiagnosisEngine _diagnosisEngine;
@@ -85,9 +90,16 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _activeRun;
     private BitmapSource? _screenshot;
     private DiagnosticReport? _report;
+    private string? _reviewDraftText;
     private bool _clarifyingQuestionShown = false;
     private OcrAttemptOutcome _ocrAttempt = OcrAttemptOutcome.None;
     private UiLanguage _language = UiLanguage.SimplifiedChinese;
+    private readonly DispatcherTimer _elapsedTimer;
+    private DateTimeOffset _runStartedAt;
+    private long _runGeneration;
+    private bool _runInProgress;
+    private bool _suppressLanguageSave;
+    private bool _closing;
 
     private readonly FixtureSession? _fixture;
 
@@ -95,6 +107,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _fixture = fixture;
+        _elapsedTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _elapsedTimer.Tick += ElapsedTimer_Tick;
         _httpClient = new HttpClient(new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.All,
@@ -124,24 +138,53 @@ public partial class MainWindow : Window
         _ocr = fixture is null ? LocalOcrFactory.Create() : new FixtureOcrService(fixture.MockOcrText);
         Closed += MainWindow_Closed;
         Loaded += MainWindow_Loaded;
-        LanguageSelector.SelectedIndex = 0;
+        _language = LanguageSettings.Load(LanguageSettings.DefaultPath);
+        _suppressLanguageSave = true;
+        LanguageSelector.SelectedIndex = (int)_language;
+        _suppressLanguageSave = false;
         ApplyLanguage();
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        if (_fixture is null) return;
-        Title = $"Codex SOS · {_fixture.Id}（全部虚构）";
-        DescriptionBox.Text = _fixture.Description;
-        if (_fixture.ScreenshotProvided)
+        var workArea = SystemParameters.WorkArea;
+        if (workArea.Width - 24 < MinWidth)
         {
-            SetScreenshot(_fixture.CreateSyntheticScreenshot(),
-                $"已载入 {_fixture.Id} 虚构截图；不含真实账号、任务或项目。 ");
+            MinWidth = Math.Max(480, workArea.Width - 24);
+        }
+        if (workArea.Height - 24 < MinHeight)
+        {
+            MinHeight = Math.Max(360, workArea.Height - 24);
+        }
+        if (Width > workArea.Width - 24)
+        {
+            Width = Math.Max(MinWidth, workArea.Width - 24);
+        }
+        if (Height > workArea.Height - 24)
+        {
+            Height = Math.Max(MinHeight, workArea.Height - 24);
+        }
+        Left = Math.Max(workArea.Left, Math.Min(Left, workArea.Right - Width));
+        Top = Math.Max(workArea.Top, Math.Min(Top, workArea.Bottom - Height));
+        if (_fixture is not null)
+        {
+            Title = $"Codex SOS · {_fixture.Id}（全部虚构）";
+            DescriptionBox.Text = _fixture.Description;
+            if (_fixture.ScreenshotProvided)
+            {
+                SetScreenshot(_fixture.CreateSyntheticScreenshot(),
+                    $"已载入 {_fixture.Id} 虚构截图；不含真实账号、任务或项目。 ");
+            }
+
+            StartError.Text = $"虚构验收场景：{_fixture.Id} · {_fixture.Title}";
+            StartError.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 107, 135));
+            StartError.Visibility = Visibility.Visible;
         }
 
-        StartError.Text = $"虚构验收场景：{_fixture.Id} · {_fixture.Title}";
-        StartError.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 107, 135));
-        StartError.Visibility = Visibility.Visible;
+        // The visual tree is complete only after Loaded. Apply once here so
+        // the default Simplified Chinese screen receives the same localized
+        // button text as an explicit language switch.
+        ApplyLanguage();
     }
 
     private void CaptureButton_Click(object sender, RoutedEventArgs e)
@@ -159,27 +202,32 @@ public partial class MainWindow : Window
 
     private void PasteButton_Click(object sender, RoutedEventArgs e)
     {
+        PasteScreenshotFromClipboard();
+    }
+
+    private bool PasteScreenshotFromClipboard()
+    {
         try
         {
             if (!Clipboard.ContainsImage())
             {
                 ScreenshotStatus.Text = L("剪贴板里没有图片。你可以先截图，再点一次“粘贴截图”。", "剪貼簿裡沒有圖片。你可以先截圖，再點一次「貼上截圖」。", "There is no image on the clipboard. Take a screenshot, then choose “Paste screenshot” again.");
-                return;
+                return false;
             }
 
             var image = Clipboard.GetImage();
             if (image is null)
             {
                 ScreenshotStatus.Text = L("这张图片暂时无法读取。你也可以选择已有截图。", "暫時無法讀取這張圖片。你也可以選擇已有截圖。", "This image could not be read. You can choose an existing screenshot instead.");
-                return;
+                return false;
             }
 
-            image.Freeze();
-            SetScreenshot(image, L("已粘贴截图。图片只在本机处理，不会放进公开材料。", "已貼上截圖。圖片只在本機處理，不會放進公開資料。", "Screenshot pasted. The image stays on this computer and is not included in the public report."));
+            return TrySetScreenshot(image, L("已粘贴截图。图片只在本机处理，不会放进公开材料。", "已貼上截圖。圖片只在本機處理，不會放進公開資料。", "Screenshot pasted. The image stays on this computer and is not included in the public report."));
         }
         catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
         {
             ScreenshotStatus.Text = L("剪贴板暂时正忙。请再点一次，或选择已有截图。", "剪貼簿暫時忙碌。請再點一次，或選擇已有截圖。", "The clipboard is busy. Try again or choose an existing screenshot.");
+            return false;
         }
     }
 
@@ -196,22 +244,125 @@ public partial class MainWindow : Window
 
         try
         {
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.UriSource = new Uri(dialog.FileName, UriKind.Absolute);
-            image.EndInit();
-            image.Freeze();
-            SetScreenshot(image, L("已选择截图。图片只在本机处理，不会放进公开材料。", "已選擇截圖。圖片只在本機處理，不會放進公開資料。", "Screenshot selected. The image stays on this computer and is not included in the public report."));
+            if (!TryLoadScreenshotFile(dialog.FileName, out var image)) return;
+            TrySetScreenshot(image, L("已选择截图。图片只在本机处理，不会放进公开材料。", "已選擇截圖。圖片只在本機處理，不會放進公開資料。", "Screenshot selected. The image stays on this computer and is not included in the public report."));
         }
-        catch (Exception ex) when (ex is NotSupportedException or IOException or UriFormatException)
+        catch (Exception ex) when (ex is NotSupportedException or IOException or UriFormatException or ArgumentException or FileNotFoundException or DirectoryNotFoundException or InvalidDataException or EndOfStreamException or OutOfMemoryException)
         {
             ScreenshotStatus.Text = L("这张图片暂时无法读取。请换一张 PNG、JPG 或 BMP 图片。", "暫時無法讀取這張圖片。請改用 PNG、JPG 或 BMP 圖片。", "This image could not be read. Try a PNG, JPG, or BMP image.");
         }
     }
 
-    private async void StartButton_Click(object sender, RoutedEventArgs e)
+    private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key != Key.V || Keyboard.Modifiers != ModifierKeys.Control ||
+            Keyboard.FocusedElement is TextBoxBase)
+        {
+            return;
+        }
+
+        PasteScreenshotFromClipboard();
+        e.Handled = true;
+    }
+
+    private void PreviewBorder_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = HasSingleLocalImage(e.Data) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void PreviewBorder_Drop(object sender, DragEventArgs e)
+    {
+        if (!HasSingleLocalImage(e.Data))
+        {
+            ScreenshotStatus.Text = L("请一次拖入一张本机图片。", "請一次拖入一張本機圖片。", "Drop one local image at a time.");
+            return;
+        }
+
+        var path = ((string[])e.Data.GetData(DataFormats.FileDrop))[0];
+        try
+        {
+            if (TryLoadScreenshotFile(path, out var image))
+            {
+                TrySetScreenshot(image, L("已拖入截图。图片只在本机处理，不会放进公开材料。", "已拖入截圖。圖片只在本機處理，不會放進公開資料。", "Screenshot dropped. The image stays on this computer and is not included in the public report."));
+            }
+        }
+        catch (Exception ex) when (ex is NotSupportedException or IOException or UriFormatException or ArgumentException or FileNotFoundException or DirectoryNotFoundException or InvalidDataException or EndOfStreamException or OutOfMemoryException)
+        {
+            ScreenshotStatus.Text = L("这张图片暂时无法读取。请换一张 PNG、JPG 或 BMP 图片。", "暫時無法讀取這張圖片。請改用 PNG、JPG 或 BMP 圖片。", "This image could not be read. Try a PNG, JPG, or BMP image.");
+        }
+        e.Handled = true;
+    }
+
+    private static bool HasSingleLocalImage(System.Windows.IDataObject data)
+    {
+        try
+        {
+            if (!data.GetDataPresent(DataFormats.FileDrop)) return false;
+            var paths = data.GetData(DataFormats.FileDrop) as string[];
+            return paths is { Length: 1 } &&
+                !string.IsNullOrWhiteSpace(paths[0]) &&
+                !paths[0].StartsWith("\\\\", StringComparison.Ordinal) &&
+                IsImageExtension(paths[0]);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException or System.Runtime.InteropServices.ExternalException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsImageExtension(string path) =>
+        Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".bmp" or ".tif" or ".tiff";
+
+    private bool TryLoadScreenshotFile(string path, out BitmapImage image)
+    {
+        image = null!;
+        if (!IsImageExtension(path) || new FileInfo(path).Length > MaximumScreenshotBytes)
+        {
+            ScreenshotStatus.Text = L("图片太大或格式不支持。请换一张不超过 25 MB 的 PNG、JPG 或 BMP 图片。", "圖片太大或格式不支援。請改用不超過 25 MB 的 PNG、JPG 或 BMP 圖片。", "This image is too large or unsupported. Use a PNG, JPG, or BMP image up to 25 MB.");
+            return false;
+        }
+
+        var candidate = new BitmapImage();
+        candidate.BeginInit();
+        candidate.CacheOption = BitmapCacheOption.OnLoad;
+        candidate.UriSource = new Uri(path, UriKind.Absolute);
+        candidate.EndInit();
+        candidate.Freeze();
+        if (candidate.PixelWidth > MaximumScreenshotDimension || candidate.PixelHeight > MaximumScreenshotDimension)
+        {
+            ScreenshotStatus.Text = L("图片尺寸太大。请换一张宽高都不超过 4096 像素的图片。", "圖片尺寸太大。請改用寬高都不超過 4096 像素的圖片。", "This image is too large. Use an image no larger than 4096 pixels in either dimension.");
+            return false;
+        }
+
+        image = candidate;
+        return true;
+    }
+
+    private bool TrySetScreenshot(BitmapSource image, string message)
+    {
+        if (image.PixelWidth > MaximumScreenshotDimension || image.PixelHeight > MaximumScreenshotDimension)
+        {
+            ScreenshotStatus.Text = L("图片尺寸太大。请换一张宽高都不超过 4096 像素的图片。", "圖片尺寸太大。請改用寬高都不超過 4096 像素的圖片。", "This image is too large. Use an image no larger than 4096 pixels in either dimension.");
+            return false;
+        }
+
+        image.Freeze();
+        SetScreenshot(image, message);
+        return true;
+    }
+
+    private void RemoveScreenshotButton_Click(object sender, RoutedEventArgs e)
+    {
+        ClearScreenshot();
+        ScreenshotStatus.Text = L("已移除截图；你的文字描述还在。", "已移除截圖；你的文字描述仍在。", "The screenshot was removed; your description is still here.");
+    }
+
+    private async void StartButton_Click(object sender, RoutedEventArgs e) => await BeginCheckAsync();
+
+    private async Task BeginCheckAsync()
+    {
+        if (_runInProgress) return;
         var description = DescriptionBox.Text.Trim();
         if (_screenshot is null && string.IsNullOrWhiteSpace(description))
         {
@@ -222,45 +373,49 @@ public partial class MainWindow : Window
 
         StartError.Visibility = Visibility.Collapsed;
         ShowPanel(ProgressPanel);
-        // Let WPF paint the progress page before any local collection/OCR work
-        // begins.  The user should always see that the click was accepted.
         await Dispatcher.InvokeAsync(
             () =>
             {
                 MainScroll.UpdateLayout();
                 MainScroll.ScrollToTop();
             },
-            System.Windows.Threading.DispatcherPriority.Render);
+            DispatcherPriority.Render);
+
+        var generation = ++_runGeneration;
+        _runInProgress = true;
+        _report = null;
+        _reviewDraftText = null;
+        _clarifyingQuestionShown = false;
+        _runStartedAt = DateTimeOffset.UtcNow;
+        _elapsedTimer.Start();
+        StopWaitingButton.IsEnabled = true;
+        ProgressElapsedText.Text = UiText.Elapsed(_language, 0);
         _ocrAttempt = OcrAttemptOutcome.None;
-        _activeRun?.Cancel();
-        _activeRun?.Dispose();
-        _activeRun = new CancellationTokenSource();
-        var token = _activeRun.Token;
+        var runCts = new CancellationTokenSource();
+        _activeRun = runCts;
+        var token = runCts.Token;
+        var screenshot = _screenshot;
 
         try
         {
             var ocrText = string.Empty;
-            if (_screenshot is not null)
+            if (screenshot is not null)
             {
-                ProgressText.Text = L("正在本机识别截图里的错误文字…", "正在本機辨識截圖中的錯誤文字…", "Reading error text from the screenshot on this computer…");
+                SetProgress(generation, L("正在本机识别截图里的错误文字…", "正在本機辨識截圖中的錯誤文字…", "Reading error text from the screenshot on this computer…"));
                 try
                 {
                     if (_ocr.IsAvailable)
                     {
-                        ocrText = await _ocr.ReadAsync(_screenshot, token);
+                        ocrText = await _ocr.ReadAsync(screenshot, token);
                         if (string.IsNullOrWhiteSpace(ocrText)) ocrText = string.Empty;
-                        _ocrAttempt = ocrText.Length > 0
-                            ? OcrAttemptOutcome.Success
-                            : OcrAttemptOutcome.NoText;
+                        _ocrAttempt = ocrText.Length > 0 ? OcrAttemptOutcome.Success : OcrAttemptOutcome.NoText;
                         if (!token.IsCancellationRequested && ocrText.Length == 0)
-                        {
-                            ProgressText.Text = L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue.");
-                        }
+                            SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
                     }
                     else
                     {
                         _ocrAttempt = OcrAttemptOutcome.Unavailable;
-                        ProgressText.Text = L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue.");
+                        SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
                     }
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -269,32 +424,46 @@ public partial class MainWindow : Window
                 }
                 catch (TimeoutException)
                 {
-                    ocrText = string.Empty;
                     _ocrAttempt = OcrAttemptOutcome.Timeout;
-                    ProgressText.Text = L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue.");
+                    SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
                 }
                 catch (Exception)
                 {
-                    ocrText = string.Empty;
                     _ocrAttempt = OcrAttemptOutcome.Failure;
-                    ProgressText.Text = L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue.");
+                    SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒能讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
                 }
             }
 
-            var evidence = new UserEvidence(description, ocrText, _screenshot is not null, DateTimeOffset.UtcNow);
-            var progress = new Progress<string>(text => ProgressText.Text = UiText.Progress(_language, text));
-            _report = await _orchestrator.RunAsync(evidence, progress, token);
-            ShowResult(_report);
+            var evidence = new UserEvidence(description, ocrText, screenshot is not null, DateTimeOffset.UtcNow);
+            var progress = new Progress<string>(text => SetProgress(generation, UiText.Progress(_language, text)));
+            var report = await _orchestrator.RunAsync(evidence, progress, token);
+            if (!IsCurrentRun(generation, token)) return;
+            _report = report;
+            FinishRun(generation);
+            ShowResult(report);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
-            // Closing or starting a new run intentionally cancels the old work.
+            if (IsCurrentGeneration(generation) && !_closing && _runInProgress)
+            {
+                FinishRun(generation);
+                ShowPanel(StartPanel);
+                StartError.Text = L("已停止等待，输入还在。需要时可以再检查。", "已停止等待，輸入仍在。需要時可以再檢查。", "Waiting stopped. Your input is still here; you can check again when ready.");
+                StartError.Visibility = Visibility.Visible;
+            }
         }
         catch (Exception)
         {
+            if (!IsCurrentGeneration(generation) || _closing) return;
+            FinishRun(generation);
             StartError.Text = L("这次检查没有完成。你的截图没有上传，也没有改动 Codex 数据。请再试一次。", "這次檢查沒有完成。你的截圖沒有上傳，也沒有改動 Codex 資料。請再試一次。", "The check did not complete. Your screenshot was not uploaded and no Codex data was changed. Please try again.");
             StartError.Visibility = Visibility.Visible;
             ShowPanel(StartPanel);
+        }
+        finally
+        {
+            if (ReferenceEquals(_activeRun, runCts)) _activeRun = null;
+            runCts.Dispose();
         }
     }
 
@@ -398,20 +567,14 @@ public partial class MainWindow : Window
         {
             if (sender is not Button { Tag: ClarifyingChoice choice }) return;
             _clarifyingQuestionShown = true;
-            var original = DescriptionBox.Text.TrimEnd();
-            var room = Math.Max(0, DescriptionBox.MaxLength - original.Length - 1);
-            if (room > 0)
-            {
-                var addition = choice.Label[..Math.Min(room, choice.Label.Length)];
-                DescriptionBox.Text = string.IsNullOrEmpty(original)
-                    ? addition
-                    : $"{original}\n{addition}";
-                DescriptionBox.CaretIndex = DescriptionBox.Text.Length;
-            }
             ClarifyingChoicesPanel.Children.Clear();
             ClarifyingPanel.Visibility = Visibility.Collapsed;
             StartError.Visibility = Visibility.Collapsed;
-            StartButton_Click(StartButton, new RoutedEventArgs());
+            if (_report is not null)
+            {
+                _report = _orchestrator.Reevaluate(_report, choice.Label);
+                ShowResult(_report);
+            }
         }
         catch (Exception)
         {
@@ -503,7 +666,10 @@ public partial class MainWindow : Window
     private void ReviewButton_Click(object sender, RoutedEventArgs e)
     {
         if (_report is null) return;
-        ReportPreview.Text = UiText.BuildPublicReport(_report, _language);
+        _reviewDraftText = _report.Diagnosis.OfficialFeedbackAppropriate
+            ? new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(_report)
+            : UiText.BuildPublicReport(_report, _language);
+        ReportPreview.Text = _reviewDraftText;
         var count = _report.PrivacyFindings.Sum(finding => finding.Count);
         PrivacyCountText.Text = count == 0
             ? L("自动检查暂未发现需要遮住的内容。", "自動檢查暫未發現需要遮蔽的內容。", "The automatic check found nothing that needed redaction.")
@@ -539,8 +705,8 @@ public partial class MainWindow : Window
 
         try
         {
-            var draft = new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(_report);
-            Clipboard.SetText(draft);
+            _reviewDraftText ??= new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(_report);
+            Clipboard.SetText(_reviewDraftText);
         }
         catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
         {
@@ -592,24 +758,32 @@ public partial class MainWindow : Window
         };
         if (dialog.ShowDialog(this) != true) return;
 
-        try
+        var directory = Path.GetDirectoryName(dialog.FileName) ?? Environment.CurrentDirectory;
+        var reviewPath = Path.Combine(directory,
+            Path.GetFileNameWithoutExtension(dialog.FileName) + L("-隐私复核.md", "-隱私複核.md", "-privacy-review.md"));
+        if (File.Exists(reviewPath))
         {
-            File.WriteAllText(dialog.FileName, UiText.BuildPublicReport(_report, _language), new System.Text.UTF8Encoding(false));
-            var directory = Path.GetDirectoryName(dialog.FileName) ?? Environment.CurrentDirectory;
-            var reviewPath = Path.Combine(directory,
-                Path.GetFileNameWithoutExtension(dialog.FileName) + L("-隐私复核.md", "-隱私複核.md", "-privacy-review.md"));
-            File.WriteAllText(reviewPath, UiText.BuildPrivacyReview(_report, _language), new System.Text.UTF8Encoding(false));
-            MessageBox.Show(this,
-                L("已经保存两份文件：公开材料和隐私复核说明。原截图没有保存，也不会自动发布。", "已儲存兩份檔案：公開資料和隱私複核說明。原始截圖沒有儲存，也不會自動發佈。", "Two files were saved: the public report and the privacy review. The original screenshot was not saved, and nothing is published automatically."),
-                L("保存完成", "儲存完成", "Saved"), MessageBoxButton.OK, MessageBoxImage.Information);
+            var overwrite = MessageBox.Show(this,
+                L("隐私复核文件已经存在，要覆盖它吗？", "隱私複核檔案已存在，要覆蓋它嗎？", "The privacy-review file already exists. Overwrite it?"),
+                L("确认覆盖", "確認覆蓋", "Confirm overwrite"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (overwrite != MessageBoxResult.Yes) return;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+
+        var outcome = ReportFileWriter.TrySave(
+            dialog.FileName,
+            UiText.BuildPublicReport(_report, _language),
+            reviewPath,
+            UiText.BuildPrivacyReview(_report, _language));
+        var message = outcome switch
         {
-            MessageBox.Show(this,
-                L("这个位置暂时无法保存。请选择另一个文件夹。", "暫時無法儲存到這個位置。請選擇其他資料夾。", "This location could not be used. Choose another folder."),
-                L("没有保存", "未儲存", "Not saved"),
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
+            { BothSaved: true } => L("已经保存两份文件：公开材料和隐私复核说明。原截图没有保存，也不会自动发布。", "已儲存兩份檔案：公開資料和隱私複核說明。原始截圖沒有儲存，也不會自動發佈。", "Two files were saved: the public report and the privacy review. The original screenshot was not saved, and nothing is published automatically."),
+            { PublicReportSaved: true, PrivacyReviewSaved: false } => L("公开材料已保存，但隐私复核说明没有保存。请换一个位置再试。", "公開資料已儲存，但隱私複核說明沒有儲存。請換一個位置再試。", "The public report was saved, but the privacy review was not. Choose another location and try again."),
+            { PublicReportSaved: false, PrivacyReviewSaved: true } => L("隐私复核说明已保存，但公开材料没有保存。请换一个位置再试。", "隱私複核說明已儲存，但公開資料沒有儲存。請換一個位置再試。", "The privacy review was saved, but the public report was not. Choose another location and try again."),
+            _ => L("这两份材料都没有保存。请选择另一个文件夹。", "這兩份資料都沒有儲存。請選擇其他資料夾。", "Neither file was saved. Choose another folder.")
+        };
+        MessageBox.Show(this, message,
+            outcome.BothSaved ? L("保存完成", "儲存完成", "Saved") : L("保存结果", "儲存結果", "Save result"),
+            MessageBoxButton.OK, outcome.BothSaved ? MessageBoxImage.Information : MessageBoxImage.Warning);
     }
 
     private void CopyResultButton_Click(object sender, RoutedEventArgs e)
@@ -645,14 +819,25 @@ public partial class MainWindow : Window
 
     private void ResetButton_Click(object sender, RoutedEventArgs e)
     {
+        _ = BeginCheckAsync();
+    }
+
+    private void NewProblemButton_Click(object sender, RoutedEventArgs e)
+    {
+        _runGeneration++;
         _activeRun?.Cancel();
+        _runInProgress = false;
+        _elapsedTimer.Stop();
+        StopWaitingButton.IsEnabled = false;
         _report = null;
+        _reviewDraftText = null;
         _screenshot = null;
         _clarifyingQuestionShown = false;
         _ocrAttempt = OcrAttemptOutcome.None;
         ScreenshotPreview.Source = null;
         ScreenshotPreview.Visibility = Visibility.Collapsed;
         ScreenshotEmptyText.Visibility = Visibility.Visible;
+        RemoveScreenshotButton.Visibility = Visibility.Collapsed;
         ScreenshotStatus.Text = L("截图默认不保存，也不会上传。", "截圖預設不儲存，也不會上傳。", "Screenshots are not saved or uploaded by default.");
         DescriptionBox.Text = string.Empty;
         StartError.Visibility = Visibility.Collapsed;
@@ -671,6 +856,10 @@ public partial class MainWindow : Window
             2 => UiLanguage.English,
             _ => UiLanguage.SimplifiedChinese
         };
+        if (!_suppressLanguageSave)
+        {
+            LanguageSettings.TrySave(LanguageSettings.DefaultPath, _language);
+        }
         ApplyLanguage();
     }
 
@@ -750,8 +939,57 @@ public partial class MainWindow : Window
         ScreenshotPreview.Source = image;
         ScreenshotPreview.Visibility = Visibility.Visible;
         ScreenshotEmptyText.Visibility = Visibility.Collapsed;
+        RemoveScreenshotButton.Visibility = Visibility.Visible;
         ScreenshotStatus.Text = message;
         StartError.Visibility = Visibility.Collapsed;
+    }
+
+    private void ClearScreenshot()
+    {
+        _screenshot = null;
+        ScreenshotPreview.Source = null;
+        ScreenshotPreview.Visibility = Visibility.Collapsed;
+        ScreenshotEmptyText.Visibility = Visibility.Visible;
+        RemoveScreenshotButton.Visibility = Visibility.Collapsed;
+    }
+
+    private void SetProgress(long generation, string text)
+    {
+        if (!IsCurrentGeneration(generation) || _closing) return;
+        ProgressText.Text = text;
+    }
+
+    private bool IsCurrentGeneration(long generation) => generation == _runGeneration;
+
+    private bool IsCurrentRun(long generation, CancellationToken token) =>
+        IsCurrentGeneration(generation) && !token.IsCancellationRequested && !_closing;
+
+    private void ElapsedTimer_Tick(object? sender, EventArgs e)
+    {
+        if (!_runInProgress) return;
+        var seconds = Math.Max(0, (int)Math.Floor((DateTimeOffset.UtcNow - _runStartedAt).TotalSeconds));
+        ProgressElapsedText.Text = UiText.Elapsed(_language, seconds);
+    }
+
+    private void FinishRun(long generation)
+    {
+        if (!IsCurrentGeneration(generation)) return;
+        _runInProgress = false;
+        _elapsedTimer.Stop();
+        StopWaitingButton.IsEnabled = false;
+    }
+
+    private void StopWaitingButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_runInProgress) return;
+        _runGeneration++;
+        _activeRun?.Cancel();
+        _runInProgress = false;
+        _elapsedTimer.Stop();
+        StopWaitingButton.IsEnabled = false;
+        ShowPanel(StartPanel);
+        StartError.Text = L("已停止等待，输入还在。需要时可以再检查。", "已停止等待，輸入仍在。需要時可以再檢查。", "Waiting stopped. Your input is still here; you can check again when ready.");
+        StartError.Visibility = Visibility.Visible;
     }
 
     private void ShowPanel(FrameworkElement panel)
@@ -764,8 +1002,11 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        _closing = true;
+        _runGeneration++;
+        _runInProgress = false;
+        _elapsedTimer.Stop();
         _activeRun?.Cancel();
-        _activeRun?.Dispose();
         _httpClient.Dispose();
     }
 }

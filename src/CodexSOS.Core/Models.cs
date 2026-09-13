@@ -174,7 +174,8 @@ public sealed record DiagnosticReport(
     IReadOnlyList<PrivacyFinding> PrivacyFindings,
     bool ScreenshotSaved,
     string PublicReportMarkdown,
-    string PrivacyReviewMarkdown);
+    string PrivacyReviewMarkdown,
+    IReadOnlyList<string>? SafeSignals = null);
 
 public sealed record ClarifyingChoice(string Label, string Meaning, bool Recommended);
 
