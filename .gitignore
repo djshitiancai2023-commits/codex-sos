@@ -1,3 +1,5 @@
+# Repository current release marker: v0.1.8
+
 # Build output
 **/bin/
 **/obj/
@@ -45,4 +47,3 @@ Desktop.ini
 
 # Local UI acceptance captures belong in an explicit reviewed evidence package
 /ui-evidence-local/
-

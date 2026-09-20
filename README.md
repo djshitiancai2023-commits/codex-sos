@@ -1,3 +1,5 @@
+<!-- Repository current release marker: v0.1.8 -->
+
 # Codex SOS
 
 ![Codex SOS banner](docs/assets/codex-sos-banner.png)

@@ -1,3 +1,5 @@
+<!-- Repository current release marker: v0.1.8 -->
+
 # Codex SOS 项目约定
 
 这是一份 clean-room 公开项目规则。不要读取、复制或借用任何私有仓库、真实会话、真实项目路径、生产数据、内部提示词或私有工作流。

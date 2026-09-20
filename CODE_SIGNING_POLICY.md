@@ -1,3 +1,5 @@
+<!-- Repository current release marker: v0.1.8 -->
+
 # Code signing policy
 
 Codex SOS is an unofficial community project and is not affiliated with OpenAI.

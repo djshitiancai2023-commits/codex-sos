@@ -1,3 +1,5 @@
+<!-- Repository current release marker: v0.1.8 -->
+
 # Changelog
 
 The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).

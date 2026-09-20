@@ -1,3 +1,5 @@
+<!-- Repository current release marker: v0.1.8 -->
+
 # Codex SOS 中文说明
 
 ![Codex SOS 横幅](docs/assets/codex-sos-banner.png)

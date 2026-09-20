@@ -1,3 +1,5 @@
+# Repository current release marker: v0.1.8
+
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$')]

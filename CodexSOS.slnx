@@ -1,3 +1,4 @@
+<!-- Repository current release marker: v0.1.8 -->
 <Solution>
   <Project Path="src/CodexSOS.Core/CodexSOS.Core.csproj" />
   <Project Path="src/CodexSOS.App/CodexSOS.App.csproj" />

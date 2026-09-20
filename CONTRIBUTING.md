@@ -1,3 +1,5 @@
+<!-- Repository current release marker: v0.1.8 -->
+
 # 参与 Codex SOS
 
 感谢愿意帮助。这个项目首先服务不会编程、不会命令行、也不会 GitHub 的普通 Codex 用户。一个改动如果让他们多填一张表、多看一次警告或多做一次判断，就需要证明它带来的收益足够大。

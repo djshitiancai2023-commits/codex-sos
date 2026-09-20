@@ -1,3 +1,5 @@
+; Repository current release marker: v0.1.8
+
 #ifndef MyAppVersion
   #define MyAppVersion "0.1.0"
 #endif
