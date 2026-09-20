@@ -99,6 +99,8 @@ public partial class MainWindow : Window
     private bool _suppressLanguageSave;
     private bool _closing;
     private IReadOnlyList<string> _lastSavedPaths = [];
+    private string _progressSourceText = "正在准备…";
+    private bool _descriptionPasteRejected;
 
     private readonly FixtureSession? _fixture;
 
@@ -259,6 +261,18 @@ public partial class MainWindow : Window
 
     private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            var hasInput = _screenshot is not null || !string.IsNullOrWhiteSpace(DescriptionBox.Text);
+            if (StartPanel.Visibility == Visibility.Visible && !_runInProgress && hasInput)
+            {
+                e.Handled = true;
+                _ = BeginCheckAsync();
+            }
+
+            return;
+        }
+
         if (e.Key != Key.V || Keyboard.Modifiers != ModifierKeys.Control)
         {
             return;
@@ -414,6 +428,9 @@ public partial class MainWindow : Window
         }
 
         StartError.Visibility = Visibility.Collapsed;
+        // Set this before the first dispatcher yield so Ctrl+Enter held down
+        // cannot queue a second run before the progress page is rendered.
+        _runInProgress = true;
         ShowPanel(ProgressPanel);
         await Dispatcher.InvokeAsync(
             () =>
@@ -424,15 +441,18 @@ public partial class MainWindow : Window
             DispatcherPriority.Render);
 
         var generation = ++_runGeneration;
-        _runInProgress = true;
         _report = null;
         _reviewDraftText = null;
         _lastSavedPaths = [];
+        ResultActionStatus.Text = string.Empty;
+        FeedbackStatusText.Text = string.Empty;
         OpenSavedFolderButton.Visibility = Visibility.Collapsed;
         _clarifyingQuestionShown = false;
         _runStartedAt = DateTimeOffset.UtcNow;
         _elapsedTimer.Start();
         StopWaitingButton.IsEnabled = true;
+        _progressSourceText = "正在准备…";
+        ProgressText.Text = UiText.Progress(_language, _progressSourceText);
         ProgressElapsedText.Text = UiText.Elapsed(_language, 0);
         _ocrAttempt = OcrAttemptOutcome.None;
         var runCts = new CancellationTokenSource();
@@ -445,7 +465,7 @@ public partial class MainWindow : Window
             var ocrText = string.Empty;
             if (screenshot is not null)
             {
-                SetProgress(generation, L("正在本机识别截图里的错误文字…", "正在本機辨識截圖中的錯誤文字…", "Reading error text from the screenshot on this computer…"));
+                SetProgress(generation, "正在本机识别截图里的错误文字…");
                 try
                 {
                     if (_ocr.IsAvailable)
@@ -454,12 +474,12 @@ public partial class MainWindow : Window
                         if (string.IsNullOrWhiteSpace(ocrText)) ocrText = string.Empty;
                         _ocrAttempt = ocrText.Length > 0 ? OcrAttemptOutcome.Success : OcrAttemptOutcome.NoText;
                         if (!token.IsCancellationRequested && ocrText.Length == 0)
-                            SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
+                            SetProgress(generation, "这次没读到截图文字，其他检查仍会继续。");
                     }
                     else
                     {
                         _ocrAttempt = OcrAttemptOutcome.Unavailable;
-                        SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
+                        SetProgress(generation, "这次没读到截图文字，其他检查仍会继续。");
                     }
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -469,17 +489,17 @@ public partial class MainWindow : Window
                 catch (TimeoutException)
                 {
                     _ocrAttempt = OcrAttemptOutcome.Timeout;
-                    SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
+                    SetProgress(generation, "这次没读到截图文字，其他检查仍会继续。");
                 }
                 catch (Exception)
                 {
                     _ocrAttempt = OcrAttemptOutcome.Failure;
-                    SetProgress(generation, L("这次没读到截图文字，其他检查仍会继续。", "這次沒能讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."));
+                    SetProgress(generation, "这次没读到截图文字，其他检查仍会继续。");
                 }
             }
 
             var evidence = new UserEvidence(description, ocrText, screenshot is not null, DateTimeOffset.UtcNow);
-            var progress = new Progress<string>(text => SetProgress(generation, UiText.Progress(_language, text)));
+            var progress = new Progress<string>(text => SetProgress(generation, text));
             var report = await _orchestrator.RunAsync(evidence, progress, token);
             if (!IsCurrentRun(generation, token)) return;
             _report = report;
@@ -540,6 +560,7 @@ public partial class MainWindow : Window
             }
             : L("你只提供了一句话，其余环境信息已自动检查。", "你只提供了一句描述，其餘環境資訊已自動檢查。", "You provided one short description; the remaining environment information was checked automatically.");
         ResultNote.Text = $"{UiText.DoctorSummary(_language, report.Doctor)} {screenshotNote}";
+        ResultActionStatus.Text = string.Empty;
         RenderSimilarIssues(report.SimilarIssues);
         var asking = TryShowClarifyingQuestion(report);
         ResultTitle.Text = asking
@@ -704,7 +725,6 @@ public partial class MainWindow : Window
         }
         catch (Exception)
         {
-            ResultNote.Text = L("暂时打不开这个链接。请稍后再试，或自己在浏览器打开 GitHub 的 Codex issues 页面。", "暫時無法開啟這個連結。請稍後再試，或在瀏覽器中開啟 GitHub 的 Codex issues 頁面。", "This link could not be opened. Try again later or open the Codex issues page on GitHub in your browser.");
             return false;
         }
     }
@@ -781,20 +801,34 @@ public partial class MainWindow : Window
             "The material was copied but not sent. Paste it into an existing support conversation; first-time users can open the official Help Center.");
     }
 
+    private string OfficialFeedbackUnavailable(CodexSurface surface) => surface switch
+    {
+        CodexSurface.Desktop => L(
+            "材料已经复制，但桌面版反馈页面暂时打不开。稍后打开 openai/codex 的 Codex App Bug 页面，再粘贴即可。",
+            "資料已複製，但桌面版回報頁面暫時無法開啟。稍後開啟 openai/codex 的 Codex App Bug 頁面，再貼上即可。",
+            "The material was copied, but the desktop feedback page could not be opened. Later, open the Codex App Bug form in openai/codex and paste it."),
+        CodexSurface.Cli => L(
+            "材料已经复制，但命令行版反馈页面暂时打不开。稍后打开 openai/codex 的 CLI Bug 页面，再粘贴即可。",
+            "資料已複製，但命令列版回報頁面暫時無法開啟。稍後開啟 openai/codex 的 CLI Bug 頁面，再貼上即可。",
+            "The material was copied, but the CLI feedback page could not be opened. Later, open the CLI Bug form in openai/codex and paste it."),
+        _ => L(
+            "材料已经复制，但官方选择页面暂时打不开。稍后打开 openai/codex 的问题选择页，按你实际使用的版本粘贴即可。",
+            "資料已複製，但官方選擇頁面暫時無法開啟。稍後開啟 openai/codex 的問題選擇頁，按你實際使用的版本貼上即可。",
+            "The material was copied, but the official chooser could not be opened. Later, open the openai/codex issue chooser and paste it into the form for the interface you actually use.")
+    };
+
     private void OpenOfficialFeedbackButton_Click(object sender, RoutedEventArgs e)
     {
         if (!TryCopyOfficialFeedbackDraft()) return;
 
-        var route = OfficialFeedbackRoutes.For(_report?.System.Surface ?? CodexSurface.Unknown);
+        var surface = _report?.System.Surface ?? CodexSurface.Unknown;
+        var route = OfficialFeedbackRoutes.For(surface);
         var opened = OpenSafeExternalUrl(route, route);
         FeedbackStatusText.Text = opened
             ? route == OfficialFeedbackRoutes.ChooseUrl
                 ? L("材料已经复制，并打开了官方选择页面。请选择你实际使用的 Codex 版本；SOS 不会代你提交。", "資料已複製，並開啟官方選擇頁面。請選擇你實際使用的 Codex 版本；SOS 不會代你提交。", "The material was copied and the official form chooser was opened. Choose the Codex interface you actually use; SOS never submits for you.")
                 : L("已复制官方需要的材料并打开对应反馈页。请按页面栏目粘贴、快速检查后再提交；SOS 不会代你发布。", "已複製官方需要的資料並開啟對應回報頁。請依頁面欄位貼上、快速檢查後再提交；SOS 不會代你發佈。", "The material was copied and the matching official form was opened. Paste it into the fields, review it, and submit only when ready. SOS never submits for you.")
-            : L(
-                "材料已经复制，但网页暂时打不开。稍后打开 openai/codex 的 Codex App Bug 页面再粘贴即可。",
-                "資料已複製，但網頁暫時無法開啟。稍後開啟 openai/codex 的 Codex App Bug 頁面再貼上即可。",
-                "The draft was copied, but the page could not be opened. Later, open the Codex App Bug form in openai/codex and paste the draft.");
+            : OfficialFeedbackUnavailable(surface);
     }
 
     private void OpenHelpCenterButton_Click(object sender, RoutedEventArgs e)
@@ -892,27 +926,55 @@ public partial class MainWindow : Window
         try
         {
             Clipboard.SetText(text);
-            ResultNote.Text = L("四条结果已复制。截图、日志和完整材料没有复制。", "四項結果已複製。截圖、記錄和完整資料沒有複製。", "The four results were copied. The screenshot, logs, and full report were not copied.");
+            ResultActionStatus.Text = L("四条结果已复制。截图、日志和完整材料没有复制。", "四項結果已複製。截圖、記錄和完整資料沒有複製。", "The four results were copied. The screenshot, logs, and full report were not copied.");
         }
         catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
         {
-            ResultNote.Text = L("剪贴板暂时正忙，请再点一次。", "剪貼簿暫時忙碌，請再點一次。", "The clipboard is busy. Please try again.");
+            ResultActionStatus.Text = L("剪贴板暂时正忙，请再点一次。", "剪貼簿暫時忙碌，請再點一次。", "The clipboard is busy. Please try again.");
         }
     }
 
     private void SimilarIssueButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: string url }) OpenSafeExternalUrl(url, IssueUrlPrefix);
+        if (sender is Button { Tag: string url })
+        {
+            ResultActionStatus.Text = OpenSafeExternalUrl(url, IssueUrlPrefix)
+                ? L("已打开相似问题。", "已開啟相似問題。", "The similar issue was opened.")
+                : L("暂时打不开这个链接；诊断说明没有改变。", "暫時無法開啟這個連結；檢查說明沒有改變。", "This link could not be opened; the diagnostic note was not changed.");
+        }
     }
 
     private void BrowserFallbackButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: string url }) OpenSafeExternalUrl(url, FallbackUrlPrefix);
+        if (sender is Button { Tag: string url })
+        {
+            ResultActionStatus.Text = OpenSafeExternalUrl(url, FallbackUrlPrefix)
+                ? L("已打开浏览器搜索。", "已開啟瀏覽器搜尋。", "The browser search was opened.")
+                : L("暂时打不开这个链接；诊断说明没有改变。", "暫時無法開啟這個連結；檢查說明沒有改變。", "This link could not be opened; the diagnostic note was not changed.");
+        }
     }
 
     private void ResetButton_Click(object sender, RoutedEventArgs e)
     {
         _ = BeginCheckAsync();
+    }
+
+    private void EditInputButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_runInProgress) return;
+
+        // Keep the user-provided screenshot and description, but invalidate all
+        // result-derived material so an edited input cannot reuse an old draft.
+        _report = null;
+        _reviewDraftText = null;
+        _lastSavedPaths = [];
+        OpenSavedFolderButton.Visibility = Visibility.Collapsed;
+        ResultActionStatus.Text = string.Empty;
+        FeedbackStatusText.Text = string.Empty;
+        StartError.Visibility = Visibility.Collapsed;
+        ShowPanel(StartPanel);
+        MainScroll.ScrollToTop();
+        DescriptionBox.Focus();
     }
 
     private void NewProblemButton_Click(object sender, RoutedEventArgs e)
@@ -926,6 +988,8 @@ public partial class MainWindow : Window
         _reviewDraftText = null;
         _lastSavedPaths = [];
         OpenSavedFolderButton.Visibility = Visibility.Collapsed;
+        ResultActionStatus.Text = string.Empty;
+        FeedbackStatusText.Text = string.Empty;
         _screenshot = null;
         _clarifyingQuestionShown = false;
         _ocrAttempt = OcrAttemptOutcome.None;
@@ -964,11 +1028,12 @@ public partial class MainWindow : Window
         ScreenshotStatus.Text = _screenshot is null
             ? L("截图默认不保存，也不会上传。", "截圖預設不儲存，也不會上傳。", "Screenshots are not saved or uploaded by default.")
             : L("截图已准备好，只在本机处理。", "截圖已準備好，只在本機處理。", "The screenshot is ready and stays on this computer.");
+        UpdateDescriptionLimitHint();
 
         if (_report is null)
         {
             if (ProgressPanel.Visibility == Visibility.Visible)
-                ProgressText.Text = L("正在准备…", "正在準備…", "Preparing…");
+                ProgressText.Text = UiText.Progress(_language, _progressSourceText);
             return;
         }
 
@@ -1025,7 +1090,59 @@ public partial class MainWindow : Window
 
     private void DescriptionBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
+        _descriptionPasteRejected = false;
         DescriptionHint.Visibility = string.IsNullOrEmpty(DescriptionBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        UpdateDescriptionLimitHint();
+    }
+
+    private void DescriptionBox_Pasting(object sender, DataObjectPastingEventArgs e)
+    {
+        if (!e.SourceDataObject.GetDataPresent(DataFormats.UnicodeText)) return;
+
+        var pasted = e.SourceDataObject.GetData(DataFormats.UnicodeText) as string;
+        if (pasted is null || DescriptionInputPolicy.FitsPaste(
+                DescriptionBox.Text,
+                DescriptionBox.SelectionStart,
+                DescriptionBox.SelectionLength,
+                pasted))
+        {
+            return;
+        }
+
+        e.CancelCommand();
+        _descriptionPasteRejected = true;
+        DescriptionLimitHint.Visibility = Visibility.Visible;
+        DescriptionLimitHint.Text = L(
+            "这次粘贴的文字太长，没有改动原来的描述。请只保留故障描述。",
+            "這次貼上的文字太長，原來的描述沒有改動。請只保留故障描述。",
+            "That paste is too long, so the existing description was kept. Keep only the problem description.");
+    }
+
+    private void UpdateDescriptionLimitHint()
+    {
+        var length = DescriptionBox?.Text?.Length ?? 0;
+        if (_descriptionPasteRejected)
+        {
+            DescriptionLimitHint.Visibility = Visibility.Visible;
+            DescriptionLimitHint.Text = L(
+                "这次粘贴的文字太长，没有改动原来的描述。请只保留故障描述。",
+                "這次貼上的文字太長，原來的描述沒有改動。請只保留故障描述。",
+                "That paste is too long, so the existing description was kept. Keep only the problem description.");
+            return;
+        }
+
+        if (!DescriptionInputPolicy.ShouldShowCounter(length))
+        {
+            DescriptionLimitHint.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        DescriptionLimitHint.Visibility = Visibility.Visible;
+        DescriptionLimitHint.Text = length >= DescriptionInputPolicy.MaximumLength
+            ? L("已到 1200 字上限。", "已到 1200 字上限。", "The 1200-character limit has been reached.")
+            : L($"已输入 {length}/1200 字，还可以继续写 {DescriptionInputPolicy.MaximumLength - length} 字。",
+                $"已輸入 {length}/1200 字，還可以繼續寫 {DescriptionInputPolicy.MaximumLength - length} 字。",
+                $"{length}/1200 characters used; {DescriptionInputPolicy.MaximumLength - length} remain.");
     }
 
     private void SetScreenshot(BitmapSource image, string message)
@@ -1051,7 +1168,8 @@ public partial class MainWindow : Window
     private void SetProgress(long generation, string text)
     {
         if (!IsCurrentGeneration(generation) || _closing) return;
-        ProgressText.Text = text;
+        _progressSourceText = text;
+        ProgressText.Text = UiText.Progress(_language, text);
     }
 
     private bool IsCurrentGeneration(long generation) => generation == _runGeneration;

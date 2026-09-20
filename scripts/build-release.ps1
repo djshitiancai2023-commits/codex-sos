@@ -1,9 +1,9 @@
-# Repository current release marker: v0.1.8
+# Repository current release marker: v0.1.9 candidate
 
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.1.0',
+    [string]$Version = '0.1.9',
 
     [ValidateSet('Release', 'Debug')]
     [string]$Configuration = 'Release',

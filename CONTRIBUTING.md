@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.8 -->
+<!-- Repository current release marker: v0.1.9 candidate -->
 
 # 参与 Codex SOS
 
@@ -48,7 +48,7 @@ pwsh ./scripts/test.ps1
 使用下面的命令构建本地候选包。
 
 ```powershell
-pwsh ./scripts/build-release.ps1 -Version 0.1.6
+pwsh ./scripts/build-release.ps1 -Version 0.1.9
 ```
 
 缺少 Inno Setup 时仍应生成便携目录和 ZIP，并明确标记安装包未构建。脚本不得静默下载工具、创建远程仓库或发布文件。
@@ -62,6 +62,8 @@ pwsh ./scripts/build-release.ps1 -Version 0.1.6
 5. 处理截图、体检输出、Windows 记录或搜索词时，先过隐私边界测试。
 6. 新依赖要在 PR 中说明收益、许可证、体积、离线行为和维护风险。
 7. 更新用户可见行为时，同步 README、CHANGELOG 和相关验收条目。
+
+本轮输入体验回归还应覆盖：结果页返回补充说明不带走旧报告、Ctrl+Enter 只在输入页生效、1200 字边界不静默截断、复制/打开失败不覆盖诊断说明、运行中切换语言不重置阶段，以及桌面版/CLI/未知入口的反馈备用说明。
 
 ## 测试资料
 

@@ -1,4 +1,4 @@
-// Repository current release marker: v0.1.8
+// Repository current release marker: v0.1.9 candidate
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -55,6 +55,9 @@ internal static class Program
             ("settings and export: language persistence and partial-save truth", TestSettingsAndPartialSaveAsync),
             ("follow-up: at most one plain-language choice", TestAtMostOneFollowUpAsync),
             ("localization: Simplified Chinese default plus complete Traditional Chinese and English UI", TestLocalizationAsync),
+            ("input and UI: bounded paste, return-to-edit, shortcut, and operation status", TestInputAndUiPoliciesAsync),
+            ("progress and feedback: language stage preservation and route-specific fallback", TestProgressAndFeedbackPoliciesAsync),
+            ("release workflow: derives safe versions and never overwrites an existing release", TestReleaseWorkflowConfigAsync),
             ("boundaries: no private-state read, OpenAI API, or write request", TestSourceBoundariesAsync),
             ("fake doctor: no dependency on real user data", TestFakeDoctorDoesNotNeedRealUserDataAsync)
         };
@@ -1397,6 +1400,70 @@ internal static class Program
             SearchState: IssueSearchState.NoUsableTerms);
         Contains(UiText.SimilarSummary(UiLanguage.English, externalSimilar),
             "no Codex issues were searched", "English external-program search summary");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestInputAndUiPoliciesAsync()
+    {
+        Equal(1, DescriptionInputPolicy.RemainingCapacity(new string('x', 1199), 1199, 0),
+            "One character remains at 1199");
+        Equal(0, DescriptionInputPolicy.RemainingCapacity(new string('x', 1200), 1200, 0),
+            "No characters remain at 1200");
+        Assert(DescriptionInputPolicy.FitsPaste(new string('x', 1199), 1199, 0, "好"),
+            "A one-character paste fits at the limit");
+        Assert(!DescriptionInputPolicy.FitsPaste(new string('x', 1199), 1199, 0, "ab"),
+            "An overlong paste is rejected instead of silently truncated");
+        Assert(!DescriptionInputPolicy.FitsPaste(new string('x', 1200), 1200, 0, "y"),
+            "A 1201st character is rejected");
+        Assert(DescriptionInputPolicy.FitsPaste(new string('x', 1200), 100, 25, new string('y', 25)),
+            "Selected text is counted as replaceable paste capacity");
+        Assert(!DescriptionInputPolicy.ShouldShowCounter(1079), "Normal descriptions do not show a counter");
+        Assert(DescriptionInputPolicy.ShouldShowCounter(1080), "Near-limit descriptions show a counter");
+
+        var root = FindRepositoryRoot();
+        var xaml = File.ReadAllText(Path.Combine(root, "src", "CodexSOS.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(Path.Combine(root, "src", "CodexSOS.App", "MainWindow.xaml.cs"));
+        Contains(xaml, "DataObject.Pasting=\"DescriptionBox_Pasting\"", "Bounded text paste hook");
+        Contains(xaml, "x:Uid=\"EditInputButton\"", "Return-to-edit action");
+        Contains(xaml, "x:Uid=\"StartShortcutHint\"", "Ctrl+Enter hint");
+        Contains(xaml, "x:Name=\"ResultActionStatus\"", "Separate result operation status");
+        Contains(code, "e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control", "Ctrl+Enter gate");
+        Contains(code, "DescriptionBox_Pasting", "Overlong paste handler");
+        Contains(code, "private void EditInputButton_Click", "Return-to-edit handler");
+        Contains(code, "_reviewDraftText = null", "Edited input invalidates old draft");
+        NotContains(code, "ResultNote.Text = L(\"四条结果已复制", "Copy action must not overwrite diagnostic note");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestProgressAndFeedbackPoliciesAsync()
+    {
+        var root = FindRepositoryRoot();
+        var code = File.ReadAllText(Path.Combine(root, "src", "CodexSOS.App", "MainWindow.xaml.cs"));
+        var uiText = File.ReadAllText(Path.Combine(root, "src", "CodexSOS.App", "UiText.cs"));
+        Contains(code, "private string _progressSourceText", "Progress keeps a source stage");
+        Contains(code, "UiText.Progress(_language, _progressSourceText)", "Language switch re-renders the current stage");
+        Contains(code, "private string OfficialFeedbackUnavailable(CodexSurface surface)", "Route-specific feedback fallback");
+        Contains(code, "CodexSurface.Cli =>", "CLI fallback branch");
+        Contains(code, "CodexSurface.Desktop =>", "Desktop fallback branch");
+        Contains(code, "ResultActionStatus.Text = string.Empty", "Operation status clears for a new result");
+        Contains(uiText, "正在本机识别截图里的错误文字…", "OCR progress localization source");
+        Contains(uiText, "正在寻找相似的 Codex 公开问题…", "Search progress localization source");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestReleaseWorkflowConfigAsync()
+    {
+        var root = FindRepositoryRoot();
+        var workflow = File.ReadAllText(Path.Combine(root, ".github", "workflows", "release.yml"));
+        Assert(Regex.IsMatch("v0.1.9", @"^v\d+\.\d+\.\d+$"), "A valid release tag follows vN.N.N");
+        Assert(!Regex.IsMatch("v0.1.9-beta", @"^v\d+\.\d+\.\d+$"), "A prerelease tag is rejected by the release validator");
+        Contains(workflow, "tags: ['v*']", "Release workflow listens for version tags");
+        Contains(workflow, "$env:GITHUB_REF_NAME", "Release version comes from the actual tag");
+        Contains(workflow, "APP_VERSION=$version", "APP_VERSION is derived from the tag");
+        Contains(workflow, "docs/release-notes/$tag.md", "Matching release notes are required");
+        Contains(workflow, "already exists; leaving it unchanged", "Existing releases are not overwritten");
+        Contains(workflow, "--title \"Codex SOS $env:RELEASE_TAG\"", "Release title uses the derived tag");
+        NotContains(workflow, "v0.1.6", "Release workflow has no stale hard-coded version");
         return Task.CompletedTask;
     }
 

@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.8 -->
+<!-- Repository current release marker: v0.1.9 candidate -->
 
 # Changelog
 
@@ -9,6 +9,22 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Planned
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
+
+## [0.1.9] - Candidate (not published)
+
+### Fixed
+
+- Results can return to the input page for extra details while keeping the screenshot and description and invalidating the old report and draft.
+- `Ctrl+Enter` starts a check only from the input page; ordinary Enter remains a newline.
+- Near-limit description counts are visible, and an overlong paste is rejected without silently trimming existing text.
+- Copy and link actions use a separate status line instead of replacing the diagnostic explanation.
+- Changing language during a check keeps the current stage and elapsed time.
+- Feedback-page failure guidance now matches Desktop, CLI, or unknown use instead of always naming the desktop form.
+
+### Verification
+
+- The local candidate has 34/34 executable test groups passing, 0 failures, and a clean build with 0 warnings and 0 errors. This is not a visible Windows mouse-and-keyboard acceptance claim.
+- v0.1.9 has not been pushed, tagged, or published in this batch; v0.1.8 remains the public release.
 
 ## [0.1.8] - 2026-09-20
 
@@ -204,6 +220,7 @@ This entry restores the missing release-history heading from the [original v0.1.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
 [Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.8...HEAD
+[0.1.9]: docs/release-notes/v0.1.9.md
 [0.1.8]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.8
 [0.1.7]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.7
 [0.1.6]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.6

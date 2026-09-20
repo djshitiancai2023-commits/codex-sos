@@ -1,19 +1,15 @@
-name: publish-v0.1.6
+name: publish-release
 
 on:
   push:
-    tags: [v0.1.6]
+    tags: ['v*']
 
 permissions:
   contents: write
 
 concurrency:
-  group: publish-v0.1.6
+  group: publish-${{ github.ref_name }}
   cancel-in-progress: false
-
-env:
-  APP_VERSION: 0.1.6
-  RELEASE_TAG: v0.1.6
 
 jobs:
   release:
@@ -23,6 +19,24 @@ jobs:
     steps:
       - name: Check out the public source commit
         uses: actions/checkout@v7
+
+      - name: Validate the release tag and matching notes
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -notlike 'refs/tags/*') {
+            throw "Release workflow must run from a tag."
+          }
+          $tag = $env:GITHUB_REF_NAME
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "Release tag '$tag' must match vN.N.N."
+          }
+          $version = $tag.Substring(1)
+          $notes = "docs/release-notes/$tag.md"
+          if (-not (Test-Path -LiteralPath $notes -PathType Leaf)) {
+            throw "Release notes are missing: $notes"
+          }
+          "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
 
       - name: Install pinned .NET SDK
         uses: actions/setup-dotnet@v6
@@ -44,7 +58,7 @@ jobs:
       - name: Upload clean-build evidence
         uses: actions/upload-artifact@v7
         with:
-          name: Codex-SOS-v0.1.6-release-candidate
+          name: Codex-SOS-${{ github.ref_name }}-release-candidate
           path: |
             artifacts/packages/*
             artifacts/FILE-MANIFEST.txt
@@ -69,16 +83,17 @@ jobs:
           $checksums = "artifacts/SHA256SUMS.txt"
           $manifest = "artifacts/FILE-MANIFEST.txt"
           $preflight = "artifacts/RELEASE-CHECK.md"
+          $notes = "docs/release-notes/$env:RELEASE_TAG.md"
 
-          foreach ($required in @($installer, $portable, $checksums, $manifest, $preflight)) {
+          foreach ($required in @($installer, $portable, $checksums, $manifest, $preflight, $notes)) {
             if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
-              throw "Required release asset missing: $required"
+              throw "Required release file missing: $required"
             }
           }
 
           gh release create $env:RELEASE_TAG `
             --repo $env:GITHUB_REPOSITORY `
             --target $env:GITHUB_SHA `
-            --title "Codex SOS v0.1.6" `
-            --notes-file "docs/release-notes/v0.1.6.md" `
+            --title "Codex SOS $env:RELEASE_TAG" `
+            --notes-file $notes `
             $installer $portable $checksums $manifest $preflight

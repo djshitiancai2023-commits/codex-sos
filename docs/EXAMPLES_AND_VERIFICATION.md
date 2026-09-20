@@ -1,8 +1,10 @@
 # See what Codex SOS does — without installing it
 
-[English home](../README.md) · [中文首页](../README.zh-CN.md) · [v0.1.6 download](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.6)
+[English home](../README.md) · [中文首页](../README.zh-CN.md) · [current public v0.1.8](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.8) · [historical v0.1.6 snapshot](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.6)
 
 **Evidence snapshot: v0.1.6, commit `2e90dc0563f14a030c1262939a383d7afcb9a307`.**
+
+The current local `v0.1.9` candidate adds six small input, status, language, and feedback-routing regressions. Its executable test run is **34/34 passed; 0 failed**. That is a new automated result, not a visible Windows mouse-and-keyboard session or a real-account doctor run; the public download remains v0.1.8 until a separately authorized release.
 
 The examples below are readable summaries of this version's public synthetic fixtures and regression checks. They are **not** real customer incidents, newly executed desktop recordings, or screenshots of the program. They do not establish user numbers, diagnosis accuracy, or time saved.
 
@@ -58,6 +60,8 @@ The supplied diagnostic output reports `overallStatus: ok`.
 | [Release assets](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.6) | Installer, portable ZIP, checksums, manifest, and release check are published | Code signing; v0.1.6 is unsigned |
 
 The official doctor is deliberately replaced by a controlled fake process in automated checks. This avoids touching real credentials or conversations during a build. Real window interaction, clipboard integration, live OCR, and a real Codex diagnostic run require their own dated evidence; a green build alone is not proof of those paths.
+
+The v0.1.9 regression checks additionally cover returning to edit without reusing an old report, the input-page-only `Ctrl+Enter` shortcut, the 1200-character paste boundary, an operation status line separate from diagnostic text, preserving the progress stage during language changes, and route-specific feedback fallback wording. These checks inspect the fixed local rules and source wiring; they do not claim that every WPF interaction was manually clicked in this run.
 
 The September 4 release run's reported result is a historical public record. This documentation refresh did not rerun Windows tests or create new screenshots, and does not retroactively certify every acceptance-matrix row.
 

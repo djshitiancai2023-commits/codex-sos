@@ -38,7 +38,7 @@ A useful support report needs more than a screenshot. Codex SOS helps users gath
 
 **See it before downloading:** [three source-backed examples and verification](docs/EXAMPLES_AND_VERIFICATION.md). These are clearly labelled synthetic test examples, not customer testimonials or screenshots of a new test run.
 
-**Current release snapshot:** v0.1.8, three UI languages, and **31/31 automated test groups passed** in the local candidate verification. Visible Windows mouse-and-keyboard acceptance is still being completed; automated tests are not a claim of live Codex or every UI combination. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
+**Public release snapshot:** v0.1.8. The local `v0.1.9` candidate now has **34/34 automated test groups passed**; visible Windows mouse-and-keyboard acceptance remains a separate, dated claim. Automated tests are not a claim of live Codex or every UI combination. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
 
 ## What the user does
 
@@ -46,7 +46,7 @@ A useful support report needs more than a screenshot. Codex SOS helps users gath
 2. Paste/select a screenshot **or** write one sentence about what happened.
 3. Click the large check button.
 
-You can paste with the button or Ctrl+V, or drop one local image into the screenshot area. Remove the image without losing the description. **Check again** reuses the current input; **New problem (clear)** is the action that clears it. If a check takes too long, **Stop waiting** keeps the input and returns control. The selected language is remembered on the next launch.
+You can paste with the button or Ctrl+V, or drop one local image into the screenshot area. Remove the image without losing the description. On the input page, **Ctrl+Enter** starts a check while ordinary Enter still inserts a new line. Near 1,200 characters the description shows a counter; an overlong paste is rejected without silently trimming the existing text. **Check again** reuses the current input; **Back to add details** keeps the screenshot and description but invalidates the old report; **New problem (clear)** is the action that clears it. If a check takes too long, **Stop waiting** keeps the input and returns control. The selected language is remembered on the next launch.
 
 The result page answers four questions:
 
@@ -67,6 +67,7 @@ The result page answers four questions:
 - A second redaction pass before any report is saved
 - After the privacy preview, the recommended action copies a support-ready draft without opening a browser or requiring GitHub sign-in; a separate action can open the public Codex App bug form
 - The preview shows the exact text copied by the copy-only action; saving and opening the public form are secondary choices, and Codex SOS never submits for the user
+- Copy/open feedback is shown in a separate action-status line, so it does not replace the diagnostic explanation; changing language during a check keeps the current stage and elapsed time
 - The copied draft also carries concise OpenAI follow-up notes: incident time and time zone, visible-error status, optional private Feedback ID guidance, and scope/log reminders—without another form or a forced reproduction
 - A visible `feedback upload failed` message can be matched against similar public reports, while an unchanged Feedback ID is never treated as proof that anything was sent
 - Descriptions that clearly concern a browser, web page, startup item, or another program stay local and are not routed to Codex issue search or reporting
@@ -116,7 +117,7 @@ The current public builds are unsigned, so Windows may show an unknown-publisher
 - Common English error text for local screenshot OCR; Chinese descriptions can be typed directly
 - Simplified Chinese by default, with a prominent switch for Traditional Chinese and English
 - Fixed, explainable diagnostic rules rather than model-generated diagnosis
-- Unsigned Windows builds through v0.1.8
+- Unsigned public Windows builds through v0.1.8; `v0.1.9` is a local candidate until separately published
 
 ## Build and test
 
@@ -125,7 +126,7 @@ The repository contains the original application source, executable tests with s
 ```powershell
 pwsh ./scripts/check-source-secrets.ps1
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.8
+pwsh ./scripts/build-release.ps1 -Version 0.1.9
 ```
 
 See [BUILDING.md](BUILDING.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

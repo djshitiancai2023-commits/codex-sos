@@ -30,6 +30,7 @@ public static class UiText
         ["DescriptionHint"] = ["例如：Codex 做了很久突然断开，再也续不上。", "例如：Codex 執行很久後突然斷線，再也無法繼續。", "Example: Codex disconnected after running for a while and cannot resume."],
         ["NoSkillsNeeded"] = ["不用找日志，不用懂版本，也不用会 GitHub。", "不用找記錄、不用懂版本，也不用會 GitHub。", "No logs, version knowledge, or GitHub skills needed."],
         ["StartButton"] = ["帮我看看", "幫我看看", "Check it for me"],
+        ["StartShortcutHint"] = ["也可以按 Ctrl+Enter 开始检查", "也可以按 Ctrl+Enter 開始檢查", "You can also press Ctrl+Enter to start"],
         ["AutoCheckHint"] = ["接下来会自动完成官方体检、查找相似问题和隐私检查。", "接下來會自動完成官方檢查、尋找相似問題和隱私檢查。", "Next, Codex SOS will run the official check, find similar issues, and review privacy."],
         ["ProgressTitle"] = ["正在帮你检查", "正在幫你檢查", "Checking for you"],
         ["ProgressPrivacy"] = ["不用找日志，也不会上传你的截图或聊天。", "不用找記錄，也不會上傳你的截圖或聊天內容。", "No logs needed. Your screenshot and chats are not uploaded."],
@@ -43,6 +44,7 @@ public static class UiText
         ["ReviewButton"] = ["查看并复制求助材料", "查看並複製求助資料", "Review and copy help material"],
         ["CopyResultButton"] = ["复制这四条结果", "複製這四項結果", "Copy these four results"],
         ["ResetButton"] = ["再检查一次", "再檢查一次", "Check again"],
+        ["EditInputButton"] = ["返回补充说明", "返回補充說明", "Back to add details"],
         ["NewProblemButton"] = ["换个问题（清空）", "換個問題（清除）", "New problem (clear)"],
         ["StopWaitingButton"] = ["停止等待", "停止等待", "Stop waiting"],
         ["ReviewTitle"] = ["保存前，快速看一眼", "儲存前，快速看一眼", "Quick review before saving"],
@@ -76,6 +78,9 @@ public static class UiText
 
     public static string Progress(UiLanguage language, string source) => source switch
     {
+        "正在准备…" => Get(language, source, "正在準備…", "Preparing…"),
+        "正在本机识别截图里的错误文字…" => Get(language, source, "正在本機辨識截圖中的錯誤文字…", "Reading error text from the screenshot on this computer…"),
+        "这次没读到截图文字，其他检查仍会继续。" => Get(language, source, "這次沒有讀到截圖文字，其他檢查仍會繼續。", "No text was read from the screenshot. The other checks will continue."),
         "正在保护你提供的信息…" => Get(language, source, "正在保護你提供的資訊…", "Protecting the information you provided…"),
         "正在运行 Codex 官方体检，并查看这台电脑的基本情况…" => Get(language, source, "正在執行 Codex 官方檢查，並查看這台電腦的基本狀況…", "Running the official Codex check and reviewing this computer…"),
         "正在寻找相似的 Codex 公开问题…" => Get(language, source, "正在尋找相似的 Codex 公開問題…", "Looking for similar public Codex issues…"),

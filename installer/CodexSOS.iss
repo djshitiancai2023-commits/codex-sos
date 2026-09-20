@@ -1,7 +1,7 @@
-; Repository current release marker: v0.1.8
+; Repository current release marker: v0.1.9 candidate
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.1.0"
+  #define MyAppVersion "0.1.9"
 #endif
 #ifndef SourceDir
   #error SourceDir must be provided by scripts/build-release.ps1
