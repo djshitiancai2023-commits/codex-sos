@@ -80,8 +80,6 @@ public static class OneQuestionRules
 
 public partial class MainWindow : Window
 {
-    private const long MaximumScreenshotBytes = 25 * 1024 * 1024;
-    private const int MaximumScreenshotDimension = 4096;
     private readonly HttpClient _httpClient;
     private readonly DiagnosticOrchestrator _orchestrator;
     private readonly DiagnosisEngine _diagnosisEngine;
@@ -100,6 +98,7 @@ public partial class MainWindow : Window
     private bool _runInProgress;
     private bool _suppressLanguageSave;
     private bool _closing;
+    private IReadOnlyList<string> _lastSavedPaths = [];
 
     private readonly FixtureSession? _fixture;
 
@@ -207,6 +206,11 @@ public partial class MainWindow : Window
 
     private bool PasteScreenshotFromClipboard()
     {
+        if (_runInProgress || StartPanel.Visibility != Visibility.Visible)
+        {
+            return false;
+        }
+
         try
         {
             if (!Clipboard.ContainsImage())
@@ -247,7 +251,7 @@ public partial class MainWindow : Window
             if (!TryLoadScreenshotFile(dialog.FileName, out var image)) return;
             TrySetScreenshot(image, L("已选择截图。图片只在本机处理，不会放进公开材料。", "已選擇截圖。圖片只在本機處理，不會放進公開資料。", "Screenshot selected. The image stays on this computer and is not included in the public report."));
         }
-        catch (Exception ex) when (ex is NotSupportedException or IOException or UriFormatException or ArgumentException or FileNotFoundException or DirectoryNotFoundException or InvalidDataException or EndOfStreamException or OutOfMemoryException)
+        catch (Exception ex) when (ex is NotSupportedException or IOException or UnauthorizedAccessException or UriFormatException or ArgumentException or FileNotFoundException or DirectoryNotFoundException or InvalidDataException or EndOfStreamException or OutOfMemoryException)
         {
             ScreenshotStatus.Text = L("这张图片暂时无法读取。请换一张 PNG、JPG 或 BMP 图片。", "暫時無法讀取這張圖片。請改用 PNG、JPG 或 BMP 圖片。", "This image could not be read. Try a PNG, JPG, or BMP image.");
         }
@@ -255,14 +259,42 @@ public partial class MainWindow : Window
 
     private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.V || Keyboard.Modifiers != ModifierKeys.Control ||
-            Keyboard.FocusedElement is TextBoxBase)
+        if (e.Key != Key.V || Keyboard.Modifiers != ModifierKeys.Control)
         {
+            return;
+        }
+
+        var focusedTextBox = Keyboard.FocusedElement as TextBoxBase;
+        var descriptionFocused = ReferenceEquals(focusedTextBox, DescriptionBox);
+        var anotherTextBoxFocused = focusedTextBox is not null && !descriptionFocused;
+        var imageOnly = ClipboardHasImageOnly();
+        if (!ScreenshotPastePolicy.ShouldUseShortcut(
+                StartPanel.Visibility == Visibility.Visible,
+                _runInProgress,
+                descriptionFocused,
+                anotherTextBoxFocused,
+                imageOnly,
+                !imageOnly))
+        {
+            // Keep normal text paste untouched. Only an image-only clipboard
+            // on the input page is treated as the screenshot shortcut.
             return;
         }
 
         PasteScreenshotFromClipboard();
         e.Handled = true;
+    }
+
+    private static bool ClipboardHasImageOnly()
+    {
+        try
+        {
+            return Clipboard.ContainsImage() && !Clipboard.ContainsText();
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            return false;
+        }
     }
 
     private void PreviewBorder_DragOver(object sender, DragEventArgs e)
@@ -287,7 +319,7 @@ public partial class MainWindow : Window
                 TrySetScreenshot(image, L("已拖入截图。图片只在本机处理，不会放进公开材料。", "已拖入截圖。圖片只在本機處理，不會放進公開資料。", "Screenshot dropped. The image stays on this computer and is not included in the public report."));
             }
         }
-        catch (Exception ex) when (ex is NotSupportedException or IOException or UriFormatException or ArgumentException or FileNotFoundException or DirectoryNotFoundException or InvalidDataException or EndOfStreamException or OutOfMemoryException)
+        catch (Exception ex) when (ex is NotSupportedException or IOException or UnauthorizedAccessException or UriFormatException or ArgumentException or FileNotFoundException or DirectoryNotFoundException or InvalidDataException or EndOfStreamException or OutOfMemoryException)
         {
             ScreenshotStatus.Text = L("这张图片暂时无法读取。请换一张 PNG、JPG 或 BMP 图片。", "暫時無法讀取這張圖片。請改用 PNG、JPG 或 BMP 圖片。", "This image could not be read. Try a PNG, JPG, or BMP image.");
         }
@@ -314,41 +346,51 @@ public partial class MainWindow : Window
     private static bool IsImageExtension(string path) =>
         Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".bmp" or ".tif" or ".tiff";
 
-    private bool TryLoadScreenshotFile(string path, out BitmapImage image)
+    private bool TryLoadScreenshotFile(string path, out BitmapSource image)
     {
         image = null!;
-        if (!IsImageExtension(path) || new FileInfo(path).Length > MaximumScreenshotBytes)
+        if (path.StartsWith("\\\\", StringComparison.Ordinal) ||
+            !IsImageExtension(path) || new FileInfo(path).Length > ScreenshotNormalizer.MaximumBytes)
         {
             ScreenshotStatus.Text = L("图片太大或格式不支持。请换一张不超过 25 MB 的 PNG、JPG 或 BMP 图片。", "圖片太大或格式不支援。請改用不超過 25 MB 的 PNG、JPG 或 BMP 圖片。", "This image is too large or unsupported. Use a PNG, JPG, or BMP image up to 25 MB.");
             return false;
         }
 
-        var candidate = new BitmapImage();
-        candidate.BeginInit();
-        candidate.CacheOption = BitmapCacheOption.OnLoad;
-        candidate.UriSource = new Uri(path, UriKind.Absolute);
-        candidate.EndInit();
-        candidate.Freeze();
-        if (candidate.PixelWidth > MaximumScreenshotDimension || candidate.PixelHeight > MaximumScreenshotDimension)
+        if (!ScreenshotNormalizer.TryReadMetadata(path, out var sourceWidth, out var sourceHeight) ||
+            !ScreenshotNormalizer.TryGetTargetSize(sourceWidth, sourceHeight,
+                out var targetWidth, out _, out _))
         {
-            ScreenshotStatus.Text = L("图片尺寸太大。请换一张宽高都不超过 4096 像素的图片。", "圖片尺寸太大。請改用寬高都不超過 4096 像素的圖片。", "This image is too large. Use an image no larger than 4096 pixels in either dimension.");
+            ScreenshotStatus.Text = L("图片尺寸或内容超出安全范围。请换一张普通截图。", "圖片尺寸或內容超出安全範圍。請改用一般截圖。", "This image is outside the safe size range. Choose a normal screenshot instead.");
             return false;
         }
 
+        using var stream = File.OpenRead(path);
+        var candidate = new BitmapImage();
+        candidate.BeginInit();
+        candidate.CacheOption = BitmapCacheOption.OnLoad;
+        candidate.StreamSource = stream;
+        if (targetWidth < sourceWidth)
+        {
+            candidate.DecodePixelWidth = targetWidth;
+        }
+        candidate.EndInit();
+        candidate.Freeze();
         image = candidate;
         return true;
     }
 
     private bool TrySetScreenshot(BitmapSource image, string message)
     {
-        if (image.PixelWidth > MaximumScreenshotDimension || image.PixelHeight > MaximumScreenshotDimension)
+        if (!ScreenshotNormalizer.TryNormalize(image, out var normalized, out var resized))
         {
-            ScreenshotStatus.Text = L("图片尺寸太大。请换一张宽高都不超过 4096 像素的图片。", "圖片尺寸太大。請改用寬高都不超過 4096 像素的圖片。", "This image is too large. Use an image no larger than 4096 pixels in either dimension.");
+            ScreenshotStatus.Text = L("图片尺寸或内容超出安全范围。请换一张普通截图。", "圖片尺寸或內容超出安全範圍。請改用一般截圖。", "This image is outside the safe size range. Choose a normal screenshot instead.");
             return false;
         }
 
-        image.Freeze();
-        SetScreenshot(image, message);
+        var finalMessage = resized
+            ? message + L(" 已按比例缩小，原文件没有改动。", " 已按比例縮小，原始檔案沒有改動。", " It was scaled down proportionally; the original file was not changed.")
+            : message;
+        SetScreenshot(normalized, finalMessage);
         return true;
     }
 
@@ -385,6 +427,8 @@ public partial class MainWindow : Window
         _runInProgress = true;
         _report = null;
         _reviewDraftText = null;
+        _lastSavedPaths = [];
+        OpenSavedFolderButton.Visibility = Visibility.Collapsed;
         _clarifyingQuestionShown = false;
         _runStartedAt = DateTimeOffset.UtcNow;
         _elapsedTimer.Start();
@@ -583,7 +627,7 @@ public partial class MainWindow : Window
 
     private const string IssueUrlPrefix = "https://github.com/openai/codex/issues/";
     private const string FallbackUrlPrefix = "https://github.com/openai/codex/issues?q=";
-    private const string OfficialFeedbackUrl = "https://github.com/openai/codex/issues/new?template=1-codex-app.yml";
+    private const string HelpCenterUrl = "https://help.openai.com/";
 
     private void RenderSimilarIssues(SimilarIssueSummary similar)
     {
@@ -616,13 +660,14 @@ public partial class MainWindow : Window
         var reasons = match.Reasons.Count == 0
             ? string.Empty
             : $" · {L("依据", "依據", "Reason")}: {string.Join(L("、", "、", ", "), match.Reasons.Select(reason => UiText.MatchReason(_language, reason)))}";
+        var state = $" · {L("状态", "狀態", "Status")}: {UiText.IssueState(_language, match.Issue.State)}";
         var isOfficialUrl = match.Issue.HtmlUrl.StartsWith(IssueUrlPrefix, StringComparison.Ordinal);
         var demoNote = isOfficialUrl
             ? string.Empty
             : L(" · 演示链接，不会打开", " · 示範連結，不會開啟", " · Demo link; it will not open");
         var detail = new TextBlock
         {
-            Text = $"{UiText.Tier(_language, match.Tier)}{reasons}{demoNote}",
+            Text = $"{UiText.Tier(_language, match.Tier)}{state}{reasons}{demoNote}",
             FontSize = 12,
             Foreground = FindResource("MutedBrush") as System.Windows.Media.Brush
                 ?? System.Windows.Media.Brushes.Gray,
@@ -649,8 +694,9 @@ public partial class MainWindow : Window
         try
         {
             if (url is null) return false;
-            var allowed = string.Equals(allowedPrefix, OfficialFeedbackUrl, StringComparison.Ordinal)
-                ? string.Equals(url, OfficialFeedbackUrl, StringComparison.Ordinal)
+            var allowed = OfficialFeedbackRoutes.IsAllowed(allowedPrefix) ||
+                          string.Equals(allowedPrefix, HelpCenterUrl, StringComparison.Ordinal)
+                ? string.Equals(url, allowedPrefix, StringComparison.Ordinal)
                 : url.StartsWith(allowedPrefix, StringComparison.Ordinal);
             if (!allowed) return false;
             using var _ = Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
@@ -684,6 +730,12 @@ public partial class MainWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
         OpenOfficialFeedbackButton.Visibility = _report.Diagnosis.OfficialFeedbackAppropriate
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        OpenHelpCenterButton.Visibility = _report.Diagnosis.OfficialFeedbackAppropriate
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        OpenSavedFolderButton.Visibility = _lastSavedPaths.Count > 0
             ? Visibility.Visible
             : Visibility.Collapsed;
         FeedbackStatusText.Text = string.Empty;
@@ -724,25 +776,33 @@ public partial class MainWindow : Window
     {
         if (!TryCopyOfficialFeedbackDraft()) return;
         FeedbackStatusText.Text = L(
-            "材料已复制，但尚未发送。现在可以粘贴到原来的 OpenAI 客服邮件；这一步不需要登录 GitHub。",
-            "資料已複製，但尚未傳送。現在可以貼到原本的 OpenAI 客服郵件；這一步不需要登入 GitHub。",
-            "The report was copied but not sent. Paste it into your existing OpenAI Support email; no GitHub sign-in is needed.");
+            "材料已复制，但尚未发送。有客服对话就粘贴进去；第一次求助可以打开官方帮助中心。",
+            "資料已複製，但尚未傳送。有客服對話就貼上；第一次求助可以開啟官方說明中心。",
+            "The material was copied but not sent. Paste it into an existing support conversation; first-time users can open the official Help Center.");
     }
 
     private void OpenOfficialFeedbackButton_Click(object sender, RoutedEventArgs e)
     {
         if (!TryCopyOfficialFeedbackDraft()) return;
 
-        var opened = OpenSafeExternalUrl(OfficialFeedbackUrl, OfficialFeedbackUrl);
+        var route = OfficialFeedbackRoutes.For(_report?.System.Surface ?? CodexSurface.Unknown);
+        var opened = OpenSafeExternalUrl(route, route);
         FeedbackStatusText.Text = opened
-            ? L(
-                "已复制官方需要的材料并打开反馈页。请按页面栏目粘贴、快速检查后再提交；SOS 不会代你发布。账号套餐需要你自己选择。",
-                "已複製官方需要的資料並開啟回報頁。請依頁面欄位貼上、快速檢查後再提交；SOS 不會代你發佈。帳號方案需要你自己選擇。",
-                "The official-format draft was copied and the bug form opened. Paste it into the matching fields, review it, and submit only when ready. SOS never submits for you; select your subscription yourself.")
+            ? route == OfficialFeedbackRoutes.ChooseUrl
+                ? L("材料已经复制，并打开了官方选择页面。请选择你实际使用的 Codex 版本；SOS 不会代你提交。", "資料已複製，並開啟官方選擇頁面。請選擇你實際使用的 Codex 版本；SOS 不會代你提交。", "The material was copied and the official form chooser was opened. Choose the Codex interface you actually use; SOS never submits for you.")
+                : L("已复制官方需要的材料并打开对应反馈页。请按页面栏目粘贴、快速检查后再提交；SOS 不会代你发布。", "已複製官方需要的資料並開啟對應回報頁。請依頁面欄位貼上、快速檢查後再提交；SOS 不會代你發佈。", "The material was copied and the matching official form was opened. Paste it into the fields, review it, and submit only when ready. SOS never submits for you.")
             : L(
                 "材料已经复制，但网页暂时打不开。稍后打开 openai/codex 的 Codex App Bug 页面再粘贴即可。",
                 "資料已複製，但網頁暫時無法開啟。稍後開啟 openai/codex 的 Codex App Bug 頁面再貼上即可。",
                 "The draft was copied, but the page could not be opened. Later, open the Codex App Bug form in openai/codex and paste the draft.");
+    }
+
+    private void OpenHelpCenterButton_Click(object sender, RoutedEventArgs e)
+    {
+        var opened = OpenSafeExternalUrl(HelpCenterUrl, HelpCenterUrl);
+        FeedbackStatusText.Text = opened
+            ? L("已打开官方帮助中心。SOS 没有发送材料或创建工单。", "已開啟官方說明中心。SOS 沒有傳送資料或建立工單。", "The official Help Center was opened. SOS did not send the report or create a ticket.")
+            : L("官方帮助中心暂时打不开；材料仍留在本机。", "官方說明中心暫時無法開啟；資料仍留在本機。", "The official Help Center could not be opened; the material remains local.");
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -774,6 +834,10 @@ public partial class MainWindow : Window
             UiText.BuildPublicReport(_report, _language),
             reviewPath,
             UiText.BuildPrivacyReview(_report, _language));
+        _lastSavedPaths = SavedReportLocator.SuccessfulPaths(outcome, dialog.FileName, reviewPath);
+        OpenSavedFolderButton.Visibility = _lastSavedPaths.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         var message = outcome switch
         {
             { BothSaved: true } => L("已经保存两份文件：公开材料和隐私复核说明。原截图没有保存，也不会自动发布。", "已儲存兩份檔案：公開資料和隱私複核說明。原始截圖沒有儲存，也不會自動發佈。", "Two files were saved: the public report and the privacy review. The original screenshot was not saved, and nothing is published automatically."),
@@ -784,6 +848,35 @@ public partial class MainWindow : Window
         MessageBox.Show(this, message,
             outcome.BothSaved ? L("保存完成", "儲存完成", "Saved") : L("保存结果", "儲存結果", "Save result"),
             MessageBoxButton.OK, outcome.BothSaved ? MessageBoxImage.Information : MessageBoxImage.Warning);
+    }
+
+    private void OpenSavedFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        var path = SavedReportLocator.FirstExisting(_lastSavedPaths);
+        if (path is null)
+        {
+            FeedbackStatusText.Text = L(
+                "文件之前已经保存，但现在找不到它了；没有打开其他文件夹。",
+                "檔案之前已儲存，但現在找不到；沒有開啟其他資料夾。",
+                "The file was saved earlier but cannot be found now; no other folder was opened.");
+            return;
+        }
+
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{path}\"",
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+            FeedbackStatusText.Text = L("已打开已保存文件所在的位置。", "已開啟已儲存檔案所在的位置。", "The location of the saved file was opened.");
+        }
+        catch (Exception)
+        {
+            FeedbackStatusText.Text = L("文件已经保存，但暂时无法打开所在文件夹。", "檔案已儲存，但暫時無法開啟所在資料夾。", "The file was saved, but its containing folder could not be opened.");
+        }
     }
 
     private void CopyResultButton_Click(object sender, RoutedEventArgs e)
@@ -831,6 +924,8 @@ public partial class MainWindow : Window
         StopWaitingButton.IsEnabled = false;
         _report = null;
         _reviewDraftText = null;
+        _lastSavedPaths = [];
+        OpenSavedFolderButton.Visibility = Visibility.Collapsed;
         _screenshot = null;
         _clarifyingQuestionShown = false;
         _ocrAttempt = OcrAttemptOutcome.None;

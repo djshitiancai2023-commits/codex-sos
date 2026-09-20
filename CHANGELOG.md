@@ -8,6 +8,25 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
+## [0.1.8] - 2026-09-20
+
+### Fixed
+
+- Follow-up answers now preserve the privacy findings already collected, without double-counting them or rerunning OCR, doctor, or system collection.
+- Image-only Ctrl+V is limited to the input page; ordinary text paste keeps its normal behavior, and reasonable large screenshots are proportionally normalized within bounded resource limits.
+- Official feedback drafts now distinguish Desktop, CLI, and unknown use; similar issues show their open/closed/unknown state without implying that a closed issue is fixed.
+- Copy-first support guidance now includes a user-clicked official Help Center link, and successful saved reports can be located without opening files automatically.
+
+### Verification
+
+- Local source and candidate executable tests: 31/31 passed; build completed with 0 warnings and 0 errors.
+- A fictional screenshot was read by the local OCR engine; installer/portable package checks and an isolated install/uninstall smoke test passed.
+
+### Known limitations
+
+- Visible Windows mouse-and-keyboard acceptance was not completed in this run because no controllable window was available.
+- Windows packages are unsigned and may show an unknown-publisher warning. Codex SOS does not send support mail, upload screenshots, or submit issues.
+
 ## [0.1.7] - 2026-09-13
 
 ### Added
@@ -182,7 +201,8 @@ This entry restores the missing release-history heading from the [original v0.1.
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.8
 [0.1.7]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.7
 [0.1.6]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.6
 [0.1.5]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.5

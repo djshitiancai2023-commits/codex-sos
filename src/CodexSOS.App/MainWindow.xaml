@@ -237,8 +237,12 @@
                             <Button x:Uid="CopyOfficialFeedbackButton" x:Name="CopyOfficialFeedbackButton" Content="只复制反馈材料（无需登录）" Style="{StaticResource PrimaryButton}"
                                     Click="CopyOfficialFeedbackButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="SaveButton" Content="保存到电脑" Style="{StaticResource SoftButton}" Click="SaveButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="OpenSavedFolderButton" x:Name="OpenSavedFolderButton" Content="打开文件所在文件夹" Style="{StaticResource SoftButton}"
+                                    Click="OpenSavedFolderButton_Click" Margin="0,0,10,0" Visibility="Collapsed" />
                             <Button x:Uid="OpenOfficialFeedbackButton" x:Name="OpenOfficialFeedbackButton" Content="复制并打开公开问题页" Style="{StaticResource SoftButton}"
                                     Click="OpenOfficialFeedbackButton_Click" Margin="0,0,10,0" />
+                            <Button x:Uid="OpenHelpCenterButton" x:Name="OpenHelpCenterButton" Content="打开官方帮助中心" Style="{StaticResource SoftButton}"
+                                    Click="OpenHelpCenterButton_Click" Margin="0,0,10,0" />
                             <Button x:Uid="BackButton" Content="返回结果" Style="{StaticResource SoftButton}" Click="BackToResultButton_Click" />
                         </WrapPanel>
                         <TextBlock x:Name="FeedbackStatusText" Foreground="{StaticResource OceanBrush}" TextWrapping="Wrap"

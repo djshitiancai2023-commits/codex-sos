@@ -82,7 +82,7 @@ public sealed class PublicReportBuilder
         report.AppendLine(similarIssues.PlainSummary);
         foreach (var match in similarIssues.Matches.Take(5))
         {
-            report.AppendLine($"- [#{match.Issue.Number} {match.Issue.Title}]({match.Issue.HtmlUrl}) — {TierName(match.Tier)}；依据：{string.Join("、", match.Reasons)}");
+            report.AppendLine($"- [#{match.Issue.Number} {match.Issue.Title}]({match.Issue.HtmlUrl}) — {TierName(match.Tier)}；{IssueStateName(match.Issue.State)}；依据：{string.Join("、", match.Reasons)}");
         }
 
         if (faultEvents.Count > 0)
@@ -159,6 +159,13 @@ public sealed class PublicReportBuilder
         IssueSimilarityTier.High => "高度相似",
         IssueSimilarityTier.Possible => "可能相关",
         _ => "只是关键词相同"
+    };
+
+    private static string IssueStateName(string? state) => state?.ToLowerInvariant() switch
+    {
+        "open" => "仍开放",
+        "closed" => "已关闭（不代表已修复）",
+        _ => "状态未知"
     };
 
     private static string FriendlyPrivacyName(string kind) => kind switch

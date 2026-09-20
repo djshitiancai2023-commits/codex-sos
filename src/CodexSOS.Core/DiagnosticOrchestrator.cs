@@ -163,11 +163,13 @@ public sealed class DiagnosticOrchestrator
             previous.SimilarIssues,
             previous.ServiceStatus,
             previous.FaultEvents);
-        var allFindings = built.Findings
-            .GroupBy(finding => finding.Kind, StringComparer.OrdinalIgnoreCase)
-            .Select(group => new PrivacyFinding(group.Key, group.Sum(finding => finding.Count)))
-            .OrderBy(finding => finding.Kind, StringComparer.Ordinal)
-            .ToArray();
+        // The first pass already contains redactions found in the user's
+        // description/OCR plus the assembled report.  Re-evaluation must not
+        // erase that ledger or count the same report redaction again.  Keep
+        // the largest observed count for each kind: this preserves findings
+        // from the completed round while allowing a genuinely larger finding
+        // set from the rebuilt report to appear once.
+        var allFindings = MergePrivacyFindings(previous.PrivacyFindings, built.Findings);
         var privacyReview = PublicReportBuilder.BuildPrivacyReview(allFindings);
         return previous with
         {
@@ -184,6 +186,20 @@ public sealed class DiagnosticOrchestrator
         safeSignals.Count == 0
             ? sanitizedText ?? string.Empty
             : string.Join('\n', new[] { sanitizedText ?? string.Empty }.Concat(safeSignals));
+
+    private static IReadOnlyList<PrivacyFinding> MergePrivacyFindings(
+        IReadOnlyList<PrivacyFinding> previous,
+        IReadOnlyList<PrivacyFinding> rebuilt)
+    {
+        return previous
+            .Concat(rebuilt)
+            .GroupBy(finding => finding.Kind, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new PrivacyFinding(
+                group.First().Kind,
+                group.Max(finding => finding.Count)))
+            .OrderBy(finding => finding.Kind, StringComparer.Ordinal)
+            .ToArray();
+    }
 
 
     private static string BuildFaultSearchEvidence(IReadOnlyList<FaultEvent> events) =>

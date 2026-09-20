@@ -51,10 +51,12 @@ public static class UiText
         ["ReviewExcludes"] = ["不会保存：原截图、完整聊天、提示词、项目代码、账号文件、密钥或 cookie。", "不會儲存：原始截圖、完整聊天、提示詞、專案程式碼、帳號檔案、金鑰或 Cookie。", "Not included: the original screenshot, full chats, prompts, project code, account files, keys, or cookies."],
         ["ReviewExpander"] = ["查看将要复制的材料", "查看即將複製的資料", "View the material that will be copied"],
         ["ReviewWarning"] = ["自动遮盖不能保证 100% 安全。Codex SOS 不会自动发布这些材料。", "自動遮蔽無法保證 100% 安全。Codex SOS 不會自動發佈這些資料。", "Automatic redaction cannot guarantee 100% safety. Codex SOS never publishes this report automatically."],
-        ["OfficialFeedbackHint"] = ["推荐先只复制材料，粘贴到原来的 OpenAI 客服邮件，不需要登录 GitHub。如果官方反馈显示上传失败，反馈编号没有变化也不代表发送成功；不要反复重试或故意重现故障。需要公开报告时，再打开 GitHub 问题页。SOS 不会代你发送。", "建議先只複製資料，貼到原本的 OpenAI 客服郵件，不需要登入 GitHub。如果官方回報顯示上傳失敗，回報編號沒有變化也不代表傳送成功；不要反覆重試或刻意重現故障。需要公開回報時，再開啟 GitHub 問題頁。SOS 不會代你傳送。", "Start by copying the report into your existing OpenAI Support email; no GitHub sign-in is needed. If the official uploader reports failure, an unchanged Feedback ID does not prove delivery. Do not keep retrying or reproduce the failure. Open the public GitHub form only when you want a public report. SOS never sends anything for you."],
+        ["OfficialFeedbackHint"] = ["材料已复制，但尚未发送。有客服对话就粘贴进去；第一次求助可以打开官方帮助中心。若官方反馈显示上传失败，反馈编号没变化也不代表发送成功；不要为了拿编号反复重试或故意重现故障。SOS 不会代你发邮件、开工单或提交。", "資料已複製，但尚未傳送。有客服對話就貼上；第一次求助可以開啟官方說明中心。若官方回報顯示上傳失敗，回報編號沒有變化也不代表傳送成功；不要為了取得編號反覆重試或刻意重現故障。SOS 不會代你寄信、開工單或提交。", "The material was copied but not sent. Paste it into an existing support conversation; first-time users can open the official Help Center. If the official uploader reports failure, an unchanged Feedback ID does not prove delivery; do not keep retrying or reproduce the failure just to obtain one. SOS never sends email, opens a ticket, or submits for you."],
         ["SaveButton"] = ["保存到电脑", "儲存到電腦", "Save to this computer"],
         ["CopyOfficialFeedbackButton"] = ["只复制反馈材料（无需登录）", "只複製回報資料（無需登入）", "Copy report only (no sign-in)"],
         ["OpenOfficialFeedbackButton"] = ["复制并打开公开问题页", "複製並開啟公開問題頁", "Copy and open public bug form"],
+        ["OpenHelpCenterButton"] = ["打开官方帮助中心", "開啟官方說明中心", "Open official Help Center"],
+        ["OpenSavedFolderButton"] = ["打开文件所在文件夹", "開啟檔案所在資料夾", "Open containing folder"],
         ["BackButton"] = ["返回结果", "返回結果", "Back to results"],
         ["Footer"] = ["默认只在本机处理 · 不用 API Key · 正常运行不调用大模型 · 不自动发布", "預設只在本機處理 · 不用 API Key · 正常執行不呼叫大型模型 · 不自動發佈", "Local-first · No API key · No model calls in normal use · Never auto-publishes"]
     };
@@ -218,6 +220,13 @@ public static class UiText
         _ => Get(language, "仅供参考", "僅供參考", "For reference only")
     };
 
+    public static string IssueState(UiLanguage language, string? state) => state?.ToLowerInvariant() switch
+    {
+        "open" => Get(language, "仍开放", "仍開放", "Open"),
+        "closed" => Get(language, "已关闭（不代表已修复）", "已關閉（不代表已修復）", "Closed (not proof of a fix)"),
+        _ => Get(language, "状态未知", "狀態未知", "Status unknown")
+    };
+
     public static string MatchReason(UiLanguage language, string reason)
     {
         if (language == UiLanguage.SimplifiedChinese) return reason;
@@ -294,7 +303,7 @@ public static class UiText
         AppendHeading(b, language, "相似的公开问题", "相似的公開問題", "Similar public issues");
         b.AppendLine(SimilarSummary(language, report.SimilarIssues));
         foreach (var match in report.SimilarIssues.Matches.Take(5))
-            b.AppendLine($"- [#{match.Issue.Number} {match.Issue.Title}]({match.Issue.HtmlUrl}) — {Tier(language, match.Tier)}; {Get(language, "依据", "依據", "Reason")}: {string.Join(", ", match.Reasons.Select(reason => MatchReason(language, reason)))}");
+            b.AppendLine($"- [#{match.Issue.Number} {match.Issue.Title}]({match.Issue.HtmlUrl}) — {Tier(language, match.Tier)}; {IssueState(language, match.Issue.State)}; {Get(language, "依据", "依據", "Reason")}: {string.Join(", ", match.Reasons.Select(reason => MatchReason(language, reason)))}");
         if (report.FaultEvents.Count > 0)
         {
             AppendHeading(b, language, "故障时间附近的 Windows 记录", "故障時間附近的 Windows 記錄", "Windows records near the time of the problem");

@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CodexSOS.App;
 using CodexSOS.App.Services;
 using CodexSOS.App.Testing;
@@ -38,6 +40,9 @@ internal static class Program
             ("fixtures: fictional UI scenarios load cleanly", TestScenarioFixturesLoadAsync),
             ("diagnosis: ties stay honest and unknown doctor checks stay evidence", TestTieAndUnknownDoctorAsync),
             ("capture: browser exclusion and ambiguous desktop safety", TestWindowSelectionAsync),
+            ("capture: large screenshots scale within bounded limits", TestScreenshotNormalizationAsync),
+            ("capture: image-only paste respects focus and page", TestScreenshotPastePolicyAsync),
+            ("ocr: real local engine reads fictional screenshot", TestRealLocalOcrAsync),
             ("system collection: remote paths are skipped", TestSystemPathSafetyAsync),
             ("packaging: Windows manifest is declared", TestWindowsManifestAsync),
             ("similar issues: high matches and no-match restraint", TestSimilarityAsync),
@@ -993,10 +998,38 @@ internal static class Program
         Contains(draft, "attach only reviewed, sanitized material", "Official feedback sanitized-log guidance");
         Contains(draft, "original screenshot is not included", "Official feedback screenshot boundary");
         Contains(draft, "https://github.com/openai/codex/issues/1313", "Official feedback similar issue");
+        Contains(draft, "state: open", "Official feedback issue state");
+        Contains(UiText.BuildPublicReport(report, UiLanguage.English), "Open", "Public export issue state");
+        Equal("仍开放", UiText.IssueState(UiLanguage.SimplifiedChinese, "open"), "Open issue state label");
+        Equal("已关闭（不代表已修复）", UiText.IssueState(UiLanguage.SimplifiedChinese, "closed"), "Closed issue state label");
+        Equal("状态未知", UiText.IssueState(UiLanguage.SimplifiedChinese, "other"), "Unknown issue state label");
         Contains(draft, "<EMAIL>", "Official feedback email redaction");
         Contains(draft, "<LOCAL_PATH>", "Official feedback path redaction");
         NotContains(draft, "rowan.fixture@example.test", "Official feedback raw email");
         NotContains(draft, "C:\\Users\\Rowan.Fixture", "Official feedback raw path");
+
+        Equal(OfficialFeedbackRoutes.DesktopUrl, OfficialFeedbackRoutes.For(CodexSurface.Desktop), "Desktop feedback route");
+        Equal(OfficialFeedbackRoutes.CliUrl, OfficialFeedbackRoutes.For(CodexSurface.Cli), "CLI feedback route");
+        Equal(OfficialFeedbackRoutes.ChooseUrl, OfficialFeedbackRoutes.For(CodexSurface.Unknown), "Unknown feedback route");
+        Assert(OfficialFeedbackRoutes.IsAllowed(OfficialFeedbackRoutes.DesktopUrl), "Desktop route allow-list");
+        Assert(OfficialFeedbackRoutes.IsAllowed(OfficialFeedbackRoutes.CliUrl), "CLI route allow-list");
+        Assert(!OfficialFeedbackRoutes.IsAllowed("https://github.com/openai/codex/issues/new?template=1-codex-app.yml&body=private"),
+            "Feedback route must not carry report data");
+
+        var cliDraft = new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(
+            report with { System = FixtureSystem(CodexSurface.Cli) });
+        Contains(cliDraft, "# Codex CLI bug report draft", "CLI feedback draft identity");
+        Contains(cliDraft, "What version of Codex CLI is running?", "CLI version field");
+        Contains(cliDraft, "Which model were you using?", "CLI model field");
+        Contains(cliDraft, "What terminal emulator and version are you using", "CLI terminal field");
+        Contains(cliDraft, "Codex doctor report", "CLI doctor field");
+        NotContains(cliDraft, "What version of the Codex App are you using?", "CLI draft must not claim App route");
+
+        var unknownDraft = new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(
+            report with { System = FixtureSystem(CodexSurface.Unknown) });
+        Contains(unknownDraft, "# Codex bug report draft", "Unknown feedback draft identity");
+        Contains(unknownDraft, "Choose Desktop or CLI on the official form.", "Unknown surface guidance");
+        Contains(unknownDraft, "Suggested title: [Windows] Codex unexpected behavior", "Unknown surface title restraint");
         return Task.CompletedTask;
     }
 
@@ -1038,6 +1071,32 @@ internal static class Program
         Assert(fullFollowUp.SafeSignals is { Count: > 0 } &&
                fullFollowUp.SafeSignals.Contains(OneQuestionRules.UnrecognizedLabel, StringComparer.Ordinal),
             "A full description prevented the fixed follow-up signal");
+
+        var privacyReport = await orchestrator.RunAsync(
+            new UserEvidence(
+                "Codex stopped; contact fixture@example.test and check C:\\Users\\Fixture.User\\Apps\\Codex.",
+                string.Empty,
+                false,
+                FrozenNow),
+            progress: null,
+            CancellationToken.None);
+        var beforePrivacy = privacyReport.PrivacyFindings
+            .ToDictionary(finding => finding.Kind, finding => finding.Count, StringComparer.OrdinalIgnoreCase);
+        Assert(beforePrivacy.GetValueOrDefault("email") > 0, "Initial privacy ledger did not record the fictional email");
+        Assert(beforePrivacy.GetValueOrDefault("local_path") > 0, "Initial privacy ledger did not record the fictional path");
+
+        var privacyFollowUp = orchestrator.Reevaluate(privacyReport, OneQuestionRules.FrozenLabel);
+        var afterPrivacy = privacyFollowUp.PrivacyFindings
+            .ToDictionary(finding => finding.Kind, finding => finding.Count, StringComparer.OrdinalIgnoreCase);
+        Equal(beforePrivacy["email"], afterPrivacy["email"], "Follow-up must preserve email redaction count");
+        Equal(beforePrivacy["local_path"], afterPrivacy["local_path"], "Follow-up must preserve path redaction count");
+        NotContains(privacyFollowUp.PublicReportMarkdown, "fixture@example.test", "Follow-up report leaked fictional email");
+        NotContains(privacyFollowUp.PublicReportMarkdown, "C:\\Users\\Fixture.User", "Follow-up report leaked fictional path");
+        var repeatedPrivacy = orchestrator.Reevaluate(privacyFollowUp, OneQuestionRules.FrozenLabel);
+        Equal(afterPrivacy["email"], repeatedPrivacy.PrivacyFindings.Single(f => f.Kind == "email").Count,
+            "Equivalent follow-up changed email count");
+        Equal(afterPrivacy["local_path"], repeatedPrivacy.PrivacyFindings.Single(f => f.Kind == "local_path").Count,
+            "Equivalent follow-up changed path count");
     }
 
     private static Task TestSettingsAndPartialSaveAsync()
@@ -1072,6 +1131,25 @@ internal static class Program
             Assert(outcome.PublicReportSaved && !outcome.PrivacyReviewSaved && !outcome.BothSaved,
                 "Partial save was not reported accurately");
             Contains(outcome.PrivacyError ?? string.Empty, "IOException", "Partial-save error kind");
+
+            var partialPaths = SavedReportLocator.SuccessfulPaths(
+                outcome,
+                Path.Combine(root, "public.md"),
+                Path.Combine(root, "privacy.md"));
+            Equal(1, partialPaths.Count, "Partial save should expose only the successful file");
+            Equal(Path.Combine(root, "public.md"), partialPaths.Single(), "Partial save successful path");
+            Equal(Path.Combine(root, "public.md"),
+                SavedReportLocator.FirstExisting(partialPaths, path => path.EndsWith("public.md", StringComparison.Ordinal)),
+                "Saved-file locator should find the successful file");
+            Equal(null, SavedReportLocator.FirstExisting(partialPaths, _ => false),
+                "Moved or missing saved file should not point to another file");
+
+            var both = new ReportSaveResult(true, true, null, null);
+            Equal(2, SavedReportLocator.SuccessfulPaths(both, "a report.md", "a privacy.md").Count,
+                "Two successful saves should expose both files");
+            var none = new ReportSaveResult(false, false, "IOException", "IOException");
+            Equal(0, SavedReportLocator.SuccessfulPaths(none, "a report.md", "a privacy.md").Count,
+                "No successful save should expose no location action");
         }
         finally
         {
@@ -1080,6 +1158,103 @@ internal static class Program
             catch (UnauthorizedAccessException) { }
         }
 
+        return Task.CompletedTask;
+    }
+
+    private static Task TestScreenshotNormalizationAsync()
+    {
+        Assert(ScreenshotNormalizer.TryGetTargetSize(3840, 2160,
+                out var ordinaryWidth, out var ordinaryHeight, out var ordinaryResized),
+            "A normal 4K screenshot should be accepted");
+        Equal(3840, ordinaryWidth, "4K screenshot width");
+        Equal(2160, ordinaryHeight, "4K screenshot height");
+        Assert(!ordinaryResized, "A normal 4K screenshot should not be needlessly resized");
+
+        Assert(ScreenshotNormalizer.TryGetTargetSize(5120, 2880,
+                out var largeWidth, out var largeHeight, out var largeResized),
+            "A reasonable 5K screenshot should be accepted");
+        Equal(4096, largeWidth, "5K screenshot bounded width");
+        Equal(2304, largeHeight, "5K screenshot proportional height");
+        Assert(largeResized, "A 5K screenshot should be scaled down");
+
+        Assert(ScreenshotNormalizer.TryGetTargetSize(7680, 2160,
+                out var dualWidth, out var dualHeight, out var dualResized),
+            "A reasonable dual-screen screenshot should be accepted");
+        Equal(4096, dualWidth, "Dual-screen bounded width");
+        Equal(1152, dualHeight, "Dual-screen proportional height");
+        Assert(dualResized, "A dual-screen screenshot should be scaled down");
+
+        Assert(!ScreenshotNormalizer.TryGetTargetSize(1, 20_000,
+                out _, out _, out _), "An extreme long strip must be rejected");
+        Assert(!ScreenshotNormalizer.TryGetTargetSize(10_000, 5_000,
+                out _, out _, out _), "An image over the source pixel cap must be rejected");
+
+        var largePixels = new byte[5120 * 2880 * 4];
+        var largeSource = BitmapSource.Create(5120, 2880, 96, 96, PixelFormats.Bgra32, null,
+            largePixels, 5120 * 4);
+        Assert(ScreenshotNormalizer.TryNormalize(largeSource, out var normalizedLarge, out var largeWasResized),
+            "A real 5K bitmap should normalize without rejection");
+        Assert(largeWasResized, "The real 5K bitmap should be scaled");
+        Equal(4096, normalizedLarge.PixelWidth, "Real 5K bitmap normalized width");
+        Equal(2304, normalizedLarge.PixelHeight, "Real 5K bitmap normalized height");
+
+        var pixels = new byte[100 * 60 * 4];
+        var source = BitmapSource.Create(100, 60, 96, 96, PixelFormats.Bgra32, null, pixels, 100 * 4);
+        Assert(ScreenshotNormalizer.TryNormalize(source, out var normalized, out var wasResized),
+            "A valid local bitmap should normalize");
+        Assert(!wasResized, "A small local bitmap should stay at its original size");
+        Equal(100, normalized.PixelWidth, "Small bitmap width");
+        Equal(60, normalized.PixelHeight, "Small bitmap height");
+
+        var metadataPath = Path.Combine(Path.GetTempPath(), "CodexSOS-fictional-image-" + Guid.NewGuid().ToString("N") + ".png");
+        try
+        {
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(source));
+            using (var file = File.Create(metadataPath)) encoder.Save(file);
+            Assert(ScreenshotNormalizer.TryReadMetadata(metadataPath, out var metadataWidth, out var metadataHeight),
+                "Image metadata should be readable before full decode");
+            Equal(100, metadataWidth, "Metadata width");
+            Equal(60, metadataHeight, "Metadata height");
+            File.WriteAllText(metadataPath, "not a real image");
+            Assert(!ScreenshotNormalizer.TryReadMetadata(metadataPath, out _, out _),
+                "A corrupt image must be rejected before decode");
+        }
+        finally
+        {
+            try { File.Delete(metadataPath); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+        return Task.CompletedTask;
+    }
+
+    private static async Task TestRealLocalOcrAsync()
+    {
+        var root = FindRepositoryRoot();
+        var fixture = FixtureSession.Load(Path.Combine(root, "tests", "fixtures", "scenarios", "01-screenshot-connection.json"));
+        var ocr = new TesserNetOcrService();
+        Assert(ocr.IsAvailable, "The local OCR engine is unavailable");
+        var text = await ocr.ReadAsync(fixture.CreateSyntheticScreenshot(), CancellationToken.None)
+            .ConfigureAwait(false);
+        Assert(!string.IsNullOrWhiteSpace(text), "The real local OCR engine returned no text for the fictional screenshot");
+        Contains(text.ToUpperInvariant(), "CODEX", "Real local OCR did not read the fictional Codex screenshot");
+    }
+
+    private static Task TestScreenshotPastePolicyAsync()
+    {
+        Assert(ScreenshotPastePolicy.ShouldUseShortcut(true, false, false, false, true, false),
+            "Image-only shortcut should work on the input page without text focus");
+        Assert(ScreenshotPastePolicy.ShouldUseShortcut(true, false, true, false, true, false),
+            "Image-only shortcut should work in the description box");
+        Assert(!ScreenshotPastePolicy.ShouldUseShortcut(true, false, true, false, true, true),
+            "Mixed text and image clipboard must preserve text paste");
+        Assert(!ScreenshotPastePolicy.ShouldUseShortcut(true, false, false, true, true, false),
+            "Result/review text boxes must keep their normal paste behavior");
+        Assert(!ScreenshotPastePolicy.ShouldUseShortcut(false, false, false, false, true, false),
+            "Shortcut must not change a hidden result/review page");
+        Assert(!ScreenshotPastePolicy.ShouldUseShortcut(true, true, false, false, true, false),
+            "Shortcut must not change state while a check is running");
         return Task.CompletedTask;
     }
 
@@ -1267,6 +1442,12 @@ internal static class Program
         NotContains(all, "issues/new?body=", "Official feedback URL must not carry a report body");
         Contains(all, "CopyOfficialFeedbackButton_Click", "Copy-only official-feedback action");
         Contains(all, "OpenOfficialFeedbackButton_Click", "Explicit public-form action");
+        Contains(all, "OpenHelpCenterButton_Click", "Explicit Help Center action");
+        Contains(all, "https://help.openai.com/", "Fixed Help Center URL");
+        Contains(all, "OpenSavedFolderButton_Click", "Explicit saved-file location action");
+        Contains(all, "explorer.exe", "Saved-file location uses Explorer directly");
+        Contains(all, "ClipboardHasImageOnly", "Image-only paste guard");
+        Contains(all, "ScreenshotNormalizer.MaximumBytes", "Screenshot byte cap");
         return Task.CompletedTask;
     }
 

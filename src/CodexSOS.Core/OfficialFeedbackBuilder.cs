@@ -18,14 +18,25 @@ public sealed class OfficialFeedbackBuilder
         }
 
         var text = new StringBuilder();
-        text.AppendLine("# Codex App bug report draft");
+        var surface = report.System.Surface;
+        text.AppendLine(surface switch
+        {
+            CodexSurface.Desktop => "# Codex App bug report draft",
+            CodexSurface.Cli => "# Codex CLI bug report draft",
+            _ => "# Codex bug report draft"
+        });
         text.AppendLine();
         text.AppendLine("> Prepared locally by the unofficial community tool Codex SOS. Status: NOT SUBMITTED.");
         text.AppendLine("> Review this draft before sharing. The original screenshot is not included.");
         text.AppendLine();
-        text.AppendLine($"Suggested title: {SuggestedTitle(report.Diagnosis.Category)}");
+        text.AppendLine($"Suggested title: {SuggestedTitle(report.Diagnosis.Category, surface)}");
 
-        Heading(text, "What version of the Codex App are you using?");
+        Heading(text, surface switch
+        {
+            CodexSurface.Desktop => "What version of the Codex App are you using?",
+            CodexSurface.Cli => "What version of Codex CLI is running?",
+            _ => "What version of Codex are you using?"
+        });
         text.AppendLine(report.Doctor.CodexVersion ?? report.System.CodexVersion ?? "Unknown");
 
         Heading(text, "What subscription do you have?");
@@ -33,6 +44,25 @@ public sealed class OfficialFeedbackBuilder
 
         Heading(text, "What platform is your computer?");
         text.AppendLine($"{report.System.WindowsVersion} · {report.System.Architecture}");
+
+        if (surface == CodexSurface.Cli)
+        {
+            Heading(text, "Which model were you using?");
+            text.AppendLine("Not collected by Codex SOS. Add it only if you know it.");
+            Heading(text, "What terminal emulator and version are you using (if applicable)?");
+            text.AppendLine("Not collected by Codex SOS. Add it only if you know it.");
+            Heading(text, "Codex doctor report");
+            text.AppendLine(report.Doctor.PublicSummary);
+            foreach (var check in report.Doctor.Checks.Where(item => item.Status is "warning" or "fail").Take(12))
+            {
+                text.AppendLine($"- {check.Id}: {check.Summary}");
+            }
+        }
+        else if (surface == CodexSurface.Unknown)
+        {
+            Heading(text, "Which Codex interface are you using?");
+            text.AppendLine("Not determined by Codex SOS. Choose Desktop or CLI on the official form.");
+        }
 
         Heading(text, "What issue are you seeing?");
         text.AppendLine(string.IsNullOrWhiteSpace(report.PublicEvidence.Description)
@@ -77,7 +107,7 @@ public sealed class OfficialFeedbackBuilder
                      .Take(5))
         {
             text.AppendLine($"- Similar public issue: #{match.Issue.Number} {match.Issue.HtmlUrl} " +
-                            $"({match.Tier}, score {match.Score})");
+                            $"({match.Tier}, score {match.Score}, {IssueState(match.Issue)})");
         }
         text.AppendLine($"- Codex SOS report ID: {report.RunId.ToString("N")[..8]}");
         text.AppendLine("- Session ID, token limit usage, and context window usage: not collected by Codex SOS. Add them only if you choose to share them.");
@@ -120,13 +150,30 @@ public sealed class OfficialFeedbackBuilder
         _ => "Codex should complete the requested operation or show a clear, recoverable error without losing local work."
     };
 
-    private static string SuggestedTitle(IncidentCategory category) => category switch
+    private static string SuggestedTitle(IncidentCategory category, CodexSurface surface = CodexSurface.Desktop) =>
+        surface == CodexSurface.Cli
+            ? category switch
+            {
+                IncidentCategory.Connection => "[Windows] Codex CLI connection is interrupted",
+                IncidentCategory.Login => "[Windows] Codex CLI sign-in does not complete",
+                _ => "[Windows] Codex CLI unexpected behavior"
+            }
+            : surface == CodexSurface.Unknown
+                ? "[Windows] Codex unexpected behavior"
+                : category switch
     {
         IncidentCategory.DesktopApplication => "[Windows] Codex App exits unexpectedly",
         IncidentCategory.Connection => "[Windows] Codex App connection is interrupted",
         IncidentCategory.TaskRecovery => "[Windows] Codex App cannot resume an existing task",
         IncidentCategory.Login => "[Windows] Codex App sign-in does not complete",
         _ => "[Windows] Codex App unexpected behavior"
+    };
+
+    private static string IssueState(PublicIssue issue) => issue.State.ToLowerInvariant() switch
+    {
+        "open" => "state: open",
+        "closed" => "state: closed (not proof of a fix)",
+        _ => "state: unknown"
     };
 
     private static void Heading(StringBuilder text, string heading)
