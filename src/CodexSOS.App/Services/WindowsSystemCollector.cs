@@ -58,26 +58,19 @@ public sealed class WindowsSystemCollector : ISystemCollector
     {
         cancellationToken.ThrowIfCancellationRequested();
         var processes = GetCodexProcesses();
-        var surface = processes.Any(p => p.HasWindow) ? CodexSurface.Desktop
+        var surface = processes.Any(p => p.HasWindow ||
+            p.Path?.Contains("WindowsApps", StringComparison.OrdinalIgnoreCase) == true) ? CodexSurface.Desktop
             : processes.Count > 0 ? CodexSurface.Cli
             : CodexSurface.Unknown;
         var candidates = FindInstallCandidates(processes);
-        var roots = candidates
-            .Select(candidate => candidate.Root)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-        var versions = candidates
-            .Select(candidate => candidate.Version)
-            .Where(version => !string.IsNullOrWhiteSpace(version) && version != "0.0.0.0")
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-        var possibleDuplicate = roots.Length > 1 && versions.Length > 1;
+        var installation = CodexVersions.ResolveInstallations(surface,
+            candidates.Select(candidate => (candidate.Root, candidate.Version, candidate.Surface)));
         var hints = candidates
             .Select(candidate => candidate.Kind)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Take(4)
             .ToArray();
-        var version = versions.Length == 1 ? versions[0] : null;
+        var version = installation.Version;
         var windows = Environment.OSVersion.VersionString;
 
         return new SystemFacts(
@@ -86,7 +79,7 @@ public sealed class WindowsSystemCollector : ISystemCollector
             surface,
             version,
             processes.Count > 0,
-            possibleDuplicate,
+            installation.PossibleDuplicate,
             hints);
     }
 
@@ -143,7 +136,9 @@ public sealed class WindowsSystemCollector : ISystemCollector
         {
             if (IsSafeLocalPath(process.Path))
             {
-                AddCandidate(candidates, process.Path!, process.Version);
+                AddCandidate(candidates, process.Path!, process.Version,
+                    process.HasWindow || process.Path!.Contains("WindowsApps", StringComparison.OrdinalIgnoreCase)
+                        ? CodexSurface.Desktop : CodexSurface.Cli);
             }
         }
 
@@ -165,7 +160,7 @@ public sealed class WindowsSystemCollector : ISystemCollector
                         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or FileNotFoundException) { }
                     }
 
-                    AddCandidate(candidates, path, version);
+                    AddCandidate(candidates, path, version, CodexSurface.Cli);
                 }
                 catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
                 {
@@ -180,7 +175,8 @@ public sealed class WindowsSystemCollector : ISystemCollector
             .ToArray();
     }
 
-    private static void AddCandidate(ICollection<InstallCandidate> candidates, string path, string? version)
+    private static void AddCandidate(ICollection<InstallCandidate> candidates, string path, string? version,
+        CodexSurface surface)
     {
         if (!IsSafeLocalPath(path)) return;
         string fullPath;
@@ -201,9 +197,9 @@ public sealed class WindowsSystemCollector : ISystemCollector
             : lower.Contains("npm", StringComparison.Ordinal) || lower.EndsWith("codex.cmd", StringComparison.Ordinal)
                 ? "命令行安装（位置已隐藏）"
                 : "Codex 安装（位置已隐藏）";
-        candidates.Add(new InstallCandidate(root, version, kind));
+        candidates.Add(new InstallCandidate(root, version, kind, surface));
     }
 
     private sealed record ProcessFact(bool HasWindow, string? Path, string? Version);
-    private sealed record InstallCandidate(string Root, string? Version, string Kind);
+    private sealed record InstallCandidate(string Root, string? Version, string Kind, CodexSurface Surface);
 }

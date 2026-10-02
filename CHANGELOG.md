@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.9 candidate -->
+<!-- Repository current release marker: v0.1.10 -->
 
 # Changelog
 
@@ -10,7 +10,19 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Maintenance updates based on real user feedback and future `codex doctor` schema changes.
 
-## [0.1.9] - Candidate (not published)
+## [0.1.10] - 2026-10-02
+
+### Fixed
+
+- Separate desktop app and official doctor CLI versions in all three report languages and support drafts.
+- Do not treat a desktop installation plus a differently versioned CLI as a duplicate-install conflict.
+- Safely handle a nonnumeric doctor schema, redact map-based check identifiers, normalize known check statuses, and prefer failure/warning evidence over a contradictory green summary.
+
+### Compatibility
+
+- Checked against official Codex CLI 0.160.0 and the current desktop/CLI issue templates. Raw doctor details and issue fields remain excluded; no extra private-state reading or user steps.
+
+## [0.1.9] - 2026-09-20
 
 ### Fixed
 
@@ -24,7 +36,7 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Verification
 
 - The local candidate has 34/34 executable test groups passing, 0 failures, and a clean build with 0 warnings and 0 errors. This is not a visible Windows mouse-and-keyboard acceptance claim.
-- v0.1.9 has not been pushed, tagged, or published in this batch; v0.1.8 remains the public release.
+- v0.1.9 was published on 2026-09-20; see its [release record](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.9).
 
 ## [0.1.8] - 2026-09-20
 

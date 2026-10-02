@@ -28,6 +28,7 @@ internal static class Program
         {
             ("privacy: all fictional fixture cases", TestPrivacyFixtureAsync),
             ("doctor parser: ok, warning, fail, unknown schema, malformed", TestDoctorParserAsync),
+            ("current Codex: distinct app/CLI versions and defensive schema", TestCurrentCodexCompatibilityAsync),
             ("doctor process: unsupported, timeout, malformed, exit 1", TestFakeDoctorProcessAsync),
             ("diagnosis: green doctor never says Codex is fine", TestGreenDoctorCannotExplainAsync),
             ("diagnosis: one Chinese sentence identifies task recovery", TestChineseRecoveryDescriptionAsync),
@@ -158,6 +159,43 @@ internal static class Program
         var malformed = parser.Parse("}{not-json", 0);
         Equal(DoctorState.Malformed, malformed.State, "Doctor malformed state");
         NotContains(malformed.PublicSummary, "}{not-json", "Raw malformed output must not be shown");
+        return Task.CompletedTask;
+    }
+
+    private static Task TestCurrentCodexCompatibilityAsync()
+    {
+        var parser = new DoctorJsonParser(new PrivacyRedactor());
+        Equal(DoctorState.UnknownSchema, parser.Parse("""
+            {"schemaVersion":"changed","overallStatus":"ok","checks":{}}
+            """, 0).State, "Wrong schema type must not throw");
+        Equal(DoctorState.Failed, parser.Parse(DoctorJson("ok", "state.paths", "FAIL", "Database integrity failed"), 0).State,
+            "Failure evidence must override an inconsistent green summary");
+        Equal(DoctorState.Warning, parser.Parse(DoctorJson("ok", "sandbox", "WARNING", "Sandbox warning"), 0).State,
+            "Warning evidence must override an inconsistent green summary");
+        Equal(DoctorState.Failed, parser.Parse(DoctorJson("ok"), 1).State, "Nonzero exit must not be green");
+        var privateDetails = parser.Parse("""
+            {"schemaVersion":1,"overallStatus":"warning","codexVersion":"0.160.0","checks":{
+              "fixture@example.test":{"status":"warning","summary":"State check warning",
+                "details":{"private":"PRIVATE_DETAIL_CANARY"},"issues":[{"fields":{"secret":"PRIVATE_ISSUE_CANARY"}}]}}}
+            """, 0);
+        var serialized = JsonSerializer.Serialize(privateDetails);
+        NotContains(serialized, "fixture@example.test", "Check-map identifiers must be redacted");
+        NotContains(serialized, "PRIVATE_DETAIL_CANARY", "New doctor details must stay excluded");
+        NotContains(serialized, "PRIVATE_ISSUE_CANARY", "New doctor issue fields must stay excluded");
+
+        var desktop = FixtureSystem(CodexSurface.Desktop) with { CodexVersion = "26.999.1.0" };
+        Equal("26.999.1.0", CodexVersions.ForSurface(desktop, privateDetails), "App version must not become CLI version");
+        Equal(null, CodexVersions.ForSurface(desktop with { CodexVersion = null }, privateDetails), "Unknown app version stays unknown");
+        Equal("0.160.0", CodexVersions.ForSurface(desktop with { Surface = CodexSurface.Cli }, privateDetails), "CLI uses doctor build version");
+        var candidates = new[] {
+            ("FICTIONAL_APP_ROOT", (string?)"26.999.1.0", CodexSurface.Desktop),
+            ("FICTIONAL_CLI_ROOT", (string?)"0.160.0", CodexSurface.Cli) };
+        var resolved = CodexVersions.ResolveInstallations(CodexSurface.Desktop, candidates);
+        Equal("26.999.1.0", resolved.Version, "Mixed installations retain app version");
+        Assert(!resolved.PossibleDuplicate, "App plus CLI is not a conflicting duplicate");
+        Assert(CodexVersions.ResolveInstallations(CodexSurface.Desktop,
+            candidates.Append(("FICTIONAL_APP_ROOT_2", (string?)"26.998.1.0", CodexSurface.Desktop))).PossibleDuplicate,
+            "Two different desktop installs must retain the warning");
         return Task.CompletedTask;
     }
 
@@ -974,6 +1012,24 @@ internal static class Program
             "fictional privacy review");
 
         var draft = new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(report);
+        var distinctVersions = report with {
+            System = report.System with { CodexVersion = "26.999.1.0" },
+            Doctor = report.Doctor with { CodexVersion = "0.160.0" } };
+        var versionDraft = new OfficialFeedbackBuilder(new PrivacyRedactor()).Build(distinctVersions);
+        Contains(versionDraft, "What version of the Codex App are you using?\n\n26.999.1.0".Replace("\n", Environment.NewLine),
+            "Support draft must identify the app build, not doctor build");
+        Contains(versionDraft, "Separate diagnostic CLI version: 0.160.0", "Doctor build must be separately labelled");
+        var publicVersionReport = new PublicReportBuilder(new PrivacyRedactor()).Build(
+            distinctVersions.RunId, distinctVersions.CreatedAt, distinctVersions.PublicEvidence,
+            distinctVersions.System, distinctVersions.Doctor, distinctVersions.Diagnosis,
+            distinctVersions.SimilarIssues, distinctVersions.ServiceStatus, distinctVersions.FaultEvents);
+        distinctVersions = distinctVersions with { PublicReportMarkdown = publicVersionReport.PublicReport };
+        foreach (var language in Enum.GetValues<UiLanguage>())
+        {
+            var localized = UiText.BuildPublicReport(distinctVersions, language);
+            Contains(localized, "26.999.1.0", "Localized report app version");
+            Contains(localized, "0.160.0", "Localized report separate CLI version");
+        }
         foreach (var heading in new[]
                  {
                      "What version of the Codex App are you using?",

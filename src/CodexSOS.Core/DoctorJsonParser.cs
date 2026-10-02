@@ -46,12 +46,12 @@ public sealed class DoctorJsonParser
 
             var state = overallStatus switch
             {
-                "ok" when exitCode == 0 => DoctorState.Ok,
-                "warning" => DoctorState.Warning,
                 "fail" => DoctorState.Failed,
                 _ when checks.Any(c => string.Equals(c.Status, "fail", StringComparison.OrdinalIgnoreCase)) => DoctorState.Failed,
-                _ when checks.Any(c => string.Equals(c.Status, "warning", StringComparison.OrdinalIgnoreCase)) => DoctorState.Warning,
                 _ when exitCode != 0 => DoctorState.Failed,
+                "warning" => DoctorState.Warning,
+                _ when checks.Any(c => string.Equals(c.Status, "warning", StringComparison.OrdinalIgnoreCase)) => DoctorState.Warning,
+                "ok" => DoctorState.Ok,
                 _ => DoctorState.Malformed
             };
 
@@ -102,8 +102,14 @@ public sealed class DoctorJsonParser
 
     private DoctorCheck ParseCheck(JsonElement check, string fallbackId)
     {
-        var id = Clean(TryGetString(check, "id")) ?? fallbackId;
-        var status = Clean(TryGetString(check, "status")) ?? "unknown";
+        var id = Clean(TryGetString(check, "id") ?? fallbackId)!;
+        var status = TryGetString(check, "status")?.ToLowerInvariant() switch
+        {
+            "ok" => "ok",
+            "warning" => "warning",
+            "fail" => "fail",
+            _ => "unknown"
+        };
         var summary = Clean(TryGetString(check, "summary")) ?? "没有可公开的说明";
         var remediation = Clean(TryGetString(check, "remediation"));
         return new DoctorCheck(id, status, summary, remediation);
@@ -117,7 +123,8 @@ public sealed class DoctorJsonParser
             : null;
 
     private static int? TryGetInt(JsonElement element, string name) =>
-        element.TryGetProperty(name, out var value) && value.TryGetInt32(out var number) ? number : null;
+        element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number &&
+        value.TryGetInt32(out var number) ? number : null;
 
     private static DoctorResult Malformed(int exitCode) =>
         new(DoctorState.Malformed, null, [],

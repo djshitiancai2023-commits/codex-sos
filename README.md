@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.8 -->
+<!-- Repository current release marker: v0.1.10 -->
 
 # Codex SOS
 
@@ -20,7 +20,7 @@ Turn a Codex error screenshot or one-sentence description into **privacy-reviewe
 
 ## Quick download (Windows x64)
 
-[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.8/Codex-SOS-0.1.8-win-x64-portable.zip)
+[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest)
 
 Directly download the ZIP. Then right-click it, choose **Extract All**, and double-click `CodexSOS.exe`. No GitHub sign-in or star is required.
 
@@ -38,7 +38,7 @@ A useful support report needs more than a screenshot. Codex SOS helps users gath
 
 **See it before downloading:** [three source-backed examples and verification](docs/EXAMPLES_AND_VERIFICATION.md). These are clearly labelled synthetic test examples, not customer testimonials or screenshots of a new test run.
 
-**Public release snapshot:** v0.1.8. The local `v0.1.9` candidate now has **34/34 automated test groups passed**; visible Windows mouse-and-keyboard acceptance remains a separate, dated claim. Automated tests are not a claim of live Codex or every UI combination. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
+**Current update: v0.1.10.** App and diagnostic CLI versions are reported separately; installing both is not itself a version conflict. Doctor format changes and contradictory results degrade cautiously. See [the update and verification boundaries](docs/release-notes/v0.1.10.md). Automated tests are not a claim of live-account diagnostics or every UI combination. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
 
 ## What the user does
 

@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.9 candidate -->
+<!-- Repository current release marker: v0.1.10 -->
 
 # Codex SOS 项目约定
 
@@ -43,11 +43,11 @@
 - 不得把真实截图、真实日志、账号、用户名、路径或会话写入 fixture、截图证据、提交历史或发布包。
 - 修改者不能只凭自己的说明判定 Gate 通过。以可重跑测试、UI 截图、运行回执、文件清单和独立复核为准。
 
-常用入口如下。打包示例对应本轮的 v0.1.9 本地候选；公开发布前先核对 tag、版本说明和实际候选包，不把候选写成已发布。
+常用入口如下。打包示例对应 v0.1.10；公开发布前先核对 tag、版本说明和实际候选包，不把候选写成已发布。体检里的 codexVersion 是命令行版本，不得作为桌面版版本；两种使用方式同时安装不等于版本冲突。
 
 ```powershell
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.9
+pwsh ./scripts/build-release.ps1 -Version 0.1.10
 ```
 
 构建脚本不得在测试或打包时调用真实 `codex doctor`。构建结果不能自动上传或发布。

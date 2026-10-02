@@ -37,7 +37,11 @@ public sealed class OfficialFeedbackBuilder
             CodexSurface.Cli => "What version of Codex CLI is running?",
             _ => "What version of Codex are you using?"
         });
-        text.AppendLine(report.Doctor.CodexVersion ?? report.System.CodexVersion ?? "Unknown");
+        text.AppendLine(CodexVersions.ForSurface(report.System, report.Doctor) ?? "Unknown");
+        if (report.Doctor.CodexVersion is { } doctorVersion)
+        {
+            text.AppendLine($"Separate diagnostic CLI version: {doctorVersion}");
+        }
 
         Heading(text, "What subscription do you have?");
         text.AppendLine("Not collected by Codex SOS. Select your subscription on the official form.");

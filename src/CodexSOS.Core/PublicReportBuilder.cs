@@ -56,7 +56,8 @@ public sealed class PublicReportBuilder
         report.AppendLine($"- Windows：{system.WindowsVersion}");
         report.AppendLine($"- 电脑类型：{system.Architecture}");
         report.AppendLine($"- 使用方式：{SurfaceName(system.Surface)}");
-        report.AppendLine($"- Codex 版本：{doctor.CodexVersion ?? system.CodexVersion ?? "暂时无法确定"}");
+        report.AppendLine($"- Codex 版本：{CodexVersions.ForSurface(system, doctor) ?? "暂时无法确定"}");
+        report.AppendLine($"- 体检工具（命令行）版本：{doctor.CodexVersion ?? "暂时无法确定"}");
         report.AppendLine($"- Codex 是否正在运行：{(system.CodexIsRunning ? "是" : "没有发现")}");
         report.AppendLine($"- 可能存在不同安装：{(system.PossibleDuplicateInstall ? "可能有关" : "暂未发现")}");
 

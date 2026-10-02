@@ -296,7 +296,8 @@ public static class UiText
         b.AppendLine($"- Windows: {report.System.WindowsVersion}");
         b.AppendLine($"- {Get(language, "电脑类型", "電腦類型", "Architecture")}: {report.System.Architecture}");
         b.AppendLine($"- {Get(language, "使用方式", "使用方式", "Codex interface")}: {Surface(language, report.System.Surface)}");
-        b.AppendLine($"- {Get(language, "Codex 版本", "Codex 版本", "Codex version")}: {report.Doctor.CodexVersion ?? report.System.CodexVersion ?? Get(language, "暂时无法确定", "暫時無法確定", "Unknown")}");
+        b.AppendLine($"- {Get(language, "Codex 版本", "Codex 版本", "Codex version")}: {CodexVersions.ForSurface(report.System, report.Doctor) ?? Get(language, "暂时无法确定", "暫時無法確定", "Unknown")}");
+        b.AppendLine($"- {Get(language, "体检工具（命令行）版本", "體檢工具（命令列）版本", "Diagnostic tool (CLI) version")}: {report.Doctor.CodexVersion ?? Get(language, "暂时无法确定", "暫時無法確定", "Unknown")}");
         b.AppendLine($"- {Get(language, "Codex 是否正在运行", "Codex 是否正在執行", "Codex running")}: {(report.System.CodexIsRunning ? Get(language, "是", "是", "Yes") : Get(language, "没有发现", "未發現", "Not found"))}");
         b.AppendLine($"- {Get(language, "可能存在不同安装", "可能存在不同安裝", "Possible multiple installations")}: {(report.System.PossibleDuplicateInstall ? Get(language, "可能有关", "可能有關", "Possibly related") : Get(language, "暂未发现", "暫未發現", "Not found"))}");
         AppendHeading(b, language, "Codex 官方体检", "Codex 官方檢查", "Official Codex check");
