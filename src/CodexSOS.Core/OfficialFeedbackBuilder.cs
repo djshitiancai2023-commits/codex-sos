@@ -83,12 +83,9 @@ public sealed class OfficialFeedbackBuilder
         text.AppendLine($"Codex SOS assessment: {report.Diagnosis.PlainSummary}");
 
         Heading(text, "What steps can reproduce the bug?");
-        text.AppendLine("1. Open Codex on the Windows computer described above.");
-        text.AppendLine("2. Continue the activity described in ‘What issue are you seeing?’.");
-        text.AppendLine("3. Observe the reported behavior.");
-        text.AppendLine();
-        text.AppendLine("Exact repeatable steps were not captured automatically. Please edit this section if you know them.");
-        text.AppendLine($"Approximate check time: {report.PublicEvidence.StartedAt:O}");
+        text.AppendLine("Repeatability has not been established by Codex SOS.");
+        text.AppendLine("Add only steps you already know, or say that the issue is intermittent. Do not recreate a failure solely to complete this report.");
+        text.AppendLine($"Diagnostic collection started (timestamp includes UTC offset): {report.PublicEvidence.StartedAt:O}");
 
         Heading(text, "What is the expected behavior?");
         text.AppendLine(ExpectedBehavior(report.Diagnosis.Category));
@@ -119,7 +116,8 @@ public sealed class OfficialFeedbackBuilder
         text.AppendLine("- Privacy boundary: Codex SOS did not include the original screenshot or read full chats, prompts, project code, auth.json, tokens, or cookies.");
 
         Heading(text, "OpenAI technical follow-up");
-        text.AppendLine($"- Incident/check time and time zone: {report.PublicEvidence.StartedAt:O}");
+        text.AppendLine($"- SOS check time (not the incident time; timestamp includes UTC offset): {report.PublicEvidence.StartedAt:O}");
+        text.AppendLine("- Incident time: not inferred from the check. Add the actual incident time and time zone only if known.");
         text.AppendLine(VisibleErrorEvidence(report.PublicEvidence));
         text.AppendLine("- Feedback ID: not collected by Codex SOS. If OpenAI Support asks and an affected or relevant existing thread still opens, run `/feedback` in that thread and send the returned ID privately. Do not reproduce the bug just to obtain one, and do not paste the ID into a public issue unless Support explicitly asks.");
         text.AppendLine("- Delivery proof: a visible or unchanged Feedback ID does not prove that an upload succeeded. Rely on an explicit success confirmation; otherwise keep this local draft as the fallback.");
@@ -137,8 +135,8 @@ public sealed class OfficialFeedbackBuilder
         }
 
         return evidence.ScreenshotProvided
-            ? "- Visible error evidence: SOS did not capture readable error text from the screenshot. If the app closed silently, say so; do not trigger another failure to check."
-            : "- Visible error evidence: no screenshot or error text was provided. If the app closed silently, say so; do not trigger another failure to check.";
+            ? "- Visible error evidence: a screenshot was provided, but no readable text was extracted. Any user-supplied error text remains in the description above; unreadable text does not prove that no error appeared. Do not trigger another failure just to check."
+            : "- Visible error evidence: no screenshot was provided; screenshot text recognition was not used. Any error text supplied by the user remains in the description above.";
     }
 
     private static string ExpectedBehavior(IncidentCategory category) => category switch

@@ -1,4 +1,4 @@
-// Repository current release marker: v0.1.9 candidate
+// Test harness for Codex SOS; release history is recorded in CHANGELOG.md.
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -99,6 +99,11 @@ internal static class Program
         Assert(document.RootElement.GetProperty("allDataFictional").GetBoolean(), "Privacy fixture must declare fictional data.");
 
         var redactor = new PrivacyRedactor();
+        var punctuatedEmail = redactor.Redact("Contact rowan.fixture@example.test.");
+        Equal("Contact <EMAIL>.", punctuatedEmail.SanitizedText,
+            "A sentence-ending period must not prevent email redaction or be consumed");
+        Assert(punctuatedEmail.Findings.Any(finding => finding.Kind == "email" && finding.Count == 1),
+            "Punctuated email must count as a single redaction finding");
         var count = 0;
         foreach (var item in document.RootElement.GetProperty("cases").EnumerateArray())
         {
@@ -1048,7 +1053,7 @@ internal static class Program
         Contains(draft, "NOT SUBMITTED", "Official feedback local-only status");
         Contains(draft, "Suggested title: [Windows] Codex App exits unexpectedly", "Official feedback suggested title");
         Contains(draft, "Session ID, token limit usage, and context window usage: not collected", "Official feedback optional private fields");
-        Contains(draft, "Incident/check time and time zone", "Official feedback incident time");
+        Contains(draft, "SOS check time (not the incident time", "Official feedback check-time label");
         Contains(draft, "Visible error evidence", "Official feedback visible-error status");
         Contains(draft, "Feedback ID: not collected", "Official feedback ID boundary");
         Contains(draft, "run `/feedback`", "Official feedback ID guidance");
@@ -1090,6 +1095,59 @@ internal static class Program
         Contains(unknownDraft, "# Codex bug report draft", "Unknown feedback draft identity");
         Contains(unknownDraft, "Choose Desktop or CLI on the official form.", "Unknown surface guidance");
         Contains(unknownDraft, "Suggested title: [Windows] Codex unexpected behavior", "Unknown surface title restraint");
+
+        // All values below are synthetic. Exercise the production builder, not a copied formatter.
+        var clarityBuilder = new OfficialFeedbackBuilder(new PrivacyRedactor());
+        var checkStartedAt = FrozenNow.ToOffset(TimeSpan.FromMinutes(330));
+        foreach (var surface in new[] { CodexSurface.Desktop, CodexSurface.Cli, CodexSurface.Unknown })
+        {
+            var typedReport = report with
+            {
+                CreatedAt = FrozenNow.AddHours(12),
+                System = FixtureSystem(surface),
+                PublicEvidence = report.PublicEvidence with
+                {
+                    Description = "Codex showed FIXTURE_VISIBLE_ERROR; contact rowan.fixture@example.test.",
+                    OcrText = string.Empty,
+                    ScreenshotProvided = false,
+                    StartedAt = checkStartedAt
+                }
+            };
+            var typedDraft = clarityBuilder.Build(typedReport);
+            Contains(typedDraft, "Repeatability has not been established", "Do not assert that the bug is repeatable");
+            NotContains(typedDraft, "1. Open Codex on the Windows computer described above.", "Do not manufacture reproduction steps");
+            Contains(typedDraft, "Do not recreate a failure solely", "No forced reproduction");
+            Contains(typedDraft, $"Diagnostic collection started (timestamp includes UTC offset): {checkStartedAt:O}",
+                "Preserve actual collection time and its UTC offset");
+            Contains(typedDraft, $"SOS check time (not the incident time; timestamp includes UTC offset): {checkStartedAt:O}",
+                "Do not substitute report creation time for collection time");
+            Contains(typedDraft, "Incident time: not inferred from the check.", "Do not invent incident time");
+            NotContains(typedDraft, "Incident/check time and time zone:", "Remove ambiguous timestamp label");
+            Contains(typedDraft, "FIXTURE_VISIBLE_ERROR", "Keep typed error text without a screenshot");
+            Contains(typedDraft, "no screenshot was provided; screenshot text recognition was not used.", "Describe only absent screenshot evidence");
+            NotContains(typedDraft, "no screenshot or error text was provided", "Absence of a screenshot does not imply absence of error text");
+            NotContains(typedDraft, "rowan.fixture@example.test", "Final redaction still applies to typed text");
+            Contains(typedDraft, "NOT SUBMITTED", "Draft still is not submitted");
+
+            var unreadableDraft = clarityBuilder.Build(typedReport with
+            {
+                PublicEvidence = typedReport.PublicEvidence with { ScreenshotProvided = true }
+            });
+            Contains(unreadableDraft, "a screenshot was provided, but no readable text was extracted.", "Unreadable screenshot is not missing screenshot");
+            Contains(unreadableDraft, "unreadable text does not prove that no error appeared.", "No false absence claim");
+            Contains(unreadableDraft, "FIXTURE_VISIBLE_ERROR", "Typed evidence survives unreadable screenshot");
+
+            var recognizedDraft = clarityBuilder.Build(typedReport with
+            {
+                PublicEvidence = typedReport.PublicEvidence with
+                {
+                    ScreenshotProvided = true,
+                    OcrText = "FIXTURE_RECOGNIZED_ERROR"
+                }
+            });
+            Contains(recognizedDraft, "locally recognized error text is included above", "Recognized evidence branch is unchanged");
+            Contains(recognizedDraft, "FIXTURE_RECOGNIZED_ERROR", "Recognized error remains in the draft");
+        }
         return Task.CompletedTask;
     }
 

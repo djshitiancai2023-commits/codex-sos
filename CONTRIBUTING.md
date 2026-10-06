@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.9 candidate -->
+<!-- Public release and pending changes are recorded in CHANGELOG.md. -->
 
 # 参与 Codex SOS
 
@@ -45,10 +45,10 @@ pwsh ./scripts/test.ps1
 
 测试脚本会恢复锁定的依赖、构建解决方案并实际运行自定义测试器。成功输出必须包含具体通过数量。脚本不会启动测试机上的真实 Codex 官方体检。
 
-使用下面的命令构建本地候选包。
+使用下面的命令构建 Windows 发布包。
 
 ```powershell
-pwsh ./scripts/build-release.ps1 -Version 0.1.9
+pwsh ./scripts/build-release.ps1 -Version 0.1.11
 ```
 
 缺少 Inno Setup 时仍应生成便携目录和 ZIP，并明确标记安装包未构建。脚本不得静默下载工具、创建远程仓库或发布文件。
@@ -64,6 +64,8 @@ pwsh ./scripts/build-release.ps1 -Version 0.1.9
 7. 更新用户可见行为时，同步 README、CHANGELOG 和相关验收条目。
 
 本轮输入体验回归还应覆盖：结果页返回补充说明不带走旧报告、Ctrl+Enter 只在输入页生效、1200 字边界不静默截断、复制/打开失败不覆盖诊断说明、运行中切换语言不重置阶段，以及桌面版/CLI/未知入口的反馈备用说明。
+
+求助草稿还需分清三件事：检查时间不等于故障发生时间；通用操作不是已观察的复现步骤；没有截图或没有识别出文字，不等于用户没有在描述里提供错误。相关回归只用虚构资料；没有执行的验证不得写成通过。
 
 ## 测试资料
 

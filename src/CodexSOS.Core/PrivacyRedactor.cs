@@ -10,7 +10,7 @@ public sealed class PrivacyRedactor
     [
         New("secret", "<SECRET>", @"(?i)\b(?:bearer\s+|password\s*[:=]\s*|api[_-]?key\s*[:=]\s*|token\s*[:=]\s*)[^\s,;]+"),
         New("private_git_remote", "<PRIVATE_GIT_REMOTE>", @"(?i)(?!(?:git@github\.com:openai/codex\.git|ssh://git@github\.com/openai/codex\.git|https?://github\.com/openai/codex(?:\.git)?)(?:\s|$))(?:(?:git@[a-z0-9.-]+:[^\s]+|ssh://git@[a-z0-9.-]+(?::\d+)?/[^\s]+|https?://(?:[^/@\s]+@)?[a-z0-9.-]+/[^\s]+)\.git)\b"),
-        New("email", "<EMAIL>", @"(?i)(?<![\w.+-])[\w.+-]+@[a-z0-9.-]+\.[a-z]{2,}(?![\w.-])"),
+        New("email", "<EMAIL>", @"(?i)(?<![\w.+-])[\w.+-]+@[a-z0-9.-]+\.[a-z]{2,}(?![\w-])"),
         New("local_path", "<LOCAL_PATH>", @"(?i)(?<![\w])(?:[a-z]:[\\/]|\\\\|/(?:mnt/[a-z]|home|workspace)(?=[/\\]))[^\r\n\""'<>|?*]+"),
         New("internal_url", "<INTERNAL_URL>", @"(?i)https?://(?:localhost|127\.0\.0\.1|[^/\s.]*(?:corp|internal|intranet)[^/\s.]*|[^/\s]+\.(?:local|internal))(?:[:/]\S*)?"),
         New("private_ip", "<PRIVATE_IP>", @"(?<!\d)(?:10(?:\.\d{1,3}){3}|127(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?!\d)"),

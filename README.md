@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.10 -->
+<!-- Repository current release marker: v0.1.11 -->
 
 # Codex SOS
 
@@ -20,9 +20,9 @@ Turn a Codex error screenshot or one-sentence description into **privacy-reviewe
 
 ## Quick download (Windows x64)
 
-[Download the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest)
+[Open the latest release and choose the portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest)
 
-Directly download the ZIP. Then right-click it, choose **Extract All**, and double-click `CodexSOS.exe`. No GitHub sign-in or star is required.
+On the release page, download the portable ZIP. Then right-click it, choose **Extract All**, and double-click `CodexSOS.exe`. No GitHub sign-in or star is required.
 
 The installer is optional when you want a Start-menu entry and an uninstaller.
 
@@ -38,7 +38,11 @@ A useful support report needs more than a screenshot. Codex SOS helps users gath
 
 **See it before downloading:** [three source-backed examples and verification](docs/EXAMPLES_AND_VERIFICATION.md). These are clearly labelled synthetic test examples, not customer testimonials or screenshots of a new test run.
 
-**Current update: v0.1.10.** App and diagnostic CLI versions are reported separately; installing both is not itself a version conflict. Doctor format changes and contradictory results degrade cautiously. See [the update and verification boundaries](docs/release-notes/v0.1.10.md). Automated tests are not a claim of live-account diagnostics or every UI combination. [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
+**Current update: v0.1.11.** Support drafts no longer invent reproduction steps, confuse SOS check time with incident time, or deny typed error text when a screenshot is missing or unreadable. Email redaction handles a sentence-ending period. See [the update and verification boundaries](docs/release-notes/v0.1.11.md). [How the project is maintained](CONTRIBUTING.md#maintenance-ownership-and-evidence).
+
+## This release: v0.1.11
+
+No extra user input, model calls or data collection. The support draft remains `NOT SUBMITTED` until the user chooses a route and acts.
 
 ## What the user does
 
@@ -88,17 +92,19 @@ Automatic redaction is not a guarantee. Review exported material before publishi
 ## Code signing
 
 Public Windows releases use the signing policy in [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
-The v0.1.0 through v0.1.8 releases are unsigned. A later release will only
+The current public release, v0.1.11, is unsigned. A later release will only
 be described as signed after its installer and portable application pass
 Windows Authenticode verification.
 
 ## Download
 
-For ordinary Windows users, start with the [portable ZIP](https://github.com/djshitiancai2023-commits/codex-sos/releases/download/v0.1.8/Codex-SOS-0.1.8-win-x64-portable.zip). It runs without installation:
+For ordinary Windows users, open the [latest public release](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest) and choose the portable ZIP. It runs without installation:
 
-- `Codex-SOS-0.1.8-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
-- `Codex-SOS-Setup-0.1.8.exe` — optional when you want a Start-menu entry and an uninstaller
-- `SHA256SUMS.txt` — integrity checksums
+- `Codex-SOS-<version>-win-x64-portable.zip` — download, choose **Extract All**, then double-click `CodexSOS.exe`
+- `Codex-SOS-Setup-<version>.exe` — optional when you want a Start-menu entry and an uninstaller
+- `SHA256SUMS.txt` — integrity checksums for that same release
+
+`<version>` means the version shown on the release page. Do not download files labelled as an unreleased candidate.
 
 The current public builds are unsigned, so Windows may show an unknown-publisher warning. Verify the SHA-256 checksum from the release page and do not disable Windows security protections to bypass a warning.
 
@@ -117,7 +123,7 @@ The current public builds are unsigned, so Windows may show an unknown-publisher
 - Common English error text for local screenshot OCR; Chinese descriptions can be typed directly
 - Simplified Chinese by default, with a prominent switch for Traditional Chinese and English
 - Fixed, explainable diagnostic rules rather than model-generated diagnosis
-- Unsigned public Windows builds through v0.1.8; `v0.1.9` is a local candidate until separately published
+- The current public Windows release is unsigned; unreleased maintenance work is not available in the public download yet
 
 ## Build and test
 
@@ -126,7 +132,7 @@ The repository contains the original application source, executable tests with s
 ```powershell
 pwsh ./scripts/check-source-secrets.ps1
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.9
+pwsh ./scripts/build-release.ps1 -Version 0.1.11
 ```
 
 See [BUILDING.md](BUILDING.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

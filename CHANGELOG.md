@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.10 -->
+<!-- Repository current release marker: v0.1.11 -->
 
 # Changelog
 
@@ -6,9 +6,20 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Planned
+## [0.1.11] - 2026-10-06
 
-- Maintenance updates based on real user feedback and future `codex doctor` schema changes.
+### Fixed
+
+- Replace generic, unobserved reproduction steps with an explicit unknown-repeatability statement.
+- Label diagnostic collection time separately from unknown incident time.
+- Keep typed error evidence distinct from missing or unreadable screenshot text.
+- Redact email addresses followed by sentence punctuation.
+- Refresh outdated download and contribution instructions without changing existing releases.
+
+### Verification
+
+- Windows test harness: 35/35 passed with fictional data, including real local OCR; build completed with 0 warnings and 0 errors.
+- The matching GitHub release workflow must pass its clean Windows build, tests, and privacy scan before publishing. Visible mouse/keyboard, preview/copy UI, and install/uninstall acceptance were not run in this batch.
 
 ## [0.1.10] - 2026-10-02
 
@@ -231,7 +242,8 @@ This entry restores the missing release-history heading from the [original v0.1.
 - Rules and redaction cannot guarantee a confirmed root cause or identify every private name.
 - The v0.1.0 installer is unsigned and may show a Windows unknown-publisher warning.
 
-[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/djshitiancai2023-commits/codex-sos/compare/v0.1.11...HEAD
+[0.1.11]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.11
 [0.1.9]: docs/release-notes/v0.1.9.md
 [0.1.8]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.8
 [0.1.7]: https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.7
