@@ -6,6 +6,21 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0-preview.1] - 2026-10-13
+
+### Added
+
+- Task-first, three-language local homepage with bounded task notes, copy-for-dot, validated original-task links and stable dot-task-board snapshot import.
+- Metadata-only observation of a compatible existing local Codex runtime; explicit disconnected/cloud-scope limits, observation freshness and unverified-delivery labels.
+- Fixed native SOS bridge, exact redacted preview/copy identity and a retained classic screenshot/one-line window.
+- Checksum-pinned bundled Node runtime, preserved upstream MIT attribution, isolated preview installer and non-latest prerelease workflow.
+
+### Verification
+
+- 36/36 local native tests, including real fictional-image OCR; 13/13 Node integration tests. Public CI records the final build's actual totals.
+- Visible browser task/copy/language checks and separate Windows clipboard comparison; isolated real official-runtime observer check. [Scope and remaining validation limits](docs/DOT_ASSISTANT.md#verification).
+- No automatic cloud-task discovery, model calls, task submission, repair or upload. Existing stable release remains v0.1.11.
+
 ## [0.1.11] - 2026-10-06
 
 ### Fixed

@@ -29,7 +29,9 @@ in the repository or printed in CI logs.
 
 ## What is signed
 
-For each public Windows x64 release, the signed files are:
+Current v0.1.11 and the v0.2.0 preview builds are **unsigned**. The following describes the intended future signing flow, not a claim that those releases are signed.
+
+For a future signed Windows x64 release, the files to sign are:
 
 - the `CodexSOS.exe` application inside the portable package;
 - the outer Inno Setup installer.

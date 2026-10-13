@@ -27,8 +27,8 @@ jobs:
             throw "Release workflow must run from a tag."
           }
           $tag = $env:GITHUB_REF_NAME
-          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
-            throw "Release tag '$tag' must match vN.N.N."
+          if ($tag -notmatch '^v\d+\.\d+\.\d+(?:-preview\.[1-9]\d*)?$') {
+            throw "Release tag '$tag' must match vN.N.N or vN.N.N-preview.N."
           }
           $version = $tag.Substring(1)
           $notes = "docs/release-notes/$tag.md"
@@ -54,6 +54,11 @@ jobs:
       - name: Build, run all tests, and create release packages
         shell: pwsh
         run: ./scripts/build-release.ps1 -Version $env:APP_VERSION
+
+      - name: Verify isolated preview installation and removal
+        if: contains(github.ref_name, '-preview.')
+        shell: pwsh
+        run: ./scripts/test-installer.ps1 -Version $env:APP_VERSION
 
       - name: Upload clean-build evidence
         uses: actions/upload-artifact@v7
@@ -91,7 +96,9 @@ jobs:
             }
           }
 
-          gh release create $env:RELEASE_TAG `
+          $flags = @()
+          if ($env:RELEASE_TAG -match '-preview\.') { $flags = @('--prerelease', '--latest=false') }
+          gh release create $env:RELEASE_TAG @flags `
             --repo $env:GITHUB_REPOSITORY `
             --target $env:GITHUB_SHA `
             --title "Codex SOS $env:RELEASE_TAG" `

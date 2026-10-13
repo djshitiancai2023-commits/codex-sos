@@ -1,6 +1,21 @@
 # 第三方软件说明
 
-Codex SOS 自身使用 [MIT License](LICENSE)。下面列出 v0.1 源码和 Windows 发布包中直接使用或随包分发的主要第三方组件。Windows 发布包同时保留本项目许可、此说明和构建过程中收集到的直接依赖许可材料。
+Codex SOS 自身使用 [MIT License](LICENSE)。下面列出源码和 Windows 发布包中直接使用或随包分发的主要第三方组件。Windows 发布包同时保留本项目许可、此说明和构建过程中收集到的直接依赖许可材料。
+
+## dot-task-board v0.2.0 / KimYx0207
+
+- 项目：<https://github.com/KimYx0207/dot-task-board>
+- 来源提交：`0bba54b5361b38ba5a5d985f267a742801b4547d`（稳定版，不是 main 的预览代码）
+- 使用：`snapshot.mjs` 与 `agents.mjs` 的快照验证及字段归一化；前端、SOS 桥接和状态观察器为本项目实现。不声称完整移植了上游所有能力。
+- 许可：MIT，Copyright (c) 2026 KimYx0207。原文随包位于 `dot-assistant/vendor/dot-task-board/LICENSE`。
+- 作者：<https://aiking.dev/>、<https://x.com/KimYx0207>，微信“老金带你玩AI”。
+
+## Node.js 24.16.0
+
+- 项目：<https://nodejs.org/>；官方 Windows x64 压缩包由构建脚本校验固定 SHA-256 后提取。
+- 用途：本机任务页、最小状态存储和接口适配。没有 npm 运行依赖，用户不用单独安装。
+- 许可：Node.js MIT 及其第三方许可，完整上游文字随包位于 `dot-assistant/runtime/Node-LICENSE.txt`。
+- 成本：新增一个自带运行时、增加安装包体积；安全更新和 .NET 一样需要维护者发布新包。
 
 ## TesserNet 0.8.0
 

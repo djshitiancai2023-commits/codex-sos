@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$')]
-    [string]$Version = '0.1.10',
+    [string]$Version = '0.2.0-preview.1',
 
     [ValidateSet('Release', 'Debug')]
     [string]$Configuration = 'Release',
@@ -134,7 +134,7 @@ function Resolve-IsccExecutable {
 function Test-IsTextPackageFile {
     param([Parameter(Mandatory = $true)][IO.FileInfo]$File)
 
-    $textExtensions = @('.json', '.xml', '.config', '.txt', '.md', '.yml', '.yaml', '.ini', '.cmd', '.bat', '.ps1')
+    $textExtensions = @('.json', '.xml', '.config', '.txt', '.md', '.yml', '.yaml', '.ini', '.cmd', '.bat', '.ps1', '.mjs', '.js', '.html', '.css')
     return $textExtensions -contains $File.Extension.ToLowerInvariant()
 }
 
@@ -286,6 +286,8 @@ $pathMap = "$repoRoot=/_/CodexSOS"
     "-p:Version=$Version" '-p:PublishTrimmed=false' '-p:PublishSingleFile=false' '-p:PublishReadyToRun=false' `
     '-p:DebugType=None' '-p:DebugSymbols=false' "-p:PathMap=$pathMap"
 Assert-LastExitCode -Step 'dotnet publish'
+
+& (Join-Path $scriptRoot 'package-board.ps1') -Destination $stageApp -SkipTests:$SkipTests
 
 Get-ChildItem -LiteralPath $stageApp -Recurse -File |
     Where-Object { $_.Extension.ToLowerInvariant() -in @('.pdb', '.log', '.tmp', '.dmp') } |

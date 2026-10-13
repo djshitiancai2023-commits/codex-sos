@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.11 -->
+<!-- Stable release: v0.1.11. dot assistant preview: v0.2.0-preview.1. -->
 
 # Codex SOS
 
@@ -9,6 +9,18 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > **Codex 一卡住，按一下救生圈。 / When Codex gets stuck, press the lifebuoy.**
+
+## New: Codex SOS · dot assistant (preview)
+
+**Keep your tasks together; get help from the same place.** Double-click `CodexSOS.exe` to open a local task page. Keep a task note, copy it to official dot when ready, and use **Screenshot / quick help** if something goes wrong. English, 简体中文 and 繁體中文 are included; no developer tools or API key are needed.
+
+[Try the Windows x64 preview](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.2.0-preview.1) · [Keep using the stable SOS](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.11) · [Scope and verification](docs/DOT_ASSISTANT.md)
+
+**直接下载该压缩包即可。** 下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
+
+The preview can observe a compatible, already-running **local Codex** service, without reading chat content. It does **not** automatically see every cloud dot task. When no connection is available, it says so; task notes and classic SOS still work. A stopped turn is not treated as completed delivery. No task is automatically sent, retried or repaired. The installer is optional and uses a separate preview directory. Builds are currently unsigned.
+
+The sections below describe the retained, stable SOS troubleshooting flow.
 
 Turn a Codex error screenshot or one-sentence description into **privacy-reviewed troubleshooting material and a cautious next step**—without finding logs, running commands, or learning GitHub. Codex SOS is an unofficial, local-first Windows helper built around the official `codex doctor --json` when available. It also helps avoid duplicate reports and sending another application's problems to Codex maintainers.
 
@@ -132,7 +144,7 @@ The repository contains the original application source, executable tests with s
 ```powershell
 pwsh ./scripts/check-source-secrets.ps1
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.1.11
+pwsh ./scripts/build-release.ps1 -Version 0.2.0-preview.1
 ```
 
 See [BUILDING.md](BUILDING.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

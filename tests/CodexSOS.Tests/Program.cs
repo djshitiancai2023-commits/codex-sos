@@ -19,6 +19,38 @@ internal static class Program
 
     public static async Task<int> Main(string[] args)
     {
+        if (args.SequenceEqual(["--board-cli-check"]))
+        {
+            var found = CodexSOS.App.Board.OfficialExecutable.Find();
+            Console.WriteLine(JsonSerializer.Serialize(new { signedOfficialExecutableFound = found is not null, executed = false }));
+            return found is null ? 2 : 0;
+        }
+        if (args.Length == 3 && args[0] == "--board-ui-fixture")
+        {
+            // Explicit fictional-only host: exposes the actual native bridge to browser acceptance.
+            // The production launcher has no test URL export or test endpoint.
+            var exitCode = 1;
+            var thread = new Thread(() =>
+            {
+                var application = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
+                using var host = new CodexSOS.App.Board.BoardHost(FixtureSession.Load(args[1]),
+                    openBrowser: url => Console.WriteLine(JsonSerializer.Serialize(new { url, fictional = true })),
+                    applicationDirectory: Path.GetFullPath(args[2]));
+                application.Startup += async (_, _) =>
+                {
+                    try
+                    {
+                        if (!await host.StartAsync()) { application.Shutdown(2); return; }
+                        await host.HandleAsync("diagnose", JsonSerializer.SerializeToElement(new { language = "zh-CN" }));
+                        await host.SendReportAsync(UiLanguage.SimplifiedChinese);
+                    }
+                    catch (Exception error) { Console.Error.WriteLine(error.GetType().Name); application.Shutdown(1); }
+                };
+                exitCode = application.Run();
+            });
+            thread.SetApartmentState(ApartmentState.STA); thread.Start(); thread.Join();
+            return exitCode;
+        }
         if (args.SequenceEqual(["doctor", "--json"]))
         {
             return await RunFakeNativeDoctorAsync().ConfigureAwait(false);
@@ -59,6 +91,7 @@ internal static class Program
             ("input and UI: bounded paste, return-to-edit, shortcut, and operation status", TestInputAndUiPoliciesAsync),
             ("progress and feedback: language stage preservation and route-specific fallback", TestProgressAndFeedbackPoliciesAsync),
             ("release workflow: derives safe versions and never overwrites an existing release", TestReleaseWorkflowConfigAsync),
+            ("board bridge: exact preview, stale rejection, copy failure and safe routes", TestBoardBridgeAsync),
             ("boundaries: no private-state read, OpenAI API, or write request", TestSourceBoundariesAsync),
             ("fake doctor: no dependency on real user data", TestFakeDoctorDoesNotNeedRealUserDataAsync)
         };
@@ -1569,8 +1602,14 @@ internal static class Program
     {
         var root = FindRepositoryRoot();
         var workflow = File.ReadAllText(Path.Combine(root, ".github", "workflows", "release.yml"));
-        Assert(Regex.IsMatch("v0.1.9", @"^v\d+\.\d+\.\d+$"), "A valid release tag follows vN.N.N");
-        Assert(!Regex.IsMatch("v0.1.9-beta", @"^v\d+\.\d+\.\d+$"), "A prerelease tag is rejected by the release validator");
+        var validator = Regex.Match(workflow, @"\$tag -notmatch '([^']+)'").Groups[1].Value;
+        Assert(validator.Length > 0, "Read the actual workflow validator, not a duplicated constant");
+        foreach (var valid in new[] { "v0.1.9", "v0.2.0-preview.1", "v0.2.0-preview.12" })
+            Assert(Regex.IsMatch(valid, validator), "Valid tag: " + valid);
+        foreach (var invalid in new[] { "v0.1.9-beta", "v0.2.0-preview.0", "v0.2.0-preview.01", "../../notes", "v0.2.0;command" })
+            Assert(!Regex.IsMatch(invalid, validator), "Invalid tag: " + invalid);
+        Contains(workflow, "--prerelease", "Preview must remain a prerelease");
+        Contains(workflow, "--latest=false", "Preview cannot replace the stable download");
         Contains(workflow, "tags: ['v*']", "Release workflow listens for version tags");
         Contains(workflow, "$env:GITHUB_REF_NAME", "Release version comes from the actual tag");
         Contains(workflow, "APP_VERSION=$version", "APP_VERSION is derived from the tag");
@@ -1579,6 +1618,38 @@ internal static class Program
         Contains(workflow, "--title \"Codex SOS $env:RELEASE_TAG\"", "Release title uses the derived tag");
         NotContains(workflow, "v0.1.6", "Release workflow has no stale hard-coded version");
         return Task.CompletedTask;
+    }
+
+    private static async Task TestBoardBridgeAsync()
+    {
+        var fixture = FixtureSession.Load(Path.Combine(FindRepositoryRoot(), "tests", "fixtures", "scenarios", "01-screenshot-connection.json"));
+        string? copied = null; string? opened = null; var clipboardBusy = false;
+        using var host = new CodexSOS.App.Board.BoardHost(fixture, url => opened = url,
+            text => { if (clipboardBusy) throw new InvalidOperationException("Fictional clipboard busy"); copied = text; });
+        static JsonElement Args(object value) => JsonSerializer.SerializeToElement(value);
+        var first = Args(await host.HandleAsync("diagnose", Args(new { language = "zh-CN" })));
+        var reportId = first.GetProperty("id").GetString();
+        var previewId = first.GetProperty("previewId").GetString();
+        var copy = Args(await host.HandleAsync("copy-report", Args(new { reportId, previewId, language = "en" })));
+        Equal(first.GetProperty("text").GetString(), copied, "Copy is byte-for-byte the preview, even if a late language selection arrives");
+        Assert(copy.GetProperty("copied").GetBoolean() && !copy.GetProperty("sent").GetBoolean(), "Copied is never sent");
+        var next = Args(await host.HandleAsync("report", Args(new { language = "en" })));
+        Equal(reportId, next.GetProperty("id").GetString(), "Translation does not rerun diagnosis");
+        var rejected = false;
+        try { await host.HandleAsync("copy-report", Args(new { reportId, previewId })); }
+        catch (InvalidOperationException) { rejected = true; }
+        Assert(rejected, "An old preview cannot be copied after replacement");
+        clipboardBusy = true; rejected = false;
+        try { await host.HandleAsync("copy-report", Args(new { reportId, previewId = next.GetProperty("previewId").GetString() })); }
+        catch (InvalidOperationException) { rejected = true; }
+        Assert(rejected, "Clipboard failure propagates instead of claiming success");
+        Assert(opened is null, "Copy never opens a browser");
+        await host.HandleAsync("open", Args(new { url = "https://chatgpt.com/" }));
+        Equal("https://chatgpt.com/", opened, "Fixed official entry opens");
+        rejected = false;
+        try { await host.HandleAsync("open", Args(new { url = "https://chatgpt.com/c/00000000-0000-4000-8000-000000000001?secret=fictional" })); }
+        catch (ArgumentException) { rejected = true; }
+        Assert(rejected, "Report data cannot enter an external URL");
     }
 
     private static Task TestSourceBoundariesAsync()

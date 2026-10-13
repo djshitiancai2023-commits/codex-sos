@@ -26,7 +26,7 @@
 - 增加虚构自动测试和可追溯 UI 验收
 - 把用户文案改得更短、更明白
 
-v0.1 暂不接受服务器、账号体系、大模型调用、收费 API、语音、跨平台、自动修复、自动登录 GitHub、自动提交 issue 或大型故障知识库。可以先开讨论说明真实用户需求，不要直接扩大范围。
+v0.2 只新增已明确限定的本机任务页、任务笔记和只读状态连接，见 [dot 助手范围](docs/DOT_ASSISTANT.md)。仍不接受云服务、账号体系、大模型调用、收费 API、语音、跨平台、自动修复、自动登录 GitHub、自动提交 issue 或大型故障知识库。
 
 ## 开发环境
 
@@ -48,10 +48,10 @@ pwsh ./scripts/test.ps1
 使用下面的命令构建 Windows 发布包。
 
 ```powershell
-pwsh ./scripts/build-release.ps1 -Version 0.1.11
+pwsh ./scripts/build-release.ps1 -Version 0.2.0-preview.1
 ```
 
-缺少 Inno Setup 时仍应生成便携目录和 ZIP，并明确标记安装包未构建。脚本不得静默下载工具、创建远程仓库或发布文件。
+缺少 Inno Setup 时仍应生成便携目录和 ZIP，并明确标记安装包未构建。构建脚本会从 Node 官方站下载校验和固定的运行时并带入包中，不在用户电脑上安装开发工具，也不会创建远程仓库或发布文件。
 
 ## 修改规则
 

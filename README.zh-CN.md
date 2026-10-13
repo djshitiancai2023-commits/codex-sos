@@ -1,4 +1,4 @@
-<!-- Repository current release marker: v0.1.11 -->
+<!-- 稳定版 v0.1.11；dot 助手预览版 v0.2.0-preview.1。 -->
 
 # Codex SOS 中文说明
 
@@ -7,6 +7,18 @@
 [返回英文首页](README.md) · [下载最新版](https://github.com/djshitiancai2023-commits/codex-sos/releases/latest) · [代码签名说明](CODE_SIGNING_POLICY.md)
 
 > **Codex 一卡住，按一下救生圈。**
+
+## 新增：Codex SOS · dot 助手（预览版）
+
+**任务放在一起，有问题就在旁边求助。** 双击后打开本机任务页：先记下要交给 dot 的事情，需要时复制给官方 dot；遇到错误，点“截图 / 一句话求助”，继续用原来的 SOS。简体、繁体、英语都保留，不用装编程工具，不要 API Key。
+
+[下载 Windows x64 预览版](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.2.0-preview.1) · [继续使用稳定版 SOS](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.11) · [能力范围和验证记录](docs/DOT_ASSISTANT.md)
+
+**直接下载该压缩包即可。** 下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
+
+请留意：自动状态目前只覆盖**已接通的本机 Codex 服务**，不是所有云端 dot 任务。接不上会明确告诉你，仍可记任务、复制要求和使用 SOS；一轮停止不等于任务已经完成。不会自动发送、重试或修复任务。安装程序为可选项，预览版使用独立安装目录；目前仍未数字签名。
+
+下面是仍然保留的稳定版 SOS 求助流程。
 
 截一张 Codex 错误截图，或写一句发生了什么。Codex SOS 会自动补齐必要的检查信息，整理成**经过隐私复核、方便继续求助的材料**，并给出保守的下一步建议；同时帮助避免重复报错，或把其他软件的问题误投给 Codex。
 

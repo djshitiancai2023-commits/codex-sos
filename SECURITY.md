@@ -5,6 +5,7 @@
 | Version | Security updates |
 |---|---|
 | 0.1.x | Supported |
+| 0.2.0 preview | Supported preview; local-task scope only |
 | Earlier or unofficial builds | Not guaranteed |
 
 ## Report a vulnerability privately
@@ -49,7 +50,8 @@ Maintainers aim to acknowledge a report within 7 days and provide an initial imp
 - The official `codex doctor --json` command runs as an external official diagnostic and may perform its own state and network checks.
 - SOS waits up to 25 seconds for the UI result, does not start a second doctor process in the same run, and allows the official process to end naturally.
 - Only allow-listed fields are displayed or exported, followed by another redaction pass.
-- Automatic networking is limited to public read-only GET requests.
+- External diagnostic networking is limited to public read-only GET requests. The dot preview additionally serves an authenticated loopback-only page and observes a compatible local runtime; see [PRIVACY.md](PRIVACY.md).
+- A crafted task note or snapshot must never enable arbitrary process/file access, cross-site requests, task execution or disclosure of chats. Please report violations privately.
 - Automatic repair, deletion, reset, reinstall, and posting are outside the v0.1 scope.
 
 These controls reduce risk but do not guarantee perfect redaction or diagnosis. Download only from this repository's Releases page and verify the published SHA-256 checksum.

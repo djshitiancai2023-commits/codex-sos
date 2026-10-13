@@ -80,6 +80,15 @@ public static class OneQuestionRules
 
 public partial class MainWindow : Window
 {
+    public event Action<DiagnosticReport>? ReportReady;
+    public UiLanguage DisplayLanguage => _language;
+
+    public void SetDisplayLanguage(UiLanguage language)
+    {
+        _suppressLanguageSave = true;
+        LanguageSelector.SelectedIndex = (int)language;
+        _suppressLanguageSave = false;
+    }
     private readonly HttpClient _httpClient;
     private readonly DiagnosticOrchestrator _orchestrator;
     private readonly DiagnosisEngine _diagnosisEngine;
@@ -104,7 +113,7 @@ public partial class MainWindow : Window
 
     private readonly FixtureSession? _fixture;
 
-    public MainWindow(FixtureSession? fixture = null)
+    public MainWindow(FixtureSession? fixture = null, DiagnosticOrchestrator? orchestrator = null)
     {
         InitializeComponent();
         _fixture = fixture;
@@ -125,7 +134,7 @@ public partial class MainWindow : Window
             : new PrivacyRedactor(fixture.KnownPrivateTerms);
         var parser = new DoctorJsonParser(redactor);
         _diagnosisEngine = new DiagnosisEngine();
-        _orchestrator = fixture?.CreateOrchestrator(redactor) ?? new DiagnosticOrchestrator(
+        _orchestrator = orchestrator ?? fixture?.CreateOrchestrator(redactor) ?? new DiagnosticOrchestrator(
                 new DoctorRunner(parser),
                 new WindowsSystemCollector(),
                 new WindowsFaultEventCollector(),
@@ -533,6 +542,7 @@ public partial class MainWindow : Window
 
     private void ShowResult(DiagnosticReport report)
     {
+        ReportReady?.Invoke(report);
         DiagnosisText.Text = UiText.DiagnosisSummary(_language, report.Diagnosis);
         SimilarText.Text = UiText.SimilarSummary(_language, report.SimilarIssues);
         NextStepText.Text = UiText.SafeNextStep(_language, report.Diagnosis);
@@ -1015,7 +1025,7 @@ public partial class MainWindow : Window
             2 => UiLanguage.English,
             _ => UiLanguage.SimplifiedChinese
         };
-        if (!_suppressLanguageSave)
+        if (!_suppressLanguageSave && _fixture is null)
         {
             LanguageSettings.TrySave(LanguageSettings.DefaultPath, _language);
         }

@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = [IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) '..'))
 $findings = New-Object 'System.Collections.Generic.List[string]'
-$textExtensions = @('.cs', '.xaml', '.csproj', '.props', '.targets', '.json', '.xml', '.config', '.txt', '.md', '.yml', '.yaml', '.ps1', '.iss', '.cmd', '.bat')
+$textExtensions = @('.cs', '.xaml', '.csproj', '.props', '.targets', '.json', '.xml', '.config', '.txt', '.md', '.yml', '.yaml', '.ps1', '.iss', '.cmd', '.bat', '.mjs', '.js', '.html', '.css')
 
 $files = @(Get-ChildItem -LiteralPath $repoRoot -Recurse -File | Where-Object {
     $relative = $_.FullName.Substring($repoRoot.Length).TrimStart('\').Replace('\', '/')

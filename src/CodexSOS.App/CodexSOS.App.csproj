@@ -13,7 +13,7 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <UseSystemDrawing>false</UseSystemDrawing>
     <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
-    <Version>0.1.9</Version>
+    <Version>0.2.0-preview.1</Version>
     <Product>Codex SOS</Product>
     <Company>Codex SOS community contributors</Company>
     <Description>Windows-first local helper for Codex troubleshooting.</Description>
@@ -22,6 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CodexSOS.Core\CodexSOS.Core.csproj" />
+    <InternalsVisibleTo Include="CodexSOS.Tests" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="TesserNet" Version="0.8.0" />

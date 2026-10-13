@@ -29,9 +29,17 @@ jobs:
         shell: pwsh
         run: ./scripts/check-source-secrets.ps1
 
-      - name: Build, test, and create portable package
+      - name: Install the existing Windows packaging tool
         shell: pwsh
-        run: ./scripts/build-release.ps1 -Version "0.1.0-ci.${{ github.run_number }}" -SkipInstaller
+        run: choco install innosetup --no-progress -y
+
+      - name: Build, test, and create candidate packages
+        shell: pwsh
+        run: ./scripts/build-release.ps1 -Version "0.2.0-ci.${{ github.run_number }}"
+
+      - name: Verify isolated preview installation and removal
+        shell: pwsh
+        run: ./scripts/test-installer.ps1 -Version "0.2.0-ci.${{ github.run_number }}"
 
       - name: Upload verification artifacts
         uses: actions/upload-artifact@v7
@@ -40,6 +48,7 @@ jobs:
           path: |
             artifacts/Codex-SOS-*-win-x64/
             artifacts/packages/*.zip
+            artifacts/packages/*.exe
             artifacts/FILE-MANIFEST.txt
             artifacts/SHA256SUMS.txt
             artifacts/RELEASE-CHECK.md
