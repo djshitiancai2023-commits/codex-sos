@@ -18,7 +18,7 @@ export async function startBoard({dataDir,bridge,exe=null,now,port=0,fixture=fal
   const observer=new MetadataObserver({exe,dataDir,board,onChange:save,onFault:()=>{
     if(Date.now()-lastFault<60000)return;lastFault=Date.now();void diagnose();
   }});
-  const files=new Map(await Promise.all(['index.html','app.js','styles.css'].map(async name=>[name,await readFile(path.join(import.meta.dirname,'public',name))])));
+  const files=new Map(await Promise.all(['index.html','app.js','styles.css','task-view.mjs'].map(async name=>[name,await readFile(path.join(import.meta.dirname,'public',name))])));
   const server=createServer(async(req,res)=>{
     const origin=`http://127.0.0.1:${server.address().port}`;
     const reply=(status,data)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
@@ -26,8 +26,8 @@ export async function startBoard({dataDir,bridge,exe=null,now,port=0,fixture=fal
     res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
     res.setHeader('Referrer-Policy','no-referrer');
     if(req.headers.host!==`127.0.0.1:${server.address().port}`||req.socket.remoteAddress!=='127.0.0.1'||req.headers['sec-fetch-site']==='cross-site'||(req.headers.origin&&req.headers.origin!==origin))return reply(403,{error:'local_only'});
-    if(req.method==='GET'&&['/','/app.js','/styles.css'].includes(req.url)){
-      const name=req.url==='/'?'index.html':req.url.slice(1);res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html; charset=utf-8');return res.end(files.get(name));
+    if(req.method==='GET'&&(req.url==='/'||files.has(req.url.slice(1)))){
+      const name=req.url==='/'?'index.html':req.url.slice(1);res.setHeader('Content-Type',/\.m?js$/.test(name)?'text/javascript':name.endsWith('.css')?'text/css':'text/html; charset=utf-8');return res.end(files.get(name));
     }
     if(req.headers['x-sos-token']!==token)return reply(403,{error:'restart'});
     if(req.method==='GET'&&req.url==='/api/board') {lastBrowser=Date.now();return reply(200,{...board.view(),diagnostic,checking,saveFailed,fixture});}
@@ -61,7 +61,7 @@ export async function startBoard({dataDir,bridge,exe=null,now,port=0,fixture=fal
       }
       await saveQueue;if(saveFailed&&['/api/task','/api/update','/api/import'].includes(req.url))throw Error('save_failed');
       reply(200,result);
-    }catch{reply(400,{error:'operation_failed'});}
+    }catch(error){reply(400,{error:['invalid_link','too_many_tasks'].includes(error.message)?error.message:'operation_failed'});}
   });
   server.requestTimeout=10000;server.headersTimeout=10000;server.maxConnections=20;
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});

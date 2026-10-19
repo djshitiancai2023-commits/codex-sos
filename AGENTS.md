@@ -51,7 +51,7 @@
 
 ```powershell
 pwsh ./scripts/test.ps1
-pwsh ./scripts/build-release.ps1 -Version 0.2.0-preview.1
+pwsh ./scripts/build-release.ps1 -Version 0.2.0-preview.2
 ```
 
 构建脚本不得在测试或打包时调用真实 `codex doctor`。构建结果不能自动上传或发布。

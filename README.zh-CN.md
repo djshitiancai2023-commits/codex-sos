@@ -1,4 +1,4 @@
-<!-- 稳定版 v0.1.11；dot 助手预览版 v0.2.0-preview.1。 -->
+<!-- 稳定版 v0.1.11；dot 助手预览版 v0.2.0-preview.2。 -->
 
 # Codex SOS 中文说明
 
@@ -12,7 +12,9 @@
 
 **任务放在一起，有问题就在旁边求助。** 双击后打开本机任务页：先记下要交给 dot 的事情，需要时复制给官方 dot；遇到错误，点“截图 / 一句话求助”，继续用原来的 SOS。简体、繁体、英语都保留，不用装编程工具，不要 API Key。
 
-[下载 Windows x64 预览版](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.2.0-preview.1) · [继续使用稳定版 SOS](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.11) · [能力范围和验证记录](docs/DOT_ASSISTANT.md)
+[下载 Windows x64 预览版](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.2.0-preview.2) · [继续使用稳定版 SOS](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.11) · [能力范围和验证记录](docs/DOT_ASSISTANT.md)
+
+**preview.2 新增：** 任务可以修改、按关键词查找、收起和放回来，不会因此停止或启动实际任务。点“问进展”，也可切到“接着做这件事”，先看草稿再复制到原来的 dot 对话。断开连接后的旧状态会明确标成“上次记录”。找不到云端任务时，页面也会告诉你怎样从 dot 的“活动”页回去查看。
 
 **直接下载该压缩包即可。** 下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
 

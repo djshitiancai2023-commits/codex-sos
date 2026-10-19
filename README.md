@@ -1,4 +1,4 @@
-<!-- Stable release: v0.1.11. dot assistant preview: v0.2.0-preview.1. -->
+<!-- Stable release: v0.1.11. dot assistant preview: v0.2.0-preview.2. -->
 
 # Codex SOS
 
@@ -14,7 +14,9 @@
 
 **Keep your tasks together; get help from the same place.** Double-click `CodexSOS.exe` to open a local task page. Keep a task note, copy it to official dot when ready, and use **Screenshot / quick help** if something goes wrong. English, 简体中文 and 繁體中文 are included; no developer tools or API key are needed.
 
-[Try the Windows x64 preview](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.2.0-preview.1) · [Keep using the stable SOS](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.11) · [Scope and verification](docs/DOT_ASSISTANT.md)
+[Try the Windows x64 preview](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.2.0-preview.2) · [Keep using the stable SOS](https://github.com/djshitiancai2023-commits/codex-sos/releases/tag/v0.1.11) · [Scope and verification](docs/DOT_ASSISTANT.md)
+
+**New in preview.2:** edit task notes, find them by keyword, and archive/restore cards without stopping the actual work. **Ask progress** prepares a short draft; switch to **Continue this task**, review it and copy it into your existing dot conversation. Nothing is sent automatically. Disconnected runtime states are labelled as previously recorded instead of appearing current. Cannot find a cloud task? The built-in guide points to your dot's official **Activity** view.
 
 **直接下载该压缩包即可。** 下载后右键选择“全部解压”，再双击 CodexSOS.exe。下载和使用不需要登录 GitHub，也不需要点赞。
 

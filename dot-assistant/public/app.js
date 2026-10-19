@@ -1,3 +1,4 @@
+import {selectTasks,continuationDraft} from './task-view.mjs';
 const $=id=>document.getElementById(id);
 const labels={
  subtitle:['dot 助手 · 预览版','dot 助手 · 預覽版','dot assistant · Preview'],
@@ -32,37 +33,74 @@ const labels={
  privacyFooter:['非官方社区工具，与 OpenAI 无隶属关系。任务记录只存在这台电脑；查看状态不消耗模型用量。SOS 可联网查官方状态和少量已清理的问题关键词。','非官方社群工具，與 OpenAI 無隸屬關係。任務記錄只存在這台電腦；查看狀態不消耗模型用量。SOS 可連網查官方狀態和少量已清理的問題關鍵字。','Unofficial community tool, not affiliated with OpenAI. Task notes stay on this PC; observing state uses no model tokens. SOS may fetch public service status and search GitHub using cleaned error terms.'],
  copied:['已复制，尚未发送。','已複製，尚未傳送。','Copied, not sent.'],opened:['已打开入口，尚未发送或提交。','已開啟入口，尚未傳送或提交。','Opened the destination; nothing was sent or submitted.'],failed:['这次操作没有完成，原来的资料仍然保留。','這次操作未完成，原有資料仍保留。','That action did not finish. Your existing information is still here.'],saved:['任务卡已保存在本机，尚未发送。','任務卡已儲存在本機，尚未傳送。','Task card saved locally, not sent.'],saveFailed:['任务记录暂时无法保存到磁盘，请先复制需要的文字。','任務記錄暫時無法儲存，請先複製需要的文字。','Task notes cannot currently be saved to disk. Copy anything you need.'],imported:['已导入任务记录；不是实时状态。','已匯入任務記錄；不是即時狀態。','Task records imported; these are not live states.'],fixture:['虚构验收模式：不会运行真实体检或读取真实任务。','虛構驗收模式：不會執行真實檢查或讀取真實任務。','Fictional test mode: no real doctor or real task access.'],closed:['助手已关闭。Codex 本身没有被关闭。','助手已關閉。Codex 本身未被關閉。','Assistant closed. Codex itself was not stopped.'],long:['文字太长，原输入没有改变。最多 1200 字。','文字過長，原輸入未改變。最多 1200 字。','Too long; existing input was kept. Limit: 1,200 characters.']
 };
-let language='zh-CN',view=null,filter='all',lastCards='',lastPreview='',closed=false;
+Object.assign(labels,{
+ edit:['修改','修改','Edit'],archive:['收起','收起','Archive'],restore:['放回任务页','放回任務頁','Restore'],archived:['已收起','已收起','Archived'],
+ editTitle:['补充或修改这件事','補充或修改這件事','Edit this task note'],saveChanges:['保存修改','儲存修改','Save changes'],
+ searchLabel:['找任务','找任務','Find a task'],searchPlaceholder:['输入任务里的几个字','輸入任務裡的幾個字','Search task notes'],
+ noResultsTitle:['这里暂时没有匹配的任务','這裡暫時沒有相符的任務','No matching tasks here'],
+ noResultsNote:['换个关键词或查看全部。收起的任务可以在“已收起”里放回来。','換個關鍵字或查看全部。收起的任務可以在「已收起」裡放回來。','Try another search or view all. Archived notes can be restored from Archived.'],
+ clearFilter:['查看全部任务','查看全部任務','Show all tasks'],updated:['记录更新：','記錄更新：','Note updated: '],
+ connectionGuideTitle:['找不到 dots 的任务？','找不到 dots 的任務？','Cannot find your dots tasks?'],
+ connectionGuide:['在 ChatGPT 打开你的 dot → 个人页面 → 活动，查看原任务。本页目前只能自动观察兼容的本机 Codex；云端任务可以先记成卡片，贴上原任务链接，再用“问进展”。任务需要本机工作时，保持这台电脑在线并打开 ChatGPT。','在 ChatGPT 開啟你的 dot → 個人頁面 → 活動，查看原任務。本頁目前只能自動觀察相容的本機 Codex；雲端任務可先記成卡片，貼上原任務連結，再用「問進展」。任務需要本機工作時，保持電腦在線並開啟 ChatGPT。','In ChatGPT, open your dot’s profile → Activity to inspect the original task. This page automatically observes compatible local Codex only. Keep a card with the original link for cloud work, then use “Ask progress”. Keep the connected PC online with ChatGPT open for work that needs it.'],
+ officialGuide:['查看官方操作说明','查看官方操作說明','Read the official guide'],
+ askProgress:['问进展','問進展','Ask progress'],handoffTitle:['把这段话交给原来的 dot','把這段話交給原來的 dot','Take this draft to your original dot'],
+ handoffHint:['先看一眼再复制，粘贴到原来的 dot 对话中。本助手不会发送、重跑或续办任务。','先看一眼再複製，貼到原來的 dot 對話中。本助手不會傳送、重跑或繼續任務。','Review and copy, then paste into your existing dot conversation. This assistant does not send, rerun or resume work.'],
+ draftProgress:['问一下进展','問一下進展','Check progress'],draftContinue:['接着做这件事','接著做這件事','Continue this task'],
+ copyHandoff:['复制上面的文字','複製上面的文字','Copy the text above'],closeHandoff:['收起草稿','收起草稿','Close draft'],
+ archivedNotice:['已收起，可在“已收起”里放回来。任务本身没有被停止。','已收起，可在「已收起」裡放回來。任務本身未被停止。','Archived here. Restore it from Archived; the actual task was not stopped.'],
+ restoredNotice:['已放回任务页，任务本身没有被启动。','已放回任務頁，任務本身未被啟動。','Restored to the board; no task was started.'],
+ invalidLink:['这个链接暂不支持。请粘贴原来的 ChatGPT 对话链接，或先留空；原输入还在。','暫不支援此連結。請貼上原來的 ChatGPT 對話連結，或先留空；原輸入仍保留。','That link is not supported. Paste the original ChatGPT conversation link or leave it empty. Your input is kept.'],
+ statusOld:['这是上次记录的状态','這是上次記錄的狀態','Previously recorded state'],
+ nextStale:['请回原任务确认当前进展；上次状态不能说明现在是否仍在运行。','請回原任務確認目前進展；上次狀態無法說明現在是否仍在執行。','Check the original task for current progress; the last state does not prove it is still running.'],
+ edited:['修改已保存在本机，尚未发送。','修改已儲存在本機，尚未傳送。','Changes saved locally, not sent.']
+});
+let language='zh-CN',view=null,filter='all',lastCards='',lastPreview='',closed=false,editingId=null,saving=false,draftTaskId=null,draftKind='progress',lastDraft='';
 const t=key=>labels[key]?.[['zh-CN','zh-TW','en'].indexOf(language)]??key;
 const key=location.hash.slice(1)||sessionStorage.getItem('sos-key')||'';sessionStorage.setItem('sos-key',key);history.replaceState(null,'',location.pathname);
-async function api(route,body) {const r=await fetch('/api/'+route,{method:body===undefined?'GET':'POST',headers:{'x-sos-token':key,...(body===undefined?{}:{'content-type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});if(!r.ok)throw Error('failed');return r.json();}
+async function api(route,body) {const r=await fetch('/api/'+route,{method:body===undefined?'GET':'POST',headers:{'x-sos-token':key,...(body===undefined?{}:{'content-type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});const data=await r.json();if(!r.ok)throw Error(data.error||'failed');return data;}
 function notice(text){$('notice').textContent=text;}
 function el(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;}
-async function action(work,message){try{await work();if(message)notice(t(message));await refresh();}catch{notice(t('failed'));}}
-function translate(){document.documentElement.lang=language;for(const id of Object.keys(labels)){if($(id))$(id).textContent=t(id);}notice('');$('copyStatus').textContent='';lastCards='';}
-const group=state=>['running','reviewing'].includes(state)?'running':state==='waiting'?'waiting':state==='blocked'?'blocked':'other';
+async function action(work,message){try{await work();if(message)notice(t(message));await refresh();}catch(error){notice(t(error.message==='invalid_link'?'invalidLink':'failed'));}}
+function translate(){document.documentElement.lang=language;for(const id of Object.keys(labels)){if($(id))$(id).textContent=t(id);}$('search').placeholder=t('searchPlaceholder');notice('');$('copyStatus').textContent='';lastCards='';}
+function openComposer(task=null){if(!$('composer').hidden){$('taskText').focus();return;}editingId=task?.id??null;$('taskText').value=task?.text??'';$('taskLink').value=task?.link??'';$('composer').hidden=false;render();$('taskText').focus();}
+function showHandoff(task){draftTaskId=task.id;draftKind='progress';lastDraft='';$('handoffPanel').hidden=false;render();$('handoffPanel').scrollIntoView({behavior:'smooth'});$('copyHandoff').focus();}
 function render(){
+  if(!view)return;
+  $('composerTitle').textContent=t(editingId?'editTitle':'composerTitle');$('saveTask').textContent=t(editingId?'saveChanges':'saveTask');
+  for(const id of ['saveTask','cancelTask','taskText','taskLink'])$(id).disabled=saving;
   if(lastPreview!==view.diagnostic?.previewId){lastPreview=view.diagnostic?.previewId;$('copyStatus').textContent='';}
   $('connectionTitle').textContent=t(view.connection.state==='connected'?'connected':view.connection.state==='connecting'?'connecting':'disconnected');
   $('connectionNote').textContent=t(view.connection.state==='connected'?'connectionLive':'connectionMissing');
   $('connect').textContent=t(view.connection.state==='connected'?'disconnect':'connect');$('connect').disabled=view.connection.state==='connecting';
   $('fixture').hidden=!view.fixture;$('fixture').textContent=t('fixture');if(view.saveFailed)notice(t('saveFailed'));
-  const stamp=JSON.stringify([view.tasks,language,filter]);if(stamp!==lastCards){lastCards=stamp;$('filters').replaceChildren();
-    for(const f of ['all','running','waiting','blocked','other']){const n=view.tasks.filter(x=>f==='all'||group(x.state)===f).length;const b=el('button',`${t(f)} ${n}`);b.setAttribute('aria-pressed',String(f===filter));b.onclick=()=>{filter=f;render();};$('filters').append(b);}
-    $('tasks').replaceChildren();for(const task of view.tasks.filter(x=>filter==='all'||group(x.state)===filter)){
+  const query=$('search').value;
+  const stamp=JSON.stringify([view.tasks,language,filter,query,$('composer').hidden]);if(stamp!==lastCards){lastCards=stamp;$('filters').replaceChildren();
+    for(const f of ['all','running','waiting','blocked','other','archived']){const n=selectTasks(view.tasks,{filter:f}).length;const b=el('button',`${t(f)} ${n}`);b.setAttribute('aria-pressed',String(f===filter));b.onclick=()=>{filter=f;render();};$('filters').append(b);}
+    const visible=selectTasks(view.tasks,{filter,query});
+    $('tasks').replaceChildren();for(const task of visible){
       const card=el('article',undefined,'card'),title=task.title||`${t('unnamed')} ${task.id.slice(0,8)}`;
-      card.append(el('span',t(task.state),`badge ${task.state}`),el('span',t(task.source),'badge'),el('h2',title));
-      card.append(el('p',t('observed')+(task.observedAt?new Date(task.observedAt).toLocaleString(language):t('notObserved')),'meta'));
+      card.append(el('span',task.stale?`${t('statusOld')} · ${t(task.state)}`:t(task.state),`badge ${task.stale?'unknown':task.state}`),el('span',t(task.source),'badge'),el('h2',title));
+      const updated=task.source==='manual'?task.updatedAt||task.observedAt:task.observedAt;
+      card.append(el('p',t(task.source==='manual'?'updated':'observed')+(updated?new Date(updated).toLocaleString(language):t('notObserved')),'meta'));
       if(task.stale)card.append(el('p',t('stale'),'meta'));
-      card.append(el('p',t(task.state==='running'?'nextWorking':task.state==='waiting'?'nextWaiting':task.state==='blocked'?'nextHelp':'nextOther'),'next'));
+      card.append(el('p',t(task.stale?'nextStale':task.state==='running'?'nextWorking':task.state==='waiting'?'nextWaiting':task.state==='blocked'?'nextHelp':task.state==='queued'?'composerNote':'nextOther'),'next'));
       const controls=el('div',undefined,'actions');
       const open=el('button',t(task.link?'open':'openDot'));open.onclick=()=>action(()=>api('open',{id:task.id}),'opened');controls.append(open);
       if(task.text){const copy=el('button',t('copyTask'));copy.onclick=()=>action(()=>navigator.clipboard.writeText(task.text),'copied');controls.append(copy);}
+      const progress=el('button',t('askProgress'));progress.onclick=()=>showHandoff(task);controls.append(progress);
       const help=el('button',t('help'));help.onclick=()=>action(()=>api('classic',{}));controls.append(help);card.append(controls);
-      if(task.source!=='native'){const label=el('label',t('mark'));const select=el('select');select.setAttribute('aria-label',t('mark')+title);for(const s of ['queued','running','waiting','blocked','paused','completed','canceled']){const o=el('option',t(s));o.value=s;select.append(o);}select.value=task.state;select.onchange=()=>action(()=>api('update',{id:task.id,state:select.value}));label.append(select);card.append(label);}
+      if(task.source!=='native'){
+        const manage=el('div',undefined,'actions secondary-actions'),edit=el('button',t('edit'));edit.disabled=!$('composer').hidden;edit.onclick=()=>openComposer(task);
+        const archive=el('button',t(task.archived?'restore':'archive'));archive.onclick=()=>action(()=>api('update',{id:task.id,archived:!task.archived}),task.archived?'restoredNotice':'archivedNotice');manage.append(edit,archive);card.append(manage);
+        const label=el('label',t('mark'));const select=el('select');select.setAttribute('aria-label',t('mark')+title);for(const s of ['queued','running','waiting','blocked','paused','completed','canceled','partial','reviewing','unknown']){const o=el('option',t(s));o.value=s;select.append(o);}select.value=task.state;select.onchange=()=>action(()=>api('update',{id:task.id,state:select.value}));label.append(select);card.append(label);
+      }
       $('tasks').append(card);
-    }$('empty').hidden=view.tasks.length!==0;
+    }const first=!view.tasks.length&&filter==='all'&&!query;
+    $('empty').hidden=visible.length!==0;$('emptyTitle').textContent=t(first?'emptyTitle':'noResultsTitle');$('emptyNote').textContent=t(first?'emptyNote':'noResultsNote');$('clearFilter').hidden=first;
   }
+  const draftTask=view.tasks.find(task=>task.id===draftTaskId);
+  if(draftTask&&!$('handoffPanel').hidden){const draft=continuationDraft(draftTask,language,draftKind);if(lastDraft!==draft){lastDraft=draft;$('handoffText').textContent=draft;$('handoffStatus').textContent='';}for(const kind of ['progress','continue'])$('draft'+(kind==='progress'?'Progress':'Continue')).setAttribute('aria-pressed',String(draftKind===kind));}
+  else{$('handoffPanel').hidden=true;draftTaskId=null;lastDraft='';$('handoffText').textContent='';}
   $('diagnosis').hidden=!view.checking&&!view.diagnostic;
   if(view.checking){$('diagnosisText').textContent=t('checking');$('review').disabled=true;$('copyReport').disabled=true;}
   else if(view.diagnostic?.error){$('diagnosisText').textContent=t('diagnosticFailed');$('review').disabled=true;$('reviewPanel').hidden=true;}
@@ -70,9 +108,13 @@ function render(){
 }
 async function refresh(){if(closed)return;try{view=await api('board');if(view.language!==language){language=view.language;$('language').value=language;translate();}render();}catch{notice(t('failed'));}}
 translate();
-$('add').onclick=()=>{$('composer').hidden=false;$('taskText').focus();};$('cancelTask').onclick=()=>{$('composer').hidden=true;};
+$('add').onclick=()=>openComposer();$('cancelTask').onclick=()=>{$('composer').hidden=true;editingId=null;render();};
+$('search').oninput=()=>render();$('clearFilter').onclick=()=>{filter='all';$('search').value='';render();};
+$('draftProgress').onclick=()=>{draftKind='progress';render();};$('draftContinue').onclick=()=>{draftKind='continue';render();};
+$('closeHandoff').onclick=()=>{$('handoffPanel').hidden=true;draftTaskId=null;render();};
+$('copyHandoff').onclick=()=>{$('handoffStatus').textContent='';return action(async()=>{const shown=$('handoffText').textContent;if(!shown||$('handoffPanel').hidden)throw Error('no_draft');await navigator.clipboard.writeText(shown);$('handoffStatus').textContent=t('copied');},'copied');};
 $('taskText').addEventListener('paste',e=>{const box=$('taskText'),text=e.clipboardData.getData('text/plain');if(box.value.length-box.selectionEnd+box.selectionStart+text.length>1200){e.preventDefault();notice(t('long'));}});
-$('saveTask').onclick=()=>action(async()=>{await api('task',{text:$('taskText').value,link:$('taskLink').value});$('taskText').value='';$('taskLink').value='';$('composer').hidden=true;},'saved');
+$('saveTask').onclick=async()=>{if(saving)return;saving=true;render();const edited=editingId!==null;await action(async()=>{await api(edited?'update':'task',{...(edited?{id:editingId}:{}),text:$('taskText').value,link:$('taskLink').value});$('taskText').value='';$('taskLink').value='';$('composer').hidden=true;editingId=null;filter='all';$('search').value='';},edited?'edited':'saved');saving=false;render();};
 $('classic').onclick=()=>action(()=>api('classic',{}));
 $('connect').onclick=()=>action(()=>api(view?.connection.state==='connected'?'disconnect':'connect',{}));
 $('connectEndpoint').onclick=()=>action(()=>api('connect',{endpoint:$('endpoint').value.trim()}));

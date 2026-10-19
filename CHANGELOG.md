@@ -6,6 +6,26 @@ The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0-preview.2] - 2026-10-19
+
+### Added
+
+- Edit task notes and original-task links while retaining their identity and recorded state; invalid edits keep the existing note.
+- Local keyword search, useful empty-filter feedback, and reversible card archive/restore without controlling the underlying task.
+- Three-language progress/continuation drafts with an exact-text copy preview and guidance back to official dots Activity.
+
+### Fixed
+
+- Immediately label disconnected native states as previously observed and keep them out of the current Working/Needs me filters.
+- Manual notes now show their own update time rather than becoming stale runtime observations.
+- Unsupported task links are explained instead of silently discarded; repeated save clicks are suppressed.
+
+### Verification
+
+- Native baseline: 36/36 passed with fictional data, including real offline OCR. Task board: 20/20 tests passed. The final CI run records the exact published build.
+- Actual browser clicks covered editing, invalid-link preservation, archive/restore, empty filters, three-language drafts and exact clipboard equality. A 683×500 CSS viewport had no horizontal overflow; this is not physical Windows DPI testing.
+- No cloud-task discovery, model calls, automatic task execution or submission were added. Stable v0.1.11 and previous releases remain unchanged.
+
 ## [0.2.0-preview.1] - 2026-10-13
 
 ### Added

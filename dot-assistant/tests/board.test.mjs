@@ -6,6 +6,7 @@ import path from 'node:path';
 import {BoardState,nativeState,originalUrl} from '../state.mjs';
 import {notificationFilter,MetadataObserver} from '../observer.mjs';
 import {startBoard} from '../server.mjs';
+import {selectTasks,continuationDraft} from '../public/task-view.mjs';
 
 // All task text, identifiers and snapshots below are fictional.
 const id='00000000-0000-4000-8000-000000000001',at='2026-10-13T00:00:00.000Z';
@@ -106,4 +107,97 @@ test('production observer fails closed on version mismatch and forbidden notific
    }finally{observer.close();}
  }
  await rm(dir,{recursive:true,force:true});
+});
+
+test('editing a note preserves its identity and state; invalid edits are atomic',()=>{
+  let time=at;const b=new BoardState(()=>time),task=b.create({text:'Fictional draft'});
+  b.update(task.id,{state:'waiting'});const before=JSON.stringify(task);
+  assert.throws(()=>b.update(task.id,{text:'This must not be applied',link:'https://evil.example/'}));
+  assert.equal(JSON.stringify(task),before);
+  assert.throws(()=>b.update(task.id,{text:'字'.repeat(1201)}));assert.equal(JSON.stringify(task),before);
+  assert.throws(()=>b.update(task.id,{text:'  '}));assert.equal(JSON.stringify(task),before);
+  time='2026-10-19T00:00:00.000Z';
+  b.update(task.id,{text:'Fictional revised draft',link:'https://chatgpt.com/c/'+id});
+  assert.equal(task.id,b.tasks[0].id);assert.equal(task.source,'manual');assert.equal(task.state,'waiting');
+  assert.equal(task.text,'Fictional revised draft');assert.equal(task.title,'Fictional revised draft');
+  assert.equal(task.observedAt,at);assert.equal(task.updatedAt,time);assert.equal(task.link,'https://chatgpt.com/c/'+id);
+});
+
+test('invalid create links preserve all existing cards and native records stay read-only',()=>{
+  const b=new BoardState(()=>at);b.create({text:'Keep this fictional note'});const before=JSON.stringify(b.tasks);
+  assert.throws(()=>b.create({text:'Rejected fictional note',link:'https://chatgpt.com/c/'+id+'?secret=fake'}));
+  assert.equal(JSON.stringify(b.tasks),before);
+  b.native(id,{type:'active'},Date.parse(at));const nativeBefore=JSON.stringify(b.tasks[1]);
+  for(const change of [{text:'overwrite'},{archived:true},{state:'completed'}])assert.throws(()=>b.update(id,change));
+  assert.equal(JSON.stringify(b.tasks[1]),nativeBefore);
+});
+
+test('archive and restore survive restart without deleting a note or changing runtime state',async()=>{
+  const dir=await mkdtemp(path.join(os.tmpdir(),'sos-board-archive-'));try{
+    const file=path.join(dir,'tasks.json'),b=new BoardState(()=>at),task=b.create({text:'Fictional archive note'});
+    b.update(task.id,{state:'running'});b.update(task.id,{archived:true});await b.save(file);
+    const loaded=new BoardState();await loaded.load(file);
+    assert.equal(selectTasks(loaded.view().tasks).length,0);assert.equal(selectTasks(loaded.view().tasks,{filter:'archived'}).length,1);
+    assert.equal(loaded.tasks[0].state,'running');loaded.update(task.id,{archived:false});
+    assert.equal(selectTasks(loaded.view().tasks).length,1);assert.equal(loaded.tasks[0].text,'Fictional archive note');
+    assert.throws(()=>loaded.update(task.id,{archived:'false'}));
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('manual notes do not become stale runtime observations; disconnect invalidates even a fresh native state',()=>{
+  let time=at;const b=new BoardState(()=>time),note=b.create({text:'Fictional manual record'});
+  b.native(id,{type:'active'},Date.parse(at));b.connection={state:'connected'};
+  assert.equal(b.view().tasks.find(t=>t.id===id).stale,false);
+  b.connection={state:'disconnected'};
+  assert.equal(b.view().tasks.find(t=>t.id===id).stale,true);
+  assert.equal(selectTasks(b.view().tasks,{filter:'running'}).length,0);
+  assert.equal(selectTasks(b.view().tasks,{filter:'other'}).length,2);
+  time='2026-10-19T00:00:00.000Z';assert.equal(b.view().tasks.find(t=>t.id===note.id).stale,false);
+});
+
+test('search combines category and archive filters and reads only note title/text',()=>{
+  const tasks=[
+    {id:'1',state:'running',title:'Fictional Alpha',text:'整理书单',source:'manual'},
+    {id:'2',state:'waiting',title:'Fictional Beta',text:'检查版本',source:'manual'},
+    {id:'3',state:'running',title:'Fictional Alpha archive',text:'书单',archived:true,source:'manual'},
+    {id:'4',state:'blocked',title:'Fictional Delta',text:'notes',link:'https://example.com/SECRET',source:'reported'}
+  ];
+  assert.deepEqual(selectTasks(tasks,{query:' ALPHA '}).map(t=>t.id),['1']);
+  assert.deepEqual(selectTasks(tasks,{filter:'archived',query:'书单'}).map(t=>t.id),['3']);
+  assert.equal(selectTasks(tasks,{filter:'waiting',query:'Alpha'}).length,0);
+  assert.deepEqual(selectTasks(tasks,{filter:'waiting'}).map(t=>t.id),['2']);
+  assert.equal(selectTasks(tasks,{query:'SECRET'}).length,0);
+  assert.equal(selectTasks(tasks,{query:'not present'}).length,0);
+});
+
+test('three-language continuation drafts identify original work and never include unrelated imported fields',()=>{
+  const task={text:'Fictional project note',title:'Fictional title',link:'https://chatgpt.com/c/'+id,prompt:'FICTIONAL_PRIVATE_CANARY',token:'FICTIONAL_SECRET_CANARY'};
+  for(const language of ['zh-CN','zh-TW','en']){
+    const progress=continuationDraft(task,language,'progress'),resume=continuationDraft(task,language,'continue');
+    for(const draft of [progress,resume]){
+      assert.ok(draft.includes(task.text));assert.ok(draft.includes(task.link));assert.ok(!draft.includes('CANARY'));
+    }
+    assert.notEqual(progress,resume);
+  }
+  assert.match(continuationDraft({text:'Fictional note'},'en'),/If it is unclear, ask me; do not create or rerun/);
+  assert.match(continuationDraft(task,'en','continue'),/without repeating completed actions/);
+  assert.throws(()=>continuationDraft(task,'en','execute'));
+});
+
+test('note edit and archive HTTP actions are local-only; new browser module has a JavaScript MIME type',async()=>{
+  const dir=await mkdtemp(path.join(os.tmpdir(),'sos-board-edit-http-')),calls=[];
+  const app=await startBoard({dataDir:dir,fixture:true,bridge:async(method)=>{calls.push(method);return {};}});
+  const origin=app.url.split('/#')[0],headers={'x-sos-token':app.token,'content-type':'application/json'};
+  const post=(route,body)=>fetch(origin+'/api/'+route,{method:'POST',headers,body:JSON.stringify(body)});
+  try{
+    const module=await fetch(origin+'/task-view.mjs');assert.equal(module.status,200);assert.match(module.headers.get('content-type'),/javascript/);
+    const created=await(await post('task',{text:'Fictional original'})).json();
+    assert.equal((await post('update',{id:created.task.id,text:'Fictional edited',archived:true})).status,200);
+    let state=await(await fetch(origin+'/api/board',{headers})).json();assert.equal(state.tasks[0].archived,true);assert.equal(state.tasks[0].text,'Fictional edited');
+    const rejected=await post('update',{id:created.task.id,text:'MUST_NOT_APPLY',link:'https://evil.example'});assert.equal(rejected.status,400);assert.equal((await rejected.json()).error,'invalid_link');
+    await post('update',{id:created.task.id,archived:false});
+    state=await(await fetch(origin+'/api/board',{headers})).json();assert.equal(state.tasks[0].text,'Fictional edited');assert.equal(state.tasks[0].archived,false);
+    assert.deepEqual(calls,[]);
+    const saved=JSON.parse(await readFile(path.join(dir,'tasks.json'),'utf8'));assert.equal(saved.tasks[0].text,'Fictional edited');
+  }finally{await app.close();await rm(dir,{recursive:true,force:true});}
 });

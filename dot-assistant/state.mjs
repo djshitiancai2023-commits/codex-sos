@@ -7,6 +7,12 @@ export const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{1
 const states = ['running','reviewing','waiting','blocked','partial','paused','queued','completed','canceled','unknown'];
 const config = { maxTasks:100,maxAgents:0,states:Object.fromEntries(states.map(s=>[s,{}])),verification:{unknown:'unknown'},text:{subset:'selected subset'} };
 const bounded = (v,n) => typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,n) : '';
+function checkedLink(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const link = originalUrl(typeof value === 'string' ? value.trim() : value);
+  if (!link) throw Error('invalid_link');
+  return link;
+}
 export function originalUrl(value) {
   if (typeof value !== 'string') return null;
   if (/^codex:\/\/threads\/[a-f0-9-]{36}$/i.test(value) && UUID.test(value.split('/').at(-1))) return value;
@@ -37,17 +43,30 @@ export class BoardState {
   }
   create(input) {
     const text=bounded(input.text,1200);if(!text || input.text.length>1200 || this.tasks.length>=100) throw Error('invalid_task');
-    const task={id:randomUUID(),source:'manual',title:bounded(input.title,80)||text.slice(0,60),text,link:originalUrl(input.link),state:'queued',observedAt:this.now()};
+    const task={id:randomUUID(),source:'manual',title:bounded(input.title,80)||text.slice(0,60),text,link:checkedLink(input.link),state:'queued',observedAt:this.now(),updatedAt:this.now(),archived:false};
     this.tasks.push(task);return task;
   }
   update(id,input) {
     const task=this.tasks.find(t=>t.id===id);if(!task)throw Error('not_found');
-    if (input.title!==undefined) task.title=bounded(input.title,80);
-    if (input.link!==undefined) task.link=originalUrl(input.link);
+    // Validate the entire edit before changing the existing card.
+    const changes={};
+    if (input.title!==undefined) changes.title=bounded(input.title,80);
+    if (input.text!==undefined) {
+      if(task.source==='native'||typeof input.text!=='string'||input.text.length>1200||!bounded(input.text,1200))throw Error('invalid_task');
+      changes.text=bounded(input.text,1200);
+      if(input.title===undefined)changes.title=changes.text.slice(0,60);
+    }
+    if (input.link!==undefined) changes.link=checkedLink(input.link);
     if (input.state!==undefined) {
       if(task.source==='native'||!states.includes(input.state))throw Error('read_only');
-      task.state=input.state;task.observedAt=this.now();
+      changes.state=input.state;changes.observedAt=this.now();
     }
+    if (input.archived!==undefined) {
+      if(task.source==='native'||typeof input.archived!=='boolean')throw Error('read_only');
+      changes.archived=input.archived;
+    }
+    if(task.source!=='native'&&Object.keys(changes).length)changes.updatedAt=this.now();
+    Object.assign(task,changes);
     return task;
   }
   import(input) {
@@ -57,14 +76,14 @@ export class BoardState {
     if(this.tasks.length+tasks.length>100)throw Error('too_many_tasks');
     this.tasks.push(...tasks);return tasks.length;
   }
-  view() { return {tasks:this.tasks.map(t=>({...t,stale:!t.observedAt||Date.parse(this.now())-Date.parse(t.observedAt)>120000})),connection:this.connection,language:this.language,readAt:this.now()}; }
+  view() { return {tasks:this.tasks.map(t=>({...t,stale:t.source==='native'&&(this.connection.state!=='connected'||!t.observedAt||Date.parse(this.now())-Date.parse(t.observedAt)>120000)})),connection:this.connection,language:this.language,readAt:this.now()}; }
   async load(filename) {
     try {
       const text=await readFile(filename,'utf8');if(text.length>300000)return;
       const data=JSON.parse(text);if(['zh-CN','zh-TW','en'].includes(data.language))this.language=data.language;
       for(const t of (Array.isArray(data.tasks)?data.tasks:[]).slice(0,100)) {
         if(!UUID.test(t.id)||!['manual','reported','native'].includes(t.source))continue;
-        this.tasks.push({id:t.id,source:t.source,title:bounded(t.title,80),text:bounded(t.text,1200),state:states.includes(t.state)?t.state:'unknown',observedAt:typeof t.observedAt==='string'&&Number.isFinite(Date.parse(t.observedAt))?t.observedAt:null,link:originalUrl(t.link)});
+        this.tasks.push({id:t.id,source:t.source,title:bounded(t.title,80),text:bounded(t.text,1200),state:states.includes(t.state)?t.state:'unknown',observedAt:typeof t.observedAt==='string'&&Number.isFinite(Date.parse(t.observedAt))?t.observedAt:null,updatedAt:typeof t.updatedAt==='string'&&Number.isFinite(Date.parse(t.updatedAt))?t.updatedAt:null,link:originalUrl(t.link),archived:t.source!=='native'&&t.archived===true});
       }
     } catch { /* Corrupt/read-only settings must not prevent startup. */ }
   }
